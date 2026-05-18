@@ -8,569 +8,218 @@
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
 
   :root {
-    --bg: #f4f1ec;
-    --surface: #faf8f5;
-    --surface2: #eeeae3;
-    --border: #ddd9d0;
-    --accent: #2c5f4a;
-    --accent2: #d4a847;
-    --accent3: #c0392b;
-    --text: #1a1a18;
-    --text2: #5a584f;
-    --text3: #8a8880;
-    --warn: #e67e22;
-    --radius: 10px;
-    --shadow: 0 2px 12px rgba(0,0,0,0.07);
-    --shadow2: 0 4px 24px rgba(0,0,0,0.11);
+    --bg: #f4f1ec; --surface: #faf8f5; --surface2: #eeeae3; --border: #ddd9d0;
+    --accent: #2c5f4a; --accent2: #d4a847; --accent3: #c0392b;
+    --text: #1a1a18; --text2: #5a584f; --text3: #8a8880; --warn: #e67e22;
+    --radius: 10px; --shadow: 0 2px 12px rgba(0,0,0,0.07); --shadow2: 0 4px 24px rgba(0,0,0,0.11);
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
-
-  /* LAYOUT */
-  .app-shell { display: flex; min-height: 100vh; }
-
-  .sidebar {
-    width: 220px;
-    background: var(--accent);
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    z-index: 100;
-  }
-
-  .sidebar-logo {
-    padding: 28px 20px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.15);
-  }
-
-  .sidebar-logo h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.3rem;
-    color: #fff;
-    line-height: 1.2;
-  }
-
-  .sidebar-logo span {
-    font-size: 0.75rem;
-    color: rgba(255,255,255,0.6);
-    display: block;
-    margin-top: 3px;
-    font-weight: 300;
-  }
-
-  .sidebar-nav { padding: 16px 0; flex: 1; }
-
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 11px 20px;
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 400;
-    color: rgba(255,255,255,0.75);
-    transition: all 0.15s;
-    border-left: 3px solid transparent;
-  }
-
-  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
-
-  .nav-item.active {
-    background: rgba(255,255,255,0.12);
-    color: #fff;
-    font-weight: 600;
-    border-left-color: var(--accent2);
-  }
-
-  .nav-item .icon { font-size: 1.1rem; width: 20px; text-align: center; }
-
-  .sidebar-vehicle {
-    padding: 14px 18px;
-    border-top: 1px solid rgba(255,255,255,0.15);
-    font-size: 0.78rem;
-    color: rgba(255,255,255,0.6);
-  }
-
-  .sidebar-vehicle strong { display: block; color: rgba(255,255,255,0.9); font-size: 0.85rem; }
-
-  .main { margin-left: 220px; flex: 1; }
-
-  .topbar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-  }
-
-  .topbar h2 { font-size: 1.1rem; font-weight: 600; }
-
-  .topbar-actions { display: flex; gap: 10px; }
-
-  .content { padding: 28px 32px; }
-
-  /* BUTTONS */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: var(--radius);
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.15s;
-  }
-
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: #235040; }
-
-  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-  .btn-secondary:hover { background: var(--border); }
-
-  .btn-danger { background: var(--accent3); color: #fff; }
-  .btn-danger:hover { background: #a93226; }
-
-  .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
-
-  /* CARDS */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-  }
-
-  .card-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .card-header h3 { font-size: 0.95rem; font-weight: 600; }
-  .card-body { padding: 20px; }
-
-  /* STATS ROW */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px 20px;
-    box-shadow: var(--shadow);
-  }
-
-  .stat-label { font-size: 0.75rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
-  .stat-value { font-size: 1.7rem; font-weight: 600; color: var(--text); line-height: 1; }
-  .stat-sub { font-size: 0.78rem; color: var(--text3); margin-top: 4px; }
-  .stat-card.accent-green { border-left: 4px solid var(--accent); }
-  .stat-card.accent-gold { border-left: 4px solid var(--accent2); }
-  .stat-card.accent-red { border-left: 4px solid var(--accent3); }
-  .stat-card.accent-blue { border-left: 4px solid #4a7fc0; }
-
-  /* TABLE */
-  .table-wrap { overflow-x: auto; }
-
-  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-
-  thead th {
-    background: var(--surface2);
-    padding: 10px 12px;
-    text-align: left;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--text2);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-  }
-
-  tbody tr { border-bottom: 1px solid var(--border); }
-  tbody tr:hover { background: rgba(44,95,74,0.03); }
-
-  tbody td { padding: 10px 12px; vertical-align: middle; }
-
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 0.72rem;
-    font-weight: 600;
-  }
-
-  .badge-green { background: #d4edda; color: #155724; }
-  .badge-red { background: #f8d7da; color: #721c24; }
-  .badge-orange { background: #ffeeba; color: #856404; }
-  .badge-blue { background: #d1ecf1; color: #0c5460; }
-  .badge-gray { background: var(--surface2); color: var(--text2); }
-
-  /* FORM */
-  .form-grid { display: grid; gap: 14px; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-
-  .form-group { display: flex; flex-direction: column; gap: 5px; }
-
-  label { font-size: 0.8rem; font-weight: 600; color: var(--text2); }
-
-  input, select, textarea {
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: 7px;
-    padding: 8px 12px;
-    font-family: inherit;
-    font-size: 0.875rem;
-    color: var(--text);
-    transition: border-color 0.15s;
-    outline: none;
-  }
-
-  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-  input.error, select.error { border-color: var(--accent3); }
-
-  .field-error { font-size: 0.75rem; color: var(--accent3); }
-
-  /* MODAL */
-  .modal-overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-
-  .modal-overlay.open { display: flex; }
-
-  .modal {
-    background: var(--surface);
-    border-radius: 14px;
-    box-shadow: var(--shadow2);
-    width: 100%;
-    max-width: 680px;
-    max-height: 90vh;
-    overflow-y: auto;
-    animation: slideUp 0.2s ease;
-  }
-
-  @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-
-  .modal-header {
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .modal-header h3 { font-size: 1rem; font-weight: 600; }
-
-  .modal-body { padding: 24px; }
-
-  .modal-footer {
-    padding: 16px 24px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-  }
-
-  .close-btn {
-    background: none;
-    border: none;
-    font-size: 1.3rem;
-    cursor: pointer;
-    color: var(--text2);
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-
-  .close-btn:hover { background: var(--surface2); }
-
-  /* ALERTS / VALIDATION */
-  .alert {
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 0.85rem;
-    margin-bottom: 14px;
-    display: flex;
-    gap: 8px;
-    align-items: flex-start;
-  }
-
-  .alert-warning { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
-  .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c2c7; }
-  .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-  .alert-info { background: #cff4fc; color: #055160; border: 1px solid #9eeaf9; }
-
-  /* PAGES */
-  .page { display: none; }
-  .page.active { display: block; }
-
-  /* FILTER BAR */
-  .filter-bar {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-  }
-
-  .filter-bar input, .filter-bar select {
-    padding: 7px 12px;
-    font-size: 0.85rem;
-  }
-
-  /* SECTION HEADER */
-  .section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-
-  .section-head h3 { font-size: 1rem; font-weight: 600; }
-
-  /* VALIDATION SUMMARY */
-  .validation-panel {
-    background: #fff8f0;
-    border: 1px solid #fdc76b;
-    border-radius: var(--radius);
-    margin-bottom: 20px;
-    overflow: hidden;
-  }
-
-  .validation-panel-header {
-    background: #ffeeba;
-    padding: 10px 16px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #856404;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-  }
-
-  .validation-panel-body { padding: 12px 16px; }
-
-  .validation-item {
-    padding: 6px 0;
-    font-size: 0.82rem;
-    border-bottom: 1px solid #fde8b4;
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .validation-item:last-child { border-bottom: none; }
-
-  /* FUEL INDICATOR */
-  .fuel-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 4px;
-  }
-
-  /* Responsive adjustments for table */
-  .odometer-val { font-variant-numeric: tabular-nums; font-family: 'DM Sans', monospace; }
-
-  /* SETTINGS PAGE */
-  .settings-section { margin-bottom: 28px; }
-  .settings-section h4 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text2); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-
-  .list-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 9px 12px;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    margin-bottom: 6px;
-    background: var(--surface);
-    font-size: 0.875rem;
-  }
-
-  .list-item-actions { display: flex; gap: 6px; }
-
-  /* PRINT SECTION */
-  @media print {
-    .sidebar, .topbar, .topbar-actions, .btn, .filter-bar { display: none !important; }
-    .main { margin-left: 0; }
-    .content { padding: 0; }
-    table { font-size: 0.75rem; }
-  }
-
-  /* Tooltip */
-  [title] { cursor: help; }
-
-  .text-muted { color: var(--text3); font-size: 0.8rem; }
-  .text-sm { font-size: 0.82rem; }
-  .mt-2 { margin-top: 8px; }
-  .mb-2 { margin-bottom: 8px; }
-  .gap-row { display: flex; gap: 8px; align-items: center; }
-
-  /* Weekend / holiday row tinting */
-  tr.row-weekend td:first-child { border-left: 3px solid var(--warn); }
-  tr.row-holiday td:first-child { border-left: 3px solid var(--accent3); }
-  tr.row-fuel td { background: rgba(212, 168, 71, 0.06); }
-
-  .odo-gap { color: var(--accent3); font-weight: 600; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── LAYOUT ── */
+  #userScreen { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); padding:20px; }
+  .user-screen-box { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:38px 42px; box-shadow:var(--shadow2); width:100%; max-width:500px; text-align:center; }
+  .user-screen-box h1 { font-family:'DM Serif Display',serif; font-size:2.1rem; color:var(--accent); margin-bottom:4px; }
+  .user-screen-box p { color:var(--text2); font-size:0.9rem; margin-bottom:26px; }
+  .user-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:11px; margin-bottom:18px; }
+  .user-btn { background:var(--surface2); border:2px solid var(--border); border-radius:12px; padding:15px 8px; cursor:pointer; transition:all 0.15s; display:flex; flex-direction:column; align-items:center; gap:7px; }
+  .user-btn:hover { border-color:var(--accent); background:#eaf2ee; }
+  .u-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; color:#fff; }
+  .u-name { font-size:0.81rem; font-weight:600; color:var(--text); }
+  .add-user-btn { background:none; border:2px dashed var(--border); border-radius:12px; padding:15px 8px; cursor:pointer; color:var(--text3); font-size:0.8rem; display:flex; flex-direction:column; align-items:center; gap:5px; transition:all 0.15s; }
+  .add-user-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  #appMain { display:none; }
+  #appMain.visible { display:flex; width:100%; min-height:100vh; }
+
+  .sidebar { width:228px; background:var(--accent); color:#fff; display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:100; }
+  .sidebar-logo { padding:22px 19px 15px; border-bottom:1px solid rgba(255,255,255,0.15); }
+  .sidebar-logo h1 { font-family:'DM Serif Display',serif; font-size:1.22rem; color:#fff; }
+  .sidebar-logo span { font-size:0.71rem; color:rgba(255,255,255,0.5); display:block; margin-top:2px; }
+  .user-chip { margin:10px 13px; background:rgba(255,255,255,0.11); border-radius:8px; padding:8px 11px; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:0.81rem; color:rgba(255,255,255,0.88); border:1px solid rgba(255,255,255,0.14); transition:background 0.13s; }
+  .user-chip:hover { background:rgba(255,255,255,0.2); }
+  .user-chip .av { width:25px; height:25px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.73rem; font-weight:700; color:#fff; flex-shrink:0; }
+  .user-chip .uname { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .user-chip .caret { margin-left:auto; opacity:0.55; font-size:0.68rem; }
+  .sidebar-nav { padding:9px 0; flex:1; overflow-y:auto; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 19px; cursor:pointer; font-size:0.865rem; color:rgba(255,255,255,0.7); border-left:3px solid transparent; transition:all 0.13s; }
+  .nav-item:hover { background:rgba(255,255,255,0.08); color:#fff; }
+  .nav-item.active { background:rgba(255,255,255,0.12); color:#fff; font-weight:600; border-left-color:var(--accent2); }
+  .nav-item .icon { font-size:1rem; width:19px; text-align:center; }
+  .sidebar-footer { padding:11px 15px; border-top:1px solid rgba(255,255,255,0.12); font-size:0.71rem; color:rgba(255,255,255,0.42); display:flex; align-items:center; gap:5px; }
+  .sync-dot { width:7px; height:7px; border-radius:50%; background:#6bcb77; flex-shrink:0; }
+  .sync-dot.warn { background:var(--warn); } .sync-dot.err { background:var(--accent3); }
+  .main { margin-left:228px; flex:1; }
+  .topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:12px 28px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; }
+  .topbar h2 { font-size:1.02rem; font-weight:600; }
+  .topbar-actions { display:flex; gap:8px; }
+  .content { padding:24px 28px; }
+
+  /* ── BUTTONS ── */
+  .btn { display:inline-flex; align-items:center; gap:5px; padding:8px 15px; border-radius:var(--radius); border:none; cursor:pointer; font-family:inherit; font-size:0.865rem; font-weight:500; transition:all 0.13s; }
+  .btn-primary { background:var(--accent); color:#fff; } .btn-primary:hover { background:#235040; }
+  .btn-secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border); } .btn-secondary:hover { background:var(--border); }
+  .btn-danger { background:var(--accent3); color:#fff; } .btn-danger:hover { background:#a93226; }
+  .btn-sm { padding:4px 9px; font-size:0.76rem; }
+
+  /* ── STATS ── */
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:13px; margin-bottom:20px; }
+  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:15px 17px; box-shadow:var(--shadow); }
+  .stat-label { font-size:0.71rem; color:var(--text2); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
+  .stat-value { font-size:1.55rem; font-weight:600; line-height:1; }
+  .stat-sub { font-size:0.73rem; color:var(--text3); margin-top:3px; }
+  .stat-card.ag { border-left:4px solid var(--accent); } .stat-card.au { border-left:4px solid var(--accent2); }
+  .stat-card.ar { border-left:4px solid var(--accent3); } .stat-card.ab { border-left:4px solid #4a7fc0; }
+
+  /* ── CARD ── */
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
+  .card-header { padding:13px 17px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .card-header h3 { font-size:0.88rem; font-weight:600; }
+  .card-body { padding:17px; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:0.845rem; }
+  thead th { background:var(--surface2); padding:8px 11px; text-align:left; font-size:0.72rem; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.03em; border-bottom:1px solid var(--border); white-space:nowrap; }
+  tbody tr { border-bottom:1px solid var(--border); } tbody tr:hover { background:rgba(44,95,74,0.03); }
+  tbody td { padding:9px 11px; vertical-align:middle; } tfoot td { padding:9px 11px; }
+  .badge { display:inline-flex; align-items:center; padding:2px 7px; border-radius:20px; font-size:0.69rem; font-weight:700; }
+  .bg { background:#d4edda; color:#155724; } .br { background:#f8d7da; color:#721c24; }
+  .bo { background:#ffeeba; color:#856404; } .bb { background:#d1ecf1; color:#0c5460; }
+  .bz { background:var(--surface2); color:var(--text2); }
+
+  /* ── FORM ── */
+  .form-grid { display:grid; gap:12px; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .form-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  .form-group { display:flex; flex-direction:column; gap:4px; }
+  label { font-size:0.77rem; font-weight:600; color:var(--text2); }
+  input, select, textarea { background:var(--surface); border:1.5px solid var(--border); border-radius:7px; padding:7px 10px; font-family:inherit; font-size:0.845rem; color:var(--text); transition:border-color 0.13s; outline:none; }
+  input:focus, select:focus, textarea:focus { border-color:var(--accent); }
+  .ferr { font-size:0.71rem; color:var(--accent3); }
+
+  /* ── MODAL ── */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.42); z-index:200; align-items:center; justify-content:center; padding:16px; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--surface); border-radius:14px; box-shadow:var(--shadow2); width:100%; max-height:90vh; overflow-y:auto; animation:slideUp 0.18s ease; }
+  @keyframes slideUp { from{transform:translateY(18px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .modal-header { padding:17px 21px 13px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .modal-header h3 { font-size:0.95rem; font-weight:600; }
+  .modal-body { padding:20px; }
+  .modal-footer { padding:13px 21px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; }
+  .close-btn { background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text2); padding:2px 5px; border-radius:4px; } .close-btn:hover { background:var(--surface2); }
+
+  /* ── ALERTS ── */
+  .alert { border-radius:7px; padding:8px 12px; font-size:0.825rem; margin-bottom:11px; display:flex; gap:6px; align-items:flex-start; }
+  .aw { background:#fff3cd; color:#856404; border:1px solid #ffc107; }
+  .ad { background:#f8d7da; color:#721c24; border:1px solid #f5c2c7; }
+  .as { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+  .ai { background:#cff4fc; color:#055160; border:1px solid #9eeaf9; }
+
+  /* ── PAGES ── */
+  .page { display:none; } .page.active { display:block; }
+  .filter-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:13px; }
+  .filter-bar input, .filter-bar select { padding:6px 10px; font-size:0.825rem; }
+
+  /* ── VALIDATION ── */
+  .vp { background:#fff8f0; border:1px solid #fdc76b; border-radius:var(--radius); margin-bottom:16px; overflow:hidden; }
+  .vp-hd { background:#ffeeba; padding:9px 14px; font-size:0.81rem; font-weight:600; color:#856404; display:flex; align-items:center; gap:5px; cursor:pointer; }
+  .vp-bd { padding:9px 14px; }
+  .vi { padding:5px 0; font-size:0.79rem; border-bottom:1px solid #fde8b4; display:flex; align-items:flex-start; gap:6px; }
+  .vi:last-child { border-bottom:none; }
+
+  /* ── SETTINGS LIST ── */
+  .li { display:flex; align-items:center; justify-content:space-between; padding:7px 10px; border:1px solid var(--border); border-radius:7px; margin-bottom:5px; background:var(--surface); font-size:0.845rem; }
+
+  /* ── ROW TINTS ── */
+  tr.rw td:first-child { border-left:3px solid var(--warn); }
+  tr.rh td:first-child { border-left:3px solid var(--accent3); }
+  .odo { font-variant-numeric:tabular-nums; }
+  .tm { color:var(--text3); font-size:0.76rem; }
+  .mt2 { margin-top:8px; } .mb2 { margin-bottom:8px; }
+
+  /* ── SPINNER / TOAST ── */
+  .spinner { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.6s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  #toast { position:fixed; bottom:22px; right:22px; background:var(--text); color:#fff; padding:9px 16px; border-radius:9px; font-size:0.84rem; box-shadow:var(--shadow2); z-index:9999; transform:translateY(60px); opacity:0; transition:all 0.25s; pointer-events:none; }
+  #toast.show { transform:translateY(0); opacity:1; }
+  #toast.tok { background:var(--accent); } #toast.terr { background:var(--accent3); }
+
+  @media print { .sidebar,.topbar,.topbar-actions,.btn,.filter-bar{display:none!important} .main{margin-left:0} }
 </style>
 </head>
 <body>
-<div class="app-shell">
 
-  <!-- SIDEBAR -->
+<!-- ══ USER SELECT SCREEN ══ -->
+<div id="userScreen" style="display:none">
+  <div class="user-screen-box">
+    <h1>Kniha Jazd</h1>
+    <p>Evidencia firemných ciest — vyberte používateľa</p>
+    <div class="user-grid" id="userGrid"></div>
+    <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:2px">
+      <button class="btn btn-secondary btn-sm" onclick="openGithubSetup()" style="width:100%">⚙️ Nastavenia ukladania dát</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN APP ══ -->
+<div id="appMain">
   <aside class="sidebar">
-    <div class="sidebar-logo">
-      <h1>Kniha Jazd</h1>
-      <span>Evidencia firemných ciest</span>
+    <div class="sidebar-logo"><h1>Kniha Jazd</h1><span>Evidencia firemných ciest</span></div>
+    <div class="user-chip" onclick="switchUser()">
+      <div class="av" id="sbAv">?</div>
+      <span class="uname" id="sbName">—</span>
+      <span class="caret">⇄</span>
     </div>
     <nav class="sidebar-nav">
-      <div class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard">
-        <span class="icon">📊</span> Prehľad
-      </div>
-      <div class="nav-item" onclick="showPage('trips')" data-page="trips">
-        <span class="icon">🚗</span> Jazdy
-      </div>
-      <div class="nav-item" onclick="showPage('fuel')" data-page="fuel">
-        <span class="icon">⛽</span> PHM
-      </div>
-      <div class="nav-item" onclick="showPage('routes')" data-page="routes">
-        <span class="icon">🗺️</span> Trasy
-      </div>
-      <div class="nav-item" onclick="showPage('places')" data-page="places">
-        <span class="icon">📍</span> Miesta
-      </div>
-      <div class="nav-item" onclick="showPage('settings')" data-page="settings">
-        <span class="icon">⚙️</span> Nastavenia
-      </div>
+      <div class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard"><span class="icon">📊</span> Prehľad</div>
+      <div class="nav-item" onclick="showPage('trips')" data-page="trips"><span class="icon">🚗</span> Jazdy</div>
+      <div class="nav-item" onclick="showPage('fuel')" data-page="fuel"><span class="icon">⛽</span> PHM</div>
+      <div class="nav-item" onclick="showPage('routes')" data-page="routes"><span class="icon">🗺️</span> Trasy</div>
+      <div class="nav-item" onclick="showPage('places')" data-page="places"><span class="icon">📍</span> Miesta</div>
+      <div class="nav-item" onclick="showPage('settings')" data-page="settings"><span class="icon">⚙️</span> Nastavenia</div>
     </nav>
-    <div class="sidebar-vehicle" id="sidebarVehicle">
-      <span>Aktívne vozidlo</span>
-      <strong id="sidebarVehicleName">—</strong>
-    </div>
+    <div class="sidebar-footer"><div class="sync-dot" id="syncDot"></div><span id="syncLabel">—</span></div>
   </aside>
-
-  <!-- MAIN -->
   <main class="main">
-    <div class="topbar">
-      <h2 id="pageTitle">Prehľad</h2>
-      <div class="topbar-actions" id="topbarActions"></div>
-    </div>
-
+    <div class="topbar"><h2 id="pageTitle">Prehľad</h2><div class="topbar-actions" id="topAct"></div></div>
     <div class="content">
-
-      <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
         <div class="stats-grid" id="statsGrid"></div>
-        <div id="validationSummary"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-          <div class="card">
-            <div class="card-header"><h3>Posledné jazdy</h3></div>
-            <div class="table-wrap" id="recentTripsTable"></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><h3>PHM — posledné tankovania</h3></div>
-            <div class="table-wrap" id="recentFuelTable"></div>
-          </div>
+        <div id="valSummary"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:17px">
+          <div class="card"><div class="card-header"><h3>Posledné jazdy</h3></div><div class="table-wrap" id="dashTrips"></div></div>
+          <div class="card"><div class="card-header"><h3>Posledné tankovania</h3></div><div class="table-wrap" id="dashFuel"></div></div>
         </div>
       </div>
-
-      <!-- TRIPS PAGE -->
       <div class="page" id="page-trips">
-        <div id="tripsValidation"></div>
         <div class="filter-bar">
           <input type="month" id="filterMonth" onchange="renderTrips()">
-          <select id="filterVehicle" onchange="renderTrips()">
-            <option value="">Všetky vozidlá</option>
-          </select>
-          <input type="text" placeholder="Hľadať..." id="filterSearch" oninput="renderTrips()" style="flex:1;max-width:240px">
+          <select id="filterVehicle" onchange="renderTrips()"><option value="">Všetky vozidlá</option></select>
+          <input type="text" placeholder="Hľadať…" id="filterSearch" oninput="renderTrips()" style="flex:1;max-width:210px">
         </div>
-        <div class="card">
-          <div class="table-wrap" id="tripsTable"></div>
-        </div>
-        <div id="tripsPagination" style="padding:12px 0;text-align:right;font-size:0.82rem;color:var(--text3)"></div>
+        <div class="card"><div class="table-wrap" id="tripsTable"></div></div>
+        <div id="tripsPager" style="padding:9px 0;text-align:right;font-size:0.76rem;color:var(--text3)"></div>
       </div>
-
-      <!-- FUEL PAGE -->
       <div class="page" id="page-fuel">
         <div class="stats-grid" id="fuelStats"></div>
-        <div id="fuelValidation"></div>
-        <div class="card">
-          <div class="card-header">
-            <h3>Záznamy tankovania</h3>
-          </div>
-          <div class="table-wrap" id="fuelTable"></div>
-        </div>
+        <div class="card"><div class="card-header"><h3>Záznamy tankovania</h3></div><div class="table-wrap" id="fuelTable"></div></div>
       </div>
-
-      <!-- ROUTES PAGE -->
       <div class="page" id="page-routes">
-        <div class="card">
-          <div class="card-header"><h3>Definované trasy</h3></div>
-          <div class="table-wrap" id="routesTable"></div>
-        </div>
+        <div class="card"><div class="card-header"><h3>Definované trasy</h3></div><div class="table-wrap" id="routesTable"></div></div>
       </div>
-
-      <!-- PLACES PAGE -->
       <div class="page" id="page-places">
-        <div class="card">
-          <div class="card-header"><h3>Definované miesta / ciele</h3></div>
-          <div class="table-wrap" id="placesTable"></div>
-        </div>
+        <div class="card"><div class="card-header"><h3>Miesta / Ciele</h3></div><div class="table-wrap" id="placesTable"></div></div>
       </div>
-
-      <!-- SETTINGS PAGE -->
       <div class="page" id="page-settings">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-          <div class="card">
-            <div class="card-header"><h3>Vozidlá</h3><button class="btn btn-primary btn-sm" onclick="openVehicleModal()">+ Pridať</button></div>
-            <div class="card-body" id="vehicleList"></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><h3>Dôvody jazdy</h3><button class="btn btn-primary btn-sm" onclick="openReasonModal()">+ Pridať</button></div>
-            <div class="card-body" id="reasonList"></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><h3>Sviatky</h3><button class="btn btn-primary btn-sm" onclick="openHolidayModal()">+ Pridať</button></div>
-            <div class="card-body" id="holidayList"></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><h3>Dáta</h3></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:17px">
+          <div class="card"><div class="card-header"><h3>Vozidlá</h3><button class="btn btn-primary btn-sm" onclick="openVehicleModal()">+ Pridať</button></div><div class="card-body" id="vehicleList"></div></div>
+          <div class="card"><div class="card-header"><h3>Dôvody jazdy</h3><button class="btn btn-primary btn-sm" onclick="openReasonModal()">+ Pridať</button></div><div class="card-body" id="reasonList"></div></div>
+          <div class="card"><div class="card-header"><h3>Sviatky</h3><button class="btn btn-primary btn-sm" onclick="openHolidayModal()">+ Pridať</button></div><div class="card-body" id="holidayList"></div></div>
+          <div class="card"><div class="card-header"><h3>Ukladanie dát</h3></div><div class="card-body" id="storagePanel"></div></div>
+          <div class="card" style="grid-column:1/-1"><div class="card-header"><h3>Export / Import</h3></div>
             <div class="card-body">
-              <p class="text-muted mb-2">Export a import dát</p>
+              <p class="tm mb2">Záloha a obnova dát tohto používateľa</p>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <button class="btn btn-secondary" onclick="exportData()">💾 Exportovať JSON</button>
                 <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Importovať JSON</button>
@@ -580,122 +229,57 @@
           </div>
         </div>
       </div>
-
-    </div><!-- /content -->
+    </div>
   </main>
 </div>
 
-<!-- TRIP MODAL -->
+<div id="toast"></div>
+
+<!-- ══ TRIP MODAL ══ -->
 <div class="modal-overlay" id="tripModal">
-  <div class="modal" style="max-width:720px">
-    <div class="modal-header">
-      <h3 id="tripModalTitle">Nová jazda</h3>
-      <button class="close-btn" onclick="closeModal('tripModal')">✕</button>
-    </div>
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header"><h3 id="tripModalTitle">Nová jazda</h3><button class="close-btn" onclick="closeModal('tripModal')">✕</button></div>
     <div class="modal-body">
-      <div id="tripFormAlerts"></div>
+      <div id="tripAlerts"></div>
       <div class="form-grid">
-
-        <div style="background:var(--surface2);border-radius:8px;padding:14px">
-          <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:10px">Začiatok cesty</div>
+        <div style="background:var(--surface2);border-radius:8px;padding:13px">
+          <div style="font-size:0.71rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:9px">Začiatok cesty</div>
           <div class="form-row">
-            <div class="form-group">
-              <label>Dátum začiatku *</label>
-              <input type="date" id="f_startDate" onchange="onDateChange()">
-            </div>
-            <div class="form-group">
-              <label>Čas začiatku</label>
-              <input type="time" id="f_startTime">
-            </div>
+            <div class="form-group"><label>Dátum *</label><input type="date" id="f_sd" onchange="onDateChange()"></div>
+            <div class="form-group"><label>Čas</label><input type="time" id="f_st"></div>
           </div>
-          <div class="form-group mt-2">
-            <label>Miesto začiatku</label>
-            <select id="f_startPlace" onchange="onStartPlaceChange()">
-              <option value="">— vybrať miesto —</option>
-            </select>
-          </div>
-          <div class="form-group mt-2">
-            <label>Adresa začiatku *</label>
-            <input type="text" id="f_startAddress">
-          </div>
-          <div class="form-group mt-2">
-            <label>Stav tachometra začiatok (km) *</label>
-            <input type="number" id="f_startOdo" onchange="validateOdo()">
-            <span class="field-error" id="startOdoError"></span>
-          </div>
+          <div class="form-group mt2"><label>Miesto</label><select id="f_sp" onchange="onSPChange()"><option value="">— vlastná adresa —</option></select></div>
+          <div class="form-group mt2"><label>Adresa *</label><input type="text" id="f_sa"></div>
+          <div class="form-group mt2"><label>Tachometer (km) *</label><input type="number" id="f_so" oninput="calcDist()"><span class="ferr" id="odoErr"></span></div>
         </div>
-
-        <div style="background:var(--surface2);border-radius:8px;padding:14px">
-          <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:10px">Koniec cesty</div>
+        <div style="background:var(--surface2);border-radius:8px;padding:13px">
+          <div style="font-size:0.71rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:9px">Koniec cesty</div>
           <div class="form-row">
-            <div class="form-group">
-              <label>Dátum konca *</label>
-              <input type="date" id="f_endDate" onchange="onDateChange()">
-            </div>
-            <div class="form-group">
-              <label>Čas konca</label>
-              <input type="time" id="f_endTime">
-            </div>
+            <div class="form-group"><label>Dátum *</label><input type="date" id="f_ed" onchange="onDateChange()"></div>
+            <div class="form-group"><label>Čas</label><input type="time" id="f_et"></div>
           </div>
-          <div class="form-group mt-2">
-            <label>Miesto konca</label>
-            <select id="f_endPlace" onchange="onEndPlaceChange()">
-              <option value="">— vybrať miesto —</option>
-            </select>
-          </div>
-          <div class="form-group mt-2">
-            <label>Adresa konca *</label>
-            <input type="text" id="f_endAddress">
-          </div>
-          <div class="form-group mt-2">
-            <label>Stav tachometra koniec (km) *</label>
-            <input type="number" id="f_endOdo" onchange="validateOdo()">
-            <span class="field-error" id="endOdoError"></span>
-          </div>
+          <div class="form-group mt2"><label>Miesto</label><select id="f_ep" onchange="onEPChange()"><option value="">— vlastná adresa —</option></select></div>
+          <div class="form-group mt2"><label>Adresa *</label><input type="text" id="f_ea"></div>
+          <div class="form-group mt2"><label>Tachometer (km) *</label><input type="number" id="f_eo" oninput="calcDist()"></div>
         </div>
-
         <div class="form-row" style="grid-column:1/-1">
-          <div class="form-group">
-            <label>Vozidlo (EČV) *</label>
-            <select id="f_ecv"></select>
-          </div>
-          <div class="form-group">
-            <label>Trasa (predvolená)</label>
-            <select id="f_route" onchange="onRouteChange()">
-              <option value="">— vlastná trasa —</option>
-            </select>
-          </div>
+          <div class="form-group"><label>Vozidlo *</label><select id="f_ecv"></select></div>
+          <div class="form-group"><label>Predvolená trasa</label><select id="f_route" onchange="onRouteChange()"><option value="">— vlastná —</option></select></div>
         </div>
-
         <div class="form-group" style="grid-column:1/-1">
           <label>Dôvod jazdy</label>
           <div style="display:flex;gap:8px">
-            <select id="f_reasonSelect" onchange="onReasonSelect()" style="flex:1">
-              <option value="">— vybrať / zadať —</option>
-            </select>
-            <input type="text" id="f_reason" placeholder="alebo napísať..." style="flex:1">
+            <select id="f_rs" onchange="onRSChange()" style="flex:1"><option value="">— vybrať —</option></select>
+            <input type="text" id="f_reason" placeholder="alebo napísať…" style="flex:1">
           </div>
         </div>
-
         <div class="form-row" style="grid-column:1/-1">
-          <div class="form-group">
-            <label>Miesto tankovania (ak bolo)</label>
-            <select id="f_fuelPlace">
-              <option value="">— žiadne tankovanie —</option>
-            </select>
-          </div>
-          <div class="form-group" style="justify-content:flex-end;padding-top:4px">
-            <div id="tripDateFlags" style="display:flex;gap:8px;margin-top:24px"></div>
-          </div>
+          <div class="form-group"><label>Miesto tankovania (ak bolo)</label><select id="f_fp"><option value="">— žiadne —</option></select></div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:2px"><div id="dateFlags" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
         </div>
-
-        <div class="form-group" style="grid-column:1/-1">
-          <div style="background:var(--accent);color:#fff;border-radius:7px;padding:10px 14px;font-size:0.85rem;display:flex;justify-content:space-between;align-items:center">
-            <span>Prejdená vzdialenosť:</span>
-            <strong id="calcDistance">— km</strong>
-          </div>
+        <div style="grid-column:1/-1;background:var(--accent);color:#fff;border-radius:7px;padding:9px 13px;font-size:0.84rem;display:flex;justify-content:space-between;align-items:center">
+          <span>Prejdená vzdialenosť:</span><strong id="calcDist">— km</strong>
         </div>
-
       </div>
     </div>
     <div class="modal-footer">
@@ -705,131 +289,86 @@
   </div>
 </div>
 
-<!-- FUEL MODAL -->
+<!-- ══ FUEL MODAL ══ -->
 <div class="modal-overlay" id="fuelModal">
-  <div class="modal" style="max-width:540px">
-    <div class="modal-header">
-      <h3 id="fuelModalTitle">Nové tankovanie</h3>
-      <button class="close-btn" onclick="closeModal('fuelModal')">✕</button>
-    </div>
+  <div class="modal" style="max-width:510px">
+    <div class="modal-header"><h3 id="fuelModalTitle">Nové tankovanie</h3><button class="close-btn" onclick="closeModal('fuelModal')">✕</button></div>
     <div class="modal-body">
-      <div id="fuelFormAlerts"></div>
+      <div id="fuelAlerts"></div>
       <div class="form-grid">
         <div class="form-row">
-          <div class="form-group">
-            <label>Dátum *</label>
-            <input type="date" id="ff_date">
-          </div>
-          <div class="form-group">
-            <label>Čas *</label>
-            <input type="time" id="ff_time">
-          </div>
+          <div class="form-group"><label>Dátum *</label><input type="date" id="ff_date"></div>
+          <div class="form-group"><label>Čas</label><input type="time" id="ff_time"></div>
         </div>
         <div class="form-row">
-          <div class="form-group">
-            <label>EČV vozidla *</label>
-            <select id="ff_ecv"></select>
-          </div>
-          <div class="form-group">
-            <label>Stav tachometra (km) *</label>
-            <input type="number" id="ff_odometer">
-          </div>
+          <div class="form-group"><label>EČV *</label><select id="ff_ecv"></select></div>
+          <div class="form-group"><label>Tachometer *</label><input type="number" id="ff_odo"></div>
         </div>
-        <div class="form-group">
-          <label>Miesto tankovania *</label>
-          <select id="ff_place">
-            <option value="">— vybrať —</option>
-          </select>
-        </div>
+        <div class="form-group"><label>Miesto *</label><select id="ff_place"><option value="">— vybrať —</option></select></div>
         <div class="form-row-3">
-          <div class="form-group">
-            <label>Cena / liter (€) *</label>
-            <input type="number" step="0.001" id="ff_pricePerLiter" oninput="calcFuelTotal()">
-          </div>
-          <div class="form-group">
-            <label>Množstvo (l) *</label>
-            <input type="number" step="0.01" id="ff_liters" oninput="calcFuelTotal()">
-          </div>
-          <div class="form-group">
-            <label>Celková suma (€)</label>
-            <input type="number" step="0.01" id="ff_total" oninput="calcFuelFromTotal()">
-          </div>
+          <div class="form-group"><label>€ / liter *</label><input type="number" step="0.001" id="ff_ppl" oninput="calcFuelT()"></div>
+          <div class="form-group"><label>Litre *</label><input type="number" step="0.01" id="ff_l" oninput="calcFuelT()"></div>
+          <div class="form-group"><label>Suma €</label><input type="number" step="0.01" id="ff_total" oninput="calcFuelP()"></div>
         </div>
-        <div id="fuelOdoHint" style="font-size:0.8rem;color:var(--text2)"></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('fuelModal')">Zrušiť</button>
-      <button class="btn btn-primary" onclick="saveFuel()">Uložiť tankovanie</button>
+      <button class="btn btn-primary" onclick="saveFuel()">Uložiť</button>
     </div>
   </div>
 </div>
 
-<!-- ROUTE MODAL -->
+<!-- ══ ROUTE MODAL ══ -->
 <div class="modal-overlay" id="routeModal">
-  <div class="modal" style="max-width:500px">
-    <div class="modal-header">
-      <h3 id="routeModalTitle">Nová trasa</h3>
-      <button class="close-btn" onclick="closeModal('routeModal')">✕</button>
-    </div>
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header"><h3 id="routeModalTitle">Nová trasa</h3><button class="close-btn" onclick="closeModal('routeModal')">✕</button></div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group"><label>Názov trasy *</label><input type="text" id="fr_name"></div>
+        <div class="form-group"><label>Názov *</label><input type="text" id="fr_name"></div>
         <div class="form-row">
-          <div class="form-group">
-            <label>Začiatok *</label>
-            <select id="fr_start"><option value="">— vybrať —</option></select>
-          </div>
-          <div class="form-group">
-            <label>Koniec *</label>
-            <select id="fr_end"><option value="">— vybrať —</option></select>
-          </div>
+          <div class="form-group"><label>Odkiaľ *</label><select id="fr_s"><option value="">—</option></select></div>
+          <div class="form-group"><label>Kam *</label><select id="fr_e"><option value="">—</option></select></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Vzdialenosť (km) *</label><input type="number" step="0.1" id="fr_distance"></div>
-          <div class="form-group"><label>Čas (min)</label><input type="number" id="fr_duration"></div>
+          <div class="form-group"><label>Vzdialenosť (km) *</label><input type="number" step="0.1" id="fr_d"></div>
+          <div class="form-group"><label>Čas (min)</label><input type="number" id="fr_t"></div>
         </div>
-        <div class="form-group"><label>Dôvod jazdy</label><input type="text" id="fr_reason"></div>
+        <div class="form-group"><label>Dôvod</label><input type="text" id="fr_r"></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('routeModal')">Zrušiť</button>
-      <button class="btn btn-primary" onclick="saveRoute()">Uložiť trasu</button>
+      <button class="btn btn-primary" onclick="saveRoute()">Uložiť</button>
     </div>
   </div>
 </div>
 
-<!-- PLACE MODAL -->
+<!-- ══ PLACE MODAL ══ -->
 <div class="modal-overlay" id="placeModal">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header">
-      <h3 id="placeModalTitle">Nové miesto</h3>
-      <button class="close-btn" onclick="closeModal('placeModal')">✕</button>
-    </div>
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><h3 id="placeModalTitle">Nové miesto</h3><button class="close-btn" onclick="closeModal('placeModal')">✕</button></div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group"><label>Názov miesta *</label><input type="text" id="fp_name"></div>
-        <div class="form-group"><label>Adresa *</label><input type="text" id="fp_address"></div>
+        <div class="form-group"><label>Názov *</label><input type="text" id="fp_n"></div>
+        <div class="form-group"><label>Adresa *</label><input type="text" id="fp_a"></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('placeModal')">Zrušiť</button>
-      <button class="btn btn-primary" onclick="savePlace()">Uložiť miesto</button>
+      <button class="btn btn-primary" onclick="savePlace()">Uložiť</button>
     </div>
   </div>
 </div>
 
-<!-- VEHICLE MODAL -->
+<!-- ══ VEHICLE MODAL ══ -->
 <div class="modal-overlay" id="vehicleModal">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-header">
-      <h3>Vozidlo</h3>
-      <button class="close-btn" onclick="closeModal('vehicleModal')">✕</button>
-    </div>
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h3>Vozidlo</h3><button class="close-btn" onclick="closeModal('vehicleModal')">✕</button></div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group"><label>Názov vozidla *</label><input type="text" id="fv_name"></div>
-        <div class="form-group"><label>EČV *</label><input type="text" id="fv_ecv" style="text-transform:uppercase"></div>
+        <div class="form-group"><label>Názov *</label><input type="text" id="fv_n"></div>
+        <div class="form-group"><label>EČV *</label><input type="text" id="fv_e" style="text-transform:uppercase"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -839,16 +378,11 @@
   </div>
 </div>
 
-<!-- REASON MODAL -->
+<!-- ══ REASON MODAL ══ -->
 <div class="modal-overlay" id="reasonModal">
-  <div class="modal" style="max-width:400px">
-    <div class="modal-header">
-      <h3>Dôvod jazdy</h3>
-      <button class="close-btn" onclick="closeModal('reasonModal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group"><label>Dôvod *</label><input type="text" id="freason_text"></div>
-    </div>
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header"><h3>Dôvod jazdy</h3><button class="close-btn" onclick="closeModal('reasonModal')">✕</button></div>
+    <div class="modal-body"><div class="form-group"><label>Dôvod *</label><input type="text" id="freason"></div></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('reasonModal')">Zrušiť</button>
       <button class="btn btn-primary" onclick="saveReason()">Uložiť</button>
@@ -856,17 +390,14 @@
   </div>
 </div>
 
-<!-- HOLIDAY MODAL -->
+<!-- ══ HOLIDAY MODAL ══ -->
 <div class="modal-overlay" id="holidayModal">
-  <div class="modal" style="max-width:440px">
-    <div class="modal-header">
-      <h3>Sviatok</h3>
-      <button class="close-btn" onclick="closeModal('holidayModal')">✕</button>
-    </div>
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><h3>Sviatok</h3><button class="close-btn" onclick="closeModal('holidayModal')">✕</button></div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group"><label>Dátum *</label><input type="date" id="fh_date"></div>
-        <div class="form-group"><label>Názov sviatku *</label><input type="text" id="fh_name"></div>
+        <div class="form-group"><label>Dátum *</label><input type="date" id="fh_d"></div>
+        <div class="form-group"><label>Názov *</label><input type="text" id="fh_n"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -876,1047 +407,577 @@
   </div>
 </div>
 
-<!-- CONFIRM MODAL -->
-<div class="modal-overlay" id="confirmModal">
+<!-- ══ ADD USER MODAL ══ -->
+<div class="modal-overlay" id="addUserModal">
   <div class="modal" style="max-width:380px">
-    <div class="modal-header">
-      <h3>Potvrdenie</h3>
-      <button class="close-btn" onclick="closeModal('confirmModal')">✕</button>
-    </div>
+    <div class="modal-header"><h3>Nový používateľ</h3><button class="close-btn" onclick="closeModal('addUserModal')">✕</button></div>
     <div class="modal-body">
-      <p id="confirmText" style="font-size:0.9rem"></p>
+      <div class="form-grid">
+        <div class="form-group"><label>Meno *</label><input type="text" id="nu_name" placeholder="napr. Peter Novák"></div>
+        <div class="form-group"><label>Farba</label><div style="display:flex;gap:7px;flex-wrap:wrap" id="colorPicker"></div></div>
+      </div>
     </div>
     <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addUserModal')">Zrušiť</button>
+      <button class="btn btn-primary" onclick="createUser()">Vytvoriť</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GITHUB SETUP MODAL ══ -->
+<div class="modal-overlay" id="githubModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header"><h3>⚙️ Nastavenia ukladania dát</h3><button class="close-btn" onclick="closeModal('githubModal')">✕</button></div>
+    <div class="modal-body">
+      <div id="ghModeBanner" style="margin-bottom:14px"></div>
+      <div style="background:var(--surface2);border-radius:9px;padding:13px;margin-bottom:13px">
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:9px">🐙 GitHub API (pre GitHub Pages hosting)</div>
+        <p class="tm mb2">Potrebujete Personal Access Token (PAT) s oprávnením <code>contents:write</code>.</p>
+        <div class="form-grid">
+          <div class="form-row">
+            <div class="form-group"><label>GitHub vlastník / org *</label><input type="text" id="gh_owner" placeholder="napr. radovan"></div>
+            <div class="form-group"><label>Repozitár *</label><input type="text" id="gh_repo" placeholder="napr. kniha-jazd"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Branch</label><input type="text" id="gh_branch" value="main"></div>
+            <div class="form-group"><label>Cesta k data.json</label><input type="text" id="gh_path" value="data.json"></div>
+          </div>
+          <div class="form-group">
+            <label>Personal Access Token *</label>
+            <input type="password" id="gh_token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+            <span class="tm">Uloží sa len do localStorage tohto prehliadača.</span>
+          </div>
+        </div>
+        <div style="margin-top:11px;display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="testGH()">🔗 Otestovať</button>
+          <button class="btn btn-secondary btn-sm" onclick="saveGHConfig()">💾 Uložiť</button>
+          <button class="btn btn-danger btn-sm" onclick="clearGHConfig()">🗑 Odstrániť</button>
+          <span id="ghTest" style="font-size:0.79rem"></span>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border-radius:9px;padding:13px">
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:7px">ℹ️ Ako to funguje</div>
+        <ul style="font-size:0.8rem;color:var(--text2);padding-left:16px;line-height:1.9">
+          <li><strong>localhost</strong> → Python server → ukladá do <code>data.json</code> na disku + localStorage záloha</li>
+          <li><strong>GitHub Pages + PAT</strong> → GitHub API → commit priamo do repozitára</li>
+          <li><strong>GitHub Pages bez PAT</strong> → len localStorage (len tento prehliadač)</li>
+          <li>Export JSON je vždy k dispozícii ako manuálna záloha</li>
+        </ul>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('githubModal')">Zavrieť</button></div>
+  </div>
+</div>
+
+<!-- ══ CONFIRM MODAL ══ -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-header"><h3>Potvrdenie</h3><button class="close-btn" onclick="closeModal('confirmModal')">✕</button></div>
+    <div class="modal-body"><p id="confirmText" style="font-size:0.88rem"></p></div>
+    <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('confirmModal')">Zrušiť</button>
-      <button class="btn btn-danger" id="confirmOkBtn">Zmazať</button>
+      <button class="btn btn-danger" id="confirmOk">Zmazať</button>
     </div>
   </div>
 </div>
 
 <script>
-// =====================================================
-// DATA STORE
-// =====================================================
-const DATA_FILE = 'data.json';
-let db = { vehicles:[], places:[], routes:[], tripReasons:[], holidays:[], trips:[], fuelLogs:[] };
-let editingTripId = null, editingFuelId = null, editingRouteId = null, editingPlaceId = null;
-let currentPage = 'dashboard';
+// ══════════════════════════════════════════════════
+// CONSTANTS & STATE
+// ══════════════════════════════════════════════════
+const COLORS = ['#2c5f4a','#d4a847','#c0392b','#4a7fc0','#8e44ad','#16a085','#e67e22','#2980b9'];
+const LS_KEY = 'knjazd_v2', LS_GH = 'knjazd_gh', LS_USER = 'knjazd_uid';
+const IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
-// Load / Save via fetch (works when served by local HTTP server)
+let ghCfg = null, rootData = null, uid = null, curPage = 'dashboard', eIds = {}, saveTimer = null;
+
+// ── helpers
+const udb     = () => rootData.userData[uid];
+const fmtDate = d  => d ? d.split('-').reverse().join('.') : '—';
+const isWE    = d  => { const w = new Date(d+'T12:00:00').getDay(); return w===0||w===6; };
+const isHD    = d  => udb().holidays.some(h => h.date === d);
+const hdName  = d  => (udb().holidays.find(h => h.date === d)||{}).name || null;
+const nextId  = a  => a.length ? Math.max(...a.map(x=>x.id))+1 : 1;
+const $       = id => document.getElementById(id);
+const popSel  = (id, items) => $(id).innerHTML = items.map(i=>`<option value="${i.v}">${i.l}</option>`).join('');
+const closeModal = id => $(id).classList.remove('open');
+const toast   = (msg, t='ok') => { const el=$('toast'); el.textContent=msg; el.className='show t'+t; setTimeout(()=>el.className='',2600); };
+const emptyRoot = () => ({ users:[], userData:{} });
+const emptyUser = () => ({ vehicles:[], places:[], routes:[], tripReasons:[], holidays:[], trips:[], fuelLogs:[] });
+
+function showConfirm(text, cb) {
+  $('confirmText').textContent = text;
+  $('confirmOk').onclick = () => { cb(); closeModal('confirmModal'); };
+  $('confirmModal').classList.add('open');
+}
+
+// ══════════════════════════════════════════════════
+// STORAGE LAYER
+// ══════════════════════════════════════════════════
+function mode() {
+  if (IS_LOCAL) return 'local';
+  if (ghCfg?.token) return 'github';
+  return 'ls';
+}
+
+function setSyncStatus(state, label) {
+  const dot = $('syncDot'), lbl = $('syncLabel');
+  if (!dot) return;
+  dot.className = 'sync-dot' + (state==='warn' ? ' warn' : state==='err' ? ' err' : '');
+  lbl.innerHTML = state==='saving' ? '<span class="spinner"></span>' : (label||'—');
+}
+
 async function loadData() {
+  ghCfg = JSON.parse(localStorage.getItem(LS_GH)||'null');
   try {
-    const resp = await fetch(DATA_FILE + '?t=' + Date.now());
-    if (resp.ok) db = await resp.json();
-  } catch(e) {
-    // fallback: try localStorage
-    const saved = localStorage.getItem('kniha_jazd_data');
-    if (saved) db = JSON.parse(saved);
-  }
+    if (IS_LOCAL) {
+      const r = await fetch('data.json?t='+Date.now());
+      if (r.ok) { rootData = await r.json(); return; }
+    }
+    if (ghCfg?.token) {
+      const raw = await ghGet();
+      if (raw) { rootData = raw; return; }
+    }
+  } catch(e) { console.warn('Remote load failed, using localStorage', e); }
+  const ls = localStorage.getItem(LS_KEY);
+  rootData = ls ? JSON.parse(ls) : emptyRoot();
+  if (!rootData.users)    rootData.users = [];
+  if (!rootData.userData) rootData.userData = {};
 }
 
-function saveData() {
-  // Try to save via server.py endpoint
-  fetch('/save', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(db)
-  }).catch(() => {
-    // Fallback: localStorage
-    localStorage.setItem('kniha_jazd_data', JSON.stringify(db));
+async function saveData() {
+  localStorage.setItem(LS_KEY, JSON.stringify(rootData));
+  setSyncStatus('saving');
+  try {
+    if (mode() === 'local') {
+      const r = await fetch('/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(rootData) });
+      if (r.ok) { setSyncStatus('ok','Uložené lokálne'); return; }
+      throw new Error('Server '+r.status);
+    }
+    if (mode() === 'github') { await ghPut(rootData); setSyncStatus('ok','Uložené na GitHub'); return; }
+    setSyncStatus('warn','Len localStorage');
+  } catch(e) { setSyncStatus('err','Chyba ukladania'); console.error(e); }
+}
+
+const debouncedSave = () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveData, 600); };
+
+// ══════════════════════════════════════════════════
+// GITHUB API
+// ══════════════════════════════════════════════════
+const ghBase = () => `https://api.github.com/repos/${ghCfg.owner}/${ghCfg.repo}/contents/${ghCfg.path}`;
+const ghHdr  = () => ({ 'Authorization':'Bearer '+ghCfg.token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' });
+
+async function ghGet() {
+  const r = await fetch(ghBase()+'?ref='+ghCfg.branch, { headers:ghHdr() });
+  if (r.status===404) return null;
+  if (!r.ok) throw new Error('GH GET '+r.status);
+  const j = await r.json();
+  const d = JSON.parse(atob(j.content.replace(/\n/g,'')));
+  d._sha = j.sha; return d;
+}
+
+async function ghPut(data) {
+  const sha = data._sha;
+  const p = JSON.parse(JSON.stringify(data)); delete p._sha;
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(p,null,2))));
+  const body = { message:'Aktualizácia Knihy Jazd '+new Date().toISOString().slice(0,16).replace('T',' '), content, branch:ghCfg.branch };
+  if (sha) body.sha = sha;
+  const r = await fetch(ghBase(), { method:'PUT', headers:ghHdr(), body:JSON.stringify(body) });
+  if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error('GH PUT: '+(e.message||r.status)); }
+  const j = await r.json();
+  rootData._sha = j.content.sha;
+}
+
+function openGithubSetup() {
+  const c = ghCfg || {};
+  $('gh_owner').value  = c.owner  || '';
+  $('gh_repo').value   = c.repo   || '';
+  $('gh_branch').value = c.branch || 'main';
+  $('gh_path').value   = c.path   || 'data.json';
+  $('gh_token').value  = c.token  || '';
+  const m = mode();
+  const labels = { local:'🖥️ Beží lokálne (Python server)', github:'🐙 GitHub API aktívny', ls:'💾 Len localStorage' };
+  const cls    = { local:'ai', github:'as', ls:'aw' };
+  $('ghModeBanner').innerHTML = `<div class="alert ${cls[m]}">${labels[m]}</div>`;
+  $('ghTest').textContent = '';
+  $('githubModal').classList.add('open');
+}
+
+function readGHForm() {
+  const owner = $('gh_owner').value.trim(), repo = $('gh_repo').value.trim();
+  const branch= $('gh_branch').value.trim()||'main', path=$('gh_path').value.trim()||'data.json';
+  const token = $('gh_token').value.trim();
+  return (owner && repo && token) ? {owner,repo,branch,path,token} : null;
+}
+
+async function testGH() {
+  $('ghTest').textContent = 'Testujem…';
+  const c = readGHForm(); if (!c) { $('ghTest').textContent = '⚠️ Vyplňte polia'; return; }
+  ghCfg = c;
+  try { await ghGet(); $('ghTest').textContent = '✅ OK'; }
+  catch(e) { $('ghTest').textContent = '❌ '+e.message; }
+}
+
+function saveGHConfig() {
+  const c = readGHForm(); if (!c) { toast('Vyplňte owner, repo a token','err'); return; }
+  localStorage.setItem(LS_GH, JSON.stringify(c)); ghCfg = c;
+  toast('GitHub nastavenia uložené','ok'); $('ghTest').textContent = '';
+}
+
+function clearGHConfig() {
+  localStorage.removeItem(LS_GH); ghCfg = null;
+  $('gh_token').value = ''; toast('GitHub konfigurácia odstránená','ok');
+}
+
+// ══════════════════════════════════════════════════
+// USER MANAGEMENT
+// ══════════════════════════════════════════════════
+function renderUserScreen() {
+  const grid = $('userGrid'); grid.innerHTML = '';
+  rootData.users.forEach(u => {
+    const b = document.createElement('div'); b.className='user-btn';
+    b.innerHTML = `<div class="u-avatar" style="background:${u.color}">${u.name.charAt(0).toUpperCase()}</div><span class="u-name">${u.name}</span>`;
+    b.onclick = () => selectUser(u.id); grid.appendChild(b);
   });
+  const a = document.createElement('div'); a.className='add-user-btn';
+  a.innerHTML = '<span style="font-size:1.4rem">＋</span><span>Nový</span>'; a.onclick = openAddUserModal; grid.appendChild(a);
 }
 
-// =====================================================
-// UTILITIES
-// =====================================================
-function fmtDate(d) {
-  if (!d) return '—';
-  return d.split('-').reverse().join('.');
+function selectUser(id) {
+  uid = id; localStorage.setItem(LS_USER, id);
+  if (!rootData.userData[id]) rootData.userData[id] = emptyUser();
+  const u = rootData.users.find(x => x.id === id);
+  $('sbAv').textContent = u.name.charAt(0).toUpperCase(); $('sbAv').style.background = u.color;
+  $('sbName').textContent = u.name;
+  $('userScreen').style.display = 'none'; $('appMain').classList.add('visible');
+  const m = mode();
+  setSyncStatus(m==='ls'?'warn':'ok', m==='local'?'Lokálny server':m==='github'?'GitHub':'localStorage');
+  showPage('dashboard');
 }
 
-function fmtTime(t) { return t || ''; }
-
-function isWeekend(dateStr) {
-  if (!dateStr) return false;
-  const d = new Date(dateStr + 'T12:00:00');
-  return d.getDay() === 0 || d.getDay() === 6;
+function switchUser() {
+  $('appMain').classList.remove('visible'); $('userScreen').style.display='flex'; renderUserScreen();
 }
 
-function isHoliday(dateStr) {
-  return db.holidays.some(h => h.date === dateStr);
+function openAddUserModal() {
+  const picker=$('colorPicker');
+  picker.innerHTML = COLORS.map(c=>`<div onclick="pickColor('${c}')" data-c="${c}" style="width:27px;height:27px;border-radius:50%;background:${c};cursor:pointer;border:3px solid transparent;transition:border 0.12s"></div>`).join('');
+  $('nu_name').value = ''; $('addUserModal').classList.add('open');
 }
 
-function getHolidayName(dateStr) {
-  const h = db.holidays.find(h => h.date === dateStr);
-  return h ? h.name : null;
+function pickColor(c) {
+  document.querySelectorAll('#colorPicker [data-c]').forEach(el => el.style.borderColor='transparent');
+  document.querySelector(`#colorPicker [data-c="${c}"]`).style.borderColor='#333';
 }
 
-function nextId(arr) {
-  return arr.length > 0 ? Math.max(...arr.map(x => x.id)) + 1 : 1;
+function createUser() {
+  const name = $('nu_name').value.trim(); if (!name) { toast('Zadajte meno','err'); return; }
+  const sel = document.querySelector('#colorPicker [style*="borderColor: rgb"]')||document.querySelector('#colorPicker [data-c]');
+  const color = sel ? sel.dataset.c : COLORS[rootData.users.length % COLORS.length];
+  const id = 'u_'+Date.now();
+  rootData.users.push({id,name,color}); rootData.userData[id] = emptyUser();
+  debouncedSave(); closeModal('addUserModal'); renderUserScreen();
 }
 
-function getLastOdo(ecv, beforeId) {
-  const relevant = db.trips
-    .filter(t => t.ecv === ecv && (beforeId == null || t.id < beforeId))
-    .sort((a, b) => {
-      const da = a.startDate + (a.startTime || '00:00');
-      const db_ = b.startDate + (b.startTime || '00:00');
-      return da > db_ ? 1 : -1;
-    });
-  if (relevant.length === 0) return null;
-  return relevant[relevant.length - 1].endOdo;
-}
-
-// =====================================================
+// ══════════════════════════════════════════════════
 // NAVIGATION
-// =====================================================
+// ══════════════════════════════════════════════════
 function showPage(page) {
-  currentPage = page;
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
+  curPage = page;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  $('page-'+page).classList.add('active');
   document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
-
-  const titles = { dashboard:'Prehľad', trips:'Evidencia jázd', fuel:'Evidencia PHM', routes:'Trasy', places:'Miesta / Ciele', settings:'Nastavenia' };
-  document.getElementById('pageTitle').textContent = titles[page] || page;
-
-  const actions = document.getElementById('topbarActions');
-  actions.innerHTML = '';
-
-  if (page === 'trips') {
-    actions.innerHTML = `<button class="btn btn-primary" onclick="openTripModal()">+ Nová jazda</button>`;
-    renderTrips();
-  } else if (page === 'fuel') {
-    actions.innerHTML = `<button class="btn btn-primary" onclick="openFuelModal()">+ Tankovanie</button>`;
-    renderFuel();
-  } else if (page === 'routes') {
-    actions.innerHTML = `<button class="btn btn-primary" onclick="openRouteModal()">+ Nová trasa</button>`;
-    renderRoutes();
-  } else if (page === 'places') {
-    actions.innerHTML = `<button class="btn btn-primary" onclick="openPlaceModal()">+ Nové miesto</button>`;
-    renderPlaces();
-  } else if (page === 'dashboard') {
-    renderDashboard();
-  } else if (page === 'settings') {
-    renderSettings();
-  }
+  const titles={dashboard:'Prehľad',trips:'Evidencia jázd',fuel:'Evidencia PHM',routes:'Trasy',places:'Miesta / Ciele',settings:'Nastavenia'};
+  $('pageTitle').textContent = titles[page]||page;
+  $('topAct').innerHTML = {trips:'<button class="btn btn-primary" onclick="openTripModal()">＋ Nová jazda</button>',fuel:'<button class="btn btn-primary" onclick="openFuelModal()">＋ Tankovanie</button>',routes:'<button class="btn btn-primary" onclick="openRouteModal()">＋ Nová trasa</button>',places:'<button class="btn btn-primary" onclick="openPlaceModal()">＋ Nové miesto</button>'}[page]||'';
+  ({dashboard:renderDashboard,trips:renderTrips,fuel:renderFuel,routes:renderRoutes,places:renderPlaces,settings:renderSettings})[page]?.();
 }
 
-// =====================================================
-// VALIDATION ENGINE
-// =====================================================
-function validateAll() {
-  const errors = [];
-
-  db.trips.forEach((trip, idx) => {
-    const prefix = `Jazda #${trip.id} (${fmtDate(trip.startDate)})`;
-
-    // Weekend flag
-    if (isWeekend(trip.startDate)) {
-      errors.push({ type:'warning', msg: `${prefix}: Jazda cez víkend (${new Date(trip.startDate+'T12:00:00').toLocaleDateString('sk',{weekday:'long'})})` });
+// ══════════════════════════════════════════════════
+// VALIDATION
+// ══════════════════════════════════════════════════
+function validate() {
+  const db = udb(); const errs = [];
+  const sorted = [...db.trips].sort((a,b)=>(a.startDate+(a.startTime||'')<b.startDate+(b.startTime||''))?-1:1);
+  sorted.forEach((t,i) => {
+    const pfx = `Jazda #${t.id} (${fmtDate(t.startDate)})`;
+    if (isWE(t.startDate)) errs.push({type:'warning',tid:t.id,msg:`${pfx}: Jazda cez víkend`});
+    const hn = hdName(t.startDate);
+    if (hn) errs.push({type:'warning',tid:t.id,msg:`${pfx}: Jazda cez sviatok — ${hn}`});
+    if (t.endOdo < t.startOdo) errs.push({type:'error',tid:t.id,msg:`${pfx}: Koniec tachom. ${t.endOdo} < začiatok ${t.startOdo}`});
+    if (t.endOdo === t.startOdo) errs.push({type:'warning',tid:t.id,msg:`${pfx}: Vzdialenosť 0 km`});
+    if (i>0) {
+      const prev = sorted.filter((x,j)=>j<i&&x.ecv===t.ecv);
+      if (prev.length && t.startOdo !== prev[prev.length-1].endOdo)
+        errs.push({type:'error',tid:t.id,msg:`${pfx}: Tachometer ${t.startOdo} ≠ koniec predch. jazdy ${prev[prev.length-1].endOdo} (Δ${t.startOdo-prev[prev.length-1].endOdo} km)`});
     }
-
-    // Holiday flag
-    const hn = getHolidayName(trip.startDate);
-    if (hn) {
-      errors.push({ type:'warning', msg: `${prefix}: Jazda cez sviatok — ${hn}` });
-    }
-
-    // Odometer continuity check
-    if (idx > 0) {
-      const prev = db.trips.filter(t => t.ecv === trip.ecv && t.id < trip.id)
-        .sort((a,b) => a.id - b.id);
-      if (prev.length > 0) {
-        const lastTrip = prev[prev.length - 1];
-        if (trip.startOdo !== lastTrip.endOdo) {
-          errors.push({ type:'error', msg: `${prefix}: Stav tachometra (${trip.startOdo} km) sa nezhoduje s koncom predchádzajúcej jazdy (${lastTrip.endOdo} km) — rozdiel ${trip.startOdo - lastTrip.endOdo} km` });
-        }
-      }
-    }
-
-    // Start odo > End odo
-    if (trip.endOdo < trip.startOdo) {
-      errors.push({ type:'error', msg: `${prefix}: Koncový tachometer (${trip.endOdo}) je menší ako začiatočný (${trip.startOdo})` });
-    }
-
-    // Distance 0
-    if (trip.endOdo === trip.startOdo) {
-      errors.push({ type:'warning', msg: `${prefix}: Prejdená vzdialenosť je 0 km` });
-    }
-
-    // Fuel during this trip?
-    if (trip.hasFuel || trip.fuelPlace) {
-      const fuelOnDate = db.fuelLogs.filter(f => f.ecv === trip.ecv && f.date === trip.startDate);
-      if (fuelOnDate.length === 0) {
-        errors.push({ type:'warning', msg: `${prefix}: Jazda má označené tankovanie ale žiadny záznam PHM pre tento dátum neexistuje` });
-      }
-    }
+    if (t.fuelPlace && !db.fuelLogs.some(f=>f.ecv===t.ecv&&f.date===t.startDate))
+      errs.push({type:'warning',tid:t.id,msg:`${pfx}: Označené tankovanie, chýba záznam PHM`});
   });
-
-  // PHM: check odometer at refuel has a corresponding trip
-  db.fuelLogs.forEach(fuel => {
-    const tripsOnDate = db.trips.filter(t => t.ecv === fuel.ecv && t.startDate === fuel.date);
-    if (tripsOnDate.length === 0) {
-      errors.push({ type:'warning', msg: `PHM tankovanie ${fmtDate(fuel.date)} (${fuel.place}): žiadna jazda v tento deň pre vozidlo ${fuel.ecv}` });
-    }
+  db.fuelLogs.forEach(f => {
+    if (!db.trips.some(t=>t.ecv===f.ecv&&t.startDate===f.date))
+      errs.push({type:'warning',msg:`PHM ${fmtDate(f.date)} (${f.place}): žiadna jazda pre ${f.ecv}`});
   });
-
-  return errors;
+  return errs;
 }
 
-// =====================================================
+// ══════════════════════════════════════════════════
 // DASHBOARD
-// =====================================================
+// ══════════════════════════════════════════════════
 function renderDashboard() {
-  // Stats
-  const totalKm = db.trips.reduce((s,t) => s + (t.endOdo - t.startOdo), 0);
-  const totalFuel = db.fuelLogs.reduce((s,f) => s + f.total, 0);
-  const totalLiters = db.fuelLogs.reduce((s,f) => s + f.liters, 0);
-  const lastOdo = db.trips.length > 0 ? Math.max(...db.trips.map(t => t.endOdo)) : 0;
-  const errors = validateAll().filter(e => e.type === 'error');
-  const warnings = validateAll().filter(e => e.type === 'warning');
-
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card accent-green">
-      <div class="stat-label">Celkové km</div>
-      <div class="stat-value">${totalKm.toLocaleString('sk')}</div>
-      <div class="stat-sub">${db.trips.length} jázd</div>
-    </div>
-    <div class="stat-card accent-gold">
-      <div class="stat-label">Náklady PHM</div>
-      <div class="stat-value">${totalFuel.toFixed(2)} €</div>
-      <div class="stat-sub">${totalLiters.toFixed(2)} litrov</div>
-    </div>
-    <div class="stat-card accent-blue">
-      <div class="stat-label">Stav tachometra</div>
-      <div class="stat-value">${lastOdo.toLocaleString('sk')}</div>
-      <div class="stat-sub">posledný záznam</div>
-    </div>
-    <div class="stat-card accent-red">
-      <div class="stat-label">Validácia</div>
-      <div class="stat-value">${errors.length + warnings.length}</div>
-      <div class="stat-sub">${errors.length} chýb, ${warnings.length} upozornení</div>
-    </div>
-  `;
-
-  // Validation summary
-  const allIssues = validateAll();
-  let valHtml = '';
-  if (allIssues.length > 0) {
-    valHtml = `<div class="validation-panel" style="margin-bottom:20px">
-      <div class="validation-panel-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
-        ⚠️ Validačné upozornenia a chyby (${allIssues.length})
-      </div>
-      <div class="validation-panel-body">
-        ${allIssues.map(e => `<div class="validation-item">
-          <span>${e.type==='error'?'🔴':'🟡'}</span>
-          <span>${e.msg}</span>
-        </div>`).join('')}
-      </div>
-    </div>`;
-  }
-  document.getElementById('validationSummary').innerHTML = valHtml;
-
-  // Recent trips
-  const recent = [...db.trips].sort((a,b) => b.id - a.id).slice(0,8);
-  document.getElementById('recentTripsTable').innerHTML = `<table>
-    <thead><tr><th>Dátum</th><th>Trasa</th><th>km</th></tr></thead>
-    <tbody>
-      ${recent.map(t => `<tr>
-        <td>${fmtDate(t.startDate)}</td>
-        <td style="font-size:0.8rem">${t.startAddress.split(',')[0]} → ${t.endAddress.split(',')[0]}</td>
-        <td>${t.endOdo - t.startOdo}</td>
-      </tr>`).join('')}
-    </tbody>
-  </table>`;
-
-  // Recent fuel
-  const recentFuel = [...db.fuelLogs].sort((a,b) => b.id - a.id).slice(0,5);
-  document.getElementById('recentFuelTable').innerHTML = `<table>
-    <thead><tr><th>Dátum</th><th>Miesto</th><th>Suma</th></tr></thead>
-    <tbody>
-      ${recentFuel.map(f => `<tr>
-        <td>${fmtDate(f.date)}</td>
-        <td>${f.place}</td>
-        <td>${f.total.toFixed(2)} €</td>
-      </tr>`).join('')}
-    </tbody>
-  </table>`;
-
-  // Vehicle sidebar
-  if (db.vehicles.length > 0) {
-    document.getElementById('sidebarVehicleName').textContent = `${db.vehicles[0].name} (${db.vehicles[0].ecv})`;
-  }
+  const db = udb();
+  const km=db.trips.reduce((s,t)=>s+(t.endOdo-t.startOdo),0), fuel=db.fuelLogs.reduce((s,f)=>s+f.total,0);
+  const liters=db.fuelLogs.reduce((s,f)=>s+f.liters,0), lastOdo=db.trips.length?Math.max(...db.trips.map(t=>t.endOdo)):0;
+  const issues=validate();
+  $('statsGrid').innerHTML=`
+    <div class="stat-card ag"><div class="stat-label">Celkové km</div><div class="stat-value">${km.toLocaleString('sk')}</div><div class="stat-sub">${db.trips.length} jázd</div></div>
+    <div class="stat-card au"><div class="stat-label">Náklady PHM</div><div class="stat-value">${fuel.toFixed(2)} €</div><div class="stat-sub">${liters.toFixed(2)} l</div></div>
+    <div class="stat-card ab"><div class="stat-label">Tachometer</div><div class="stat-value">${lastOdo.toLocaleString('sk')}</div><div class="stat-sub">posledný záznam</div></div>
+    <div class="stat-card ar"><div class="stat-label">Upozornenia</div><div class="stat-value">${issues.length}</div><div class="stat-sub">${issues.filter(e=>e.type==='error').length} chýb · ${issues.filter(e=>e.type==='warning').length} varovaní</div></div>`;
+  $('valSummary').innerHTML = issues.length ? `<div class="vp" style="margin-bottom:17px">
+    <div class="vp-hd" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">⚠️ Validačné upozornenia (${issues.length}) — kliknite pre rozbalenie</div>
+    <div class="vp-bd">${issues.map(e=>`<div class="vi"><span>${e.type==='error'?'🔴':'🟡'}</span><span>${e.msg}</span></div>`).join('')}</div>
+  </div>` : '';
+  $('dashTrips').innerHTML=`<table><thead><tr><th>Dátum</th><th>Trasa</th><th>km</th></tr></thead><tbody>${[...db.trips].sort((a,b)=>b.id-a.id).slice(0,7).map(t=>`<tr><td>${fmtDate(t.startDate)}</td><td style="font-size:0.79rem">${(t.startPlace||t.startAddress.split(',')[0])} → ${(t.endPlace||t.endAddress.split(',')[0])}</td><td>${t.endOdo-t.startOdo}</td></tr>`).join('')}</tbody></table>`;
+  $('dashFuel').innerHTML=`<table><thead><tr><th>Dátum</th><th>Miesto</th><th>Suma</th></tr></thead><tbody>${[...db.fuelLogs].sort((a,b)=>b.id-a.id).slice(0,5).map(f=>`<tr><td>${fmtDate(f.date)}</td><td>${f.place}</td><td>${f.total.toFixed(2)} €</td></tr>`).join('')}</tbody></table>`;
 }
 
-// =====================================================
+// ══════════════════════════════════════════════════
 // TRIPS
-// =====================================================
+// ══════════════════════════════════════════════════
 function renderTrips() {
-  const month = document.getElementById('filterMonth').value;
-  const ecvFilter = document.getElementById('filterVehicle').value;
-  const search = document.getElementById('filterSearch').value.toLowerCase();
-
-  // Populate vehicle filter
-  const vf = document.getElementById('filterVehicle');
-  if (vf.options.length <= 1) {
-    db.vehicles.forEach(v => {
-      const o = document.createElement('option');
-      o.value = v.ecv; o.textContent = `${v.name} (${v.ecv})`;
-      vf.appendChild(o);
-    });
-  }
-
-  let trips = [...db.trips].sort((a,b) => {
-    const da = a.startDate + (a.startTime || '');
-    const db_ = b.startDate + (b.startTime || '');
-    return da > db_ ? 1 : -1;
-  });
-
-  if (month) trips = trips.filter(t => t.startDate.startsWith(month));
-  if (ecvFilter) trips = trips.filter(t => t.ecv === ecvFilter);
-  if (search) trips = trips.filter(t =>
-    (t.startAddress + t.endAddress + (t.reason||'') + (t.route||'')).toLowerCase().includes(search)
-  );
-
-  const validationIssues = validateAll();
-
-  const tripIssueMap = {};
-  validationIssues.forEach(e => {
-    const m = e.msg.match(/Jazda #(\d+)/);
-    if (m) {
-      const id = parseInt(m[1]);
-      if (!tripIssueMap[id]) tripIssueMap[id] = [];
-      tripIssueMap[id].push(e);
-    }
-  });
-
-  const totalKm = trips.reduce((s,t) => s + (t.endOdo - t.startOdo), 0);
-
-  document.getElementById('tripsPagination').textContent = `${trips.length} jázd · ${totalKm.toLocaleString('sk')} km`;
-
-  if (trips.length === 0) {
-    document.getElementById('tripsTable').innerHTML = `<div style="padding:32px;text-align:center;color:var(--text3)">Žiadne jazdy</div>`;
-    return;
-  }
-
-  document.getElementById('tripsTable').innerHTML = `<table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Dátum</th>
-        <th>Čas</th>
-        <th>Odkiaľ</th>
-        <th>Kam</th>
-        <th>Tachometer</th>
-        <th>km</th>
-        <th>Dôvod</th>
-        <th>EČV</th>
-        <th>Príznaky</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      ${trips.map(t => {
-        const dist = t.endOdo - t.startOdo;
-        const issues = tripIssueMap[t.id] || [];
-        const hasError = issues.some(e => e.type === 'error');
-        const hasWarn = issues.some(e => e.type === 'warning');
-        const isWE = isWeekend(t.startDate);
-        const isHD = isHoliday(t.startDate);
-        const rowClass = hasError ? 'row-holiday' : (isWE || isHD ? 'row-weekend' : '');
-        const issueTitle = issues.map(e => e.msg).join('\n');
-
-        return `<tr class="${rowClass}" title="${issueTitle}">
-          <td style="color:var(--text3);font-size:0.78rem">${t.id}</td>
-          <td style="white-space:nowrap">${fmtDate(t.startDate)}</td>
-          <td style="color:var(--text2);font-size:0.8rem;white-space:nowrap">${fmtTime(t.startTime)}${t.startTime&&t.endTime?'–':''}${fmtTime(t.endTime)}</td>
-          <td style="font-size:0.82rem">${t.startPlace || t.startAddress.split(',')[0]}</td>
-          <td style="font-size:0.82rem">${t.endPlace || t.endAddress.split(',')[0]}</td>
-          <td class="odometer-val" style="font-size:0.8rem">${t.startOdo} → ${t.endOdo}</td>
-          <td><strong>${dist}</strong></td>
-          <td style="font-size:0.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.reason||''}">${t.reason||'<span style="color:var(--text3)">—</span>'}</td>
-          <td><span class="badge badge-gray">${t.ecv}</span></td>
-          <td style="white-space:nowrap">
-            ${isWE ? '<span class="badge badge-orange" title="Víkend">VÍK</span> ' : ''}
-            ${isHD ? `<span class="badge badge-red" title="${getHolidayName(t.startDate)}">SVT</span> ` : ''}
-            ${t.hasFuel || t.fuelPlace ? '<span class="badge badge-blue" title="Tankovanie">⛽</span> ' : ''}
-            ${hasError ? '<span class="badge badge-red" title="'+issueTitle+'">⚠</span>' : ''}
-            ${hasWarn && !hasError ? '<span class="badge badge-orange" title="'+issueTitle+'">!</span>' : ''}
-          </td>
-          <td style="white-space:nowrap">
-            <button class="btn btn-secondary btn-sm" onclick="openTripModal(${t.id})">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteTrip(${t.id})">🗑</button>
-          </td>
-        </tr>`;
-      }).join('')}
-    </tbody>
-  </table>`;
+  const db=udb(), month=$('filterMonth').value, ecvF=$('filterVehicle').value, srch=$('filterSearch').value.toLowerCase();
+  const vf=$('filterVehicle'); while(vf.options.length>1) vf.remove(1);
+  db.vehicles.forEach(v=>{const o=document.createElement('option');o.value=v.ecv;o.textContent=`${v.name} (${v.ecv})`;vf.appendChild(o);}); if(ecvF) vf.value=ecvF;
+  let trips=[...db.trips].sort((a,b)=>(a.startDate+(a.startTime||'')<b.startDate+(b.startTime||''))?-1:1);
+  if(month) trips=trips.filter(t=>t.startDate.startsWith(month));
+  if(ecvF)  trips=trips.filter(t=>t.ecv===ecvF);
+  if(srch)  trips=trips.filter(t=>(t.startAddress+t.endAddress+(t.reason||'')+(t.route||'')).toLowerCase().includes(srch));
+  const imap={};
+  validate().forEach(e=>{if(e.tid){if(!imap[e.tid])imap[e.tid]=[];imap[e.tid].push(e);}});
+  $('tripsPager').textContent=`${trips.length} jázd · ${trips.reduce((s,t)=>s+(t.endOdo-t.startOdo),0).toLocaleString('sk')} km`;
+  if(!trips.length){$('tripsTable').innerHTML=`<div style="padding:28px;text-align:center;color:var(--text3)">Žiadne jazdy</div>`;return;}
+  $('tripsTable').innerHTML=`<table><thead><tr><th>#</th><th>Dátum</th><th>Čas</th><th>Odkiaľ</th><th>Kam</th><th>Tachometer</th><th>km</th><th>Dôvod</th><th>EČV</th><th>Príznaky</th><th></th></tr></thead><tbody>${trips.map(t=>{
+    const dist=t.endOdo-t.startOdo, iss=imap[t.id]||[], hasE=iss.some(e=>e.type==='error'), hasW=iss.some(e=>e.type==='warning');
+    const rc=hasE?'rh':(isWE(t.startDate)||isHD(t.startDate))?'rw':'', tip=iss.map(e=>e.msg).join('\n');
+    return `<tr class="${rc}" title="${tip}">
+      <td style="color:var(--text3);font-size:0.73rem">${t.id}</td>
+      <td style="white-space:nowrap">${fmtDate(t.startDate)}</td>
+      <td style="color:var(--text2);font-size:0.76rem;white-space:nowrap">${t.startTime||''}${t.startTime&&t.endTime?'–':''}${t.endTime||''}</td>
+      <td style="font-size:0.8rem">${t.startPlace||t.startAddress.split(',')[0]}</td>
+      <td style="font-size:0.8rem">${t.endPlace||t.endAddress.split(',')[0]}</td>
+      <td class="odo" style="font-size:0.77rem">${t.startOdo} → ${t.endOdo}</td>
+      <td><strong>${dist}</strong></td>
+      <td style="font-size:0.78rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.reason||''}">${t.reason||'<span style="color:var(--text3)">—</span>'}</td>
+      <td><span class="badge bz">${t.ecv}</span></td>
+      <td style="white-space:nowrap">
+        ${isWE(t.startDate)?'<span class="badge bo">VÍK</span> ':''}
+        ${isHD(t.startDate)?`<span class="badge br" title="${hdName(t.startDate)}">SVT</span> `:''}
+        ${t.fuelPlace?'<span class="badge bb">⛽</span> ':''}
+        ${hasE?`<span class="badge br" title="${tip}">⚠</span>`:''}
+        ${hasW&&!hasE?`<span class="badge bo" title="${tip}">!</span>`:''}
+      </td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-secondary btn-sm" onclick="openTripModal(${t.id})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteTrip(${t.id})">🗑</button>
+      </td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
 }
 
-// =====================================================
-// TRIP MODAL
-// =====================================================
 function openTripModal(id) {
-  editingTripId = id || null;
-  document.getElementById('tripModalTitle').textContent = id ? `Upraviť jazdu #${id}` : 'Nová jazda';
-  document.getElementById('tripFormAlerts').innerHTML = '';
-
-  // Populate dropdowns
-  populateSelect('f_ecv', db.vehicles.map(v => ({value:v.ecv, label:`${v.name} (${v.ecv})`})));
-  populateSelect('f_startPlace', [{value:'',label:'— vlastná adresa —'}, ...db.places.map(p => ({value:p.name, label:p.name}))]);
-  populateSelect('f_endPlace', [{value:'',label:'— vlastná adresa —'}, ...db.places.map(p => ({value:p.name, label:p.name}))]);
-  populateSelect('f_route', [{value:'',label:'— vlastná trasa —'}, ...db.routes.map(r => ({value:r.name, label:`${r.name} (${r.distance} km)`}))]);
-  populateSelect('f_reasonSelect', [{value:'',label:'— vybrať —'}, ...db.tripReasons.map(r => ({value:r, label:r}))]);
-  populateSelect('f_fuelPlace', [{value:'',label:'— žiadne tankovanie —'}, ...db.places.map(p => ({value:p.name, label:p.name}))]);
-
+  eIds.trip = id||null;
+  $('tripModalTitle').textContent = id ? `Upraviť jazdu #${id}` : 'Nová jazda'; $('tripAlerts').innerHTML='';
+  const db=udb(), pOpts=[{v:'',l:'— vlastná adresa —'},...db.places.map(p=>({v:p.name,l:p.name}))];
+  popSel('f_ecv', db.vehicles.map(v=>({v:v.ecv,l:`${v.name} (${v.ecv})`})));
+  popSel('f_sp', pOpts); popSel('f_ep', pOpts);
+  popSel('f_route', [{v:'',l:'— vlastná —'},...db.routes.map(r=>({v:r.name,l:`${r.name} (${r.distance} km)`}))]);
+  popSel('f_rs', [{v:'',l:'— vybrať —'},...db.tripReasons.map(r=>({v:r,l:r}))]);
+  popSel('f_fp', [{v:'',l:'— žiadne —'},...db.places.map(p=>({v:p.name,l:p.name}))]);
   if (id) {
-    const t = db.trips.find(x => x.id === id);
-    if (t) {
-      document.getElementById('f_startDate').value = t.startDate;
-      document.getElementById('f_startTime').value = t.startTime || '';
-      document.getElementById('f_startAddress').value = t.startAddress;
-      document.getElementById('f_startOdo').value = t.startOdo;
-      document.getElementById('f_endDate').value = t.endDate;
-      document.getElementById('f_endTime').value = t.endTime || '';
-      document.getElementById('f_endAddress').value = t.endAddress;
-      document.getElementById('f_endOdo').value = t.endOdo;
-      document.getElementById('f_ecv').value = t.ecv;
-      document.getElementById('f_reason').value = t.reason || '';
-      document.getElementById('f_route').value = t.route || '';
-      document.getElementById('f_startPlace').value = t.startPlace || '';
-      document.getElementById('f_endPlace').value = t.endPlace || '';
-      document.getElementById('f_fuelPlace').value = t.fuelPlace || '';
-    }
+    const t=db.trips.find(x=>x.id===id);
+    if(t){$('f_sd').value=t.startDate;$('f_st').value=t.startTime||'';$('f_sa').value=t.startAddress;$('f_so').value=t.startOdo;$('f_sp').value=t.startPlace||'';
+      $('f_ed').value=t.endDate;$('f_et').value=t.endTime||'';$('f_ea').value=t.endAddress;$('f_eo').value=t.endOdo;$('f_ep').value=t.endPlace||'';
+      $('f_ecv').value=t.ecv;$('f_reason').value=t.reason||'';$('f_route').value=t.route||'';$('f_fp').value=t.fuelPlace||'';}
   } else {
-    // Defaults for new
-    document.getElementById('f_startDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('f_endDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('f_startTime').value = '';
-    document.getElementById('f_endTime').value = '';
-    document.getElementById('f_startAddress').value = '';
-    document.getElementById('f_endAddress').value = '';
-    document.getElementById('f_reason').value = '';
-    document.getElementById('f_route').value = '';
-    document.getElementById('f_startPlace').value = '';
-    document.getElementById('f_endPlace').value = '';
-    document.getElementById('f_fuelPlace').value = '';
-
-    // Pre-fill start odo
-    if (db.vehicles.length > 0) {
-      const lastOdo = getLastOdo(db.vehicles[0].ecv, null);
-      if (lastOdo) document.getElementById('f_startOdo').value = lastOdo;
-    }
-    document.getElementById('f_endOdo').value = '';
+    const today=new Date().toISOString().split('T')[0];
+    ['f_st','f_et','f_sa','f_ea','f_reason'].forEach(i=>$(i).value='');
+    $('f_sd').value=$('f_ed').value=today; $('f_sp').value=$('f_ep').value=$('f_route').value=$('f_fp').value='';
+    const last=[...db.trips].filter(t=>db.vehicles[0]&&t.ecv===db.vehicles[0].ecv).sort((a,b)=>a.id-b.id).pop();
+    $('f_so').value=last?last.endOdo:''; $('f_eo').value='';
   }
-
-  onDateChange();
-  updateCalcDistance();
-  document.getElementById('tripModal').classList.add('open');
+  onDateChange(); calcDist(); $('tripModal').classList.add('open');
 }
 
 function onRouteChange() {
-  const routeName = document.getElementById('f_route').value;
-  if (!routeName) return;
-  const route = db.routes.find(r => r.name === routeName);
-  if (!route) return;
-  // Auto-fill start/end
-  const sp = db.places.find(p => p.name === route.start);
-  const ep = db.places.find(p => p.name === route.end);
-  if (sp) {
-    document.getElementById('f_startPlace').value = route.start;
-    document.getElementById('f_startAddress').value = sp.address;
-  }
-  if (ep) {
-    document.getElementById('f_endPlace').value = route.end;
-    document.getElementById('f_endAddress').value = ep.address;
-  }
-  if (route.reason) {
-    document.getElementById('f_reason').value = route.reason;
-  }
+  const r=udb().routes.find(x=>x.name===$('f_route').value); if(!r) return;
+  const sp=udb().places.find(p=>p.name===r.start), ep=udb().places.find(p=>p.name===r.end);
+  if(sp){$('f_sp').value=r.start;$('f_sa').value=sp.address;}
+  if(ep){$('f_ep').value=r.end;$('f_ea').value=ep.address;}
+  if(r.reason) $('f_reason').value=r.reason;
 }
-
-function onStartPlaceChange() {
-  const name = document.getElementById('f_startPlace').value;
-  const place = db.places.find(p => p.name === name);
-  if (place) document.getElementById('f_startAddress').value = place.address;
-}
-
-function onEndPlaceChange() {
-  const name = document.getElementById('f_endPlace').value;
-  const place = db.places.find(p => p.name === name);
-  if (place) document.getElementById('f_endAddress').value = place.address;
-}
-
-function onReasonSelect() {
-  const v = document.getElementById('f_reasonSelect').value;
-  if (v) document.getElementById('f_reason').value = v;
-}
-
+function onSPChange() { const p=udb().places.find(x=>x.name===$('f_sp').value); if(p) $('f_sa').value=p.address; }
+function onEPChange() { const p=udb().places.find(x=>x.name===$('f_ep').value); if(p) $('f_ea').value=p.address; }
+function onRSChange() { const v=$('f_rs').value; if(v) $('f_reason').value=v; }
 function onDateChange() {
-  const d = document.getElementById('f_startDate').value;
-  const flags = document.getElementById('tripDateFlags');
-  flags.innerHTML = '';
-  if (isWeekend(d)) flags.innerHTML += `<span class="badge badge-orange">Víkend</span>`;
-  const hn = getHolidayName(d);
-  if (hn) flags.innerHTML += `<span class="badge badge-red" title="${hn}">Sviatok</span>`;
+  const d=$('f_sd').value, f=$('dateFlags'); f.innerHTML='';
+  if(isWE(d)) f.innerHTML+='<span class="badge bo">Víkend</span>';
+  const hn=hdName(d); if(hn) f.innerHTML+=`<span class="badge br">${hn}</span>`;
 }
-
-function validateOdo() {
-  const s = parseInt(document.getElementById('f_startOdo').value);
-  const e = parseInt(document.getElementById('f_endOdo').value);
-  document.getElementById('startOdoError').textContent = '';
-  document.getElementById('endOdoError').textContent = '';
-  if (e && s && e < s) {
-    document.getElementById('endOdoError').textContent = 'Koncový tachometer je menší ako začiatočný!';
-  }
-  updateCalcDistance();
-}
-
-function updateCalcDistance() {
-  const s = parseInt(document.getElementById('f_startOdo').value);
-  const e = parseInt(document.getElementById('f_endOdo').value);
-  const el = document.getElementById('calcDistance');
-  if (s && e && e >= s) {
-    el.textContent = (e - s) + ' km';
-  } else {
-    el.textContent = '— km';
-  }
+function calcDist() {
+  const s=parseInt($('f_so').value), e=parseInt($('f_eo').value);
+  $('calcDist').textContent=(s&&e&&e>=s)?((e-s)+' km'):'— km';
+  $('odoErr').textContent=(e&&s&&e<s)?'Koniec < začiatok!':'';
 }
 
 function saveTrip() {
-  const startDate = document.getElementById('f_startDate').value;
-  const startTime = document.getElementById('f_startTime').value;
-  const startAddress = document.getElementById('f_startAddress').value.trim();
-  const startOdo = parseInt(document.getElementById('f_startOdo').value);
-  const endDate = document.getElementById('f_endDate').value;
-  const endTime = document.getElementById('f_endTime').value;
-  const endAddress = document.getElementById('f_endAddress').value.trim();
-  const endOdo = parseInt(document.getElementById('f_endOdo').value);
-  const ecv = document.getElementById('f_ecv').value;
-  const reason = document.getElementById('f_reason').value.trim();
-  const route = document.getElementById('f_route').value;
-  const startPlace = document.getElementById('f_startPlace').value;
-  const endPlace = document.getElementById('f_endPlace').value;
-  const fuelPlace = document.getElementById('f_fuelPlace').value;
-
-  const alerts = document.getElementById('tripFormAlerts');
-  alerts.innerHTML = '';
-
-  // Validation
-  const errs = [];
-  if (!startDate) errs.push('Dátum začiatku je povinný');
-  if (!startAddress) errs.push('Adresa začiatku je povinná');
-  if (!startOdo || isNaN(startOdo)) errs.push('Stav tachometra začiatok je povinný');
-  if (!endDate) errs.push('Dátum konca je povinný');
-  if (!endAddress) errs.push('Adresa konca je povinná');
-  if (!endOdo || isNaN(endOdo)) errs.push('Stav tachometra koniec je povinný');
-  if (!ecv) errs.push('Vozidlo je povinné');
-  if (endOdo && startOdo && endOdo < startOdo) errs.push('Koncový tachometer je menší ako začiatočný');
-
-  if (errs.length > 0) {
-    alerts.innerHTML = errs.map(e => `<div class="alert alert-danger">⛔ ${e}</div>`).join('');
-    return;
-  }
-
-  // Warn on weekend/holiday
-  let warns = [];
-  if (isWeekend(startDate)) warns.push(`Jazda je naplánovaná na víkend`);
-  const hn = getHolidayName(startDate);
-  if (hn) warns.push(`Jazda je naplánovaná na sviatok: ${hn}`);
-
-  if (warns.length > 0 && !document.getElementById('warnAcknowledged')) {
-    alerts.innerHTML = warns.map(w => `<div class="alert alert-warning">⚠️ ${w}</div>`).join('') +
-      `<div style="margin-bottom:8px;font-size:0.82rem;color:var(--text2)">Pokračujte kliknutím na "Uložiť jazdu" znova.</div>`;
-    const ack = document.createElement('input');
-    ack.type = 'hidden'; ack.id = 'warnAcknowledged'; ack.value = '1';
-    alerts.appendChild(ack);
-    return;
-  }
-
-  const trip = {
-    id: editingTripId || nextId(db.trips),
-    startDate, startTime, startAddress, startOdo,
-    endDate, endTime, endAddress, endOdo,
-    ecv, reason, route, startPlace, endPlace,
-    fuelPlace: fuelPlace || null,
-    hasFuel: !!fuelPlace
-  };
-
-  if (editingTripId) {
-    const idx = db.trips.findIndex(t => t.id === editingTripId);
-    db.trips[idx] = trip;
-  } else {
-    db.trips.push(trip);
-  }
-
-  // Sort trips by date
-  db.trips.sort((a,b) => {
-    const da = a.startDate + (a.startTime||'');
-    const db_ = b.startDate + (b.startTime||'');
-    return da > db_ ? 1 : -1;
-  });
-
-  saveData();
-  closeModal('tripModal');
-  renderTrips();
-  if (currentPage === 'dashboard') renderDashboard();
+  const sd=$('f_sd').value, st=$('f_st').value, sa=$('f_sa').value.trim(), so=parseInt($('f_so').value);
+  const ed=$('f_ed').value, et=$('f_et').value, ea=$('f_ea').value.trim(), eo=parseInt($('f_eo').value);
+  const ecv=$('f_ecv').value, reason=$('f_reason').value.trim(), route=$('f_route').value;
+  const sp=$('f_sp').value, ep=$('f_ep').value, fp=$('f_fp').value;
+  const ae=$('tripAlerts'); ae.innerHTML='';
+  const errs=[];
+  if(!sd) errs.push('Dátum začiatku je povinný'); if(!sa) errs.push('Adresa začiatku je povinná');
+  if(!so||isNaN(so)) errs.push('Tachometer začiatok je povinný'); if(!ed) errs.push('Dátum konca je povinný');
+  if(!ea) errs.push('Adresa konca je povinná'); if(!eo||isNaN(eo)) errs.push('Tachometer koniec je povinný');
+  if(!ecv) errs.push('Vozidlo je povinné'); if(eo&&so&&eo<so) errs.push('Koniec tachom. < začiatok');
+  if(errs.length){ae.innerHTML=errs.map(e=>`<div class="alert ad">⛔ ${e}</div>`).join('');return;}
+  const warns=[];
+  if(isWE(sd)) warns.push('Jazda cez víkend'); const hn=hdName(sd); if(hn) warns.push('Jazda cez sviatok: '+hn);
+  if(warns.length&&!$('_wack')){ae.innerHTML=warns.map(w=>`<div class="alert aw">⚠️ ${w}</div>`).join('')+`<div class="tm mb2">Kliknite znova na Uložiť pre potvrdenie.</div>`;const a=document.createElement('input');a.type='hidden';a.id='_wack';ae.appendChild(a);return;}
+  const db=udb(), trip={id:eIds.trip||nextId(db.trips),startDate:sd,startTime:st,startAddress:sa,startOdo:so,endDate:ed,endTime:et,endAddress:ea,endOdo:eo,ecv,reason,route,startPlace:sp,endPlace:ep,fuelPlace:fp||null,hasFuel:!!fp};
+  if(eIds.trip){const i=db.trips.findIndex(t=>t.id===eIds.trip);db.trips[i]=trip;}else db.trips.push(trip);
+  db.trips.sort((a,b)=>(a.startDate+(a.startTime||'')<b.startDate+(b.startTime||''))?-1:1);
+  debouncedSave(); closeModal('tripModal'); renderTrips(); toast('Jazda uložená','ok');
 }
 
-function deleteTrip(id) {
-  showConfirm(`Naozaj zmazať jazdu #${id}?`, () => {
-    db.trips = db.trips.filter(t => t.id !== id);
-    saveData();
-    renderTrips();
-  });
-}
+function deleteTrip(id) { showConfirm(`Naozaj zmazať jazdu #${id}?`, ()=>{ udb().trips=udb().trips.filter(t=>t.id!==id); debouncedSave(); renderTrips(); toast('Zmazaná'); }); }
 
-// =====================================================
+// ══════════════════════════════════════════════════
 // FUEL
-// =====================================================
+// ══════════════════════════════════════════════════
 function renderFuel() {
-  const totalFuel = db.fuelLogs.reduce((s,f) => s + f.total, 0);
-  const totalLiters = db.fuelLogs.reduce((s,f) => s + f.liters, 0);
-  const avgPrice = totalLiters > 0 ? totalFuel / totalLiters : 0;
-
-  document.getElementById('fuelStats').innerHTML = `
-    <div class="stat-card accent-gold">
-      <div class="stat-label">Celkové náklady PHM</div>
-      <div class="stat-value">${totalFuel.toFixed(2)} €</div>
-      <div class="stat-sub">${db.fuelLogs.length} tankovania</div>
-    </div>
-    <div class="stat-card accent-green">
-      <div class="stat-label">Celkové litre</div>
-      <div class="stat-value">${totalLiters.toFixed(2)} l</div>
-      <div class="stat-sub">priemerná cena ${avgPrice.toFixed(3)} €/l</div>
-    </div>
-  `;
-
-  const sorted = [...db.fuelLogs].sort((a,b) => a.date > b.date ? 1 : -1);
-
-  document.getElementById('fuelTable').innerHTML = `<table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Dátum</th>
-        <th>Čas</th>
-        <th>EČV</th>
-        <th>Miesto</th>
-        <th>Tachometer</th>
-        <th>Cena / l</th>
-        <th>Množstvo</th>
-        <th>Suma</th>
-        <th>Jazda v deň tank.</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      ${sorted.map(f => {
-        const hasTrip = db.trips.some(t => t.ecv === f.ecv && t.startDate === f.date);
-        return `<tr>
-          <td style="color:var(--text3);font-size:0.78rem">${f.id}</td>
-          <td>${fmtDate(f.date)}</td>
-          <td style="color:var(--text2)">${f.time}</td>
-          <td><span class="badge badge-gray">${f.ecv}</span></td>
-          <td>${f.place}</td>
-          <td class="odometer-val">${f.odometer.toLocaleString('sk')}</td>
-          <td>${f.pricePerLiter.toFixed(3)} €</td>
-          <td>${f.liters.toFixed(2)} l</td>
-          <td><strong>${f.total.toFixed(2)} €</strong></td>
-          <td>${hasTrip ? '<span class="badge badge-green">✓ Áno</span>' : '<span class="badge badge-red">✗ Chýba!</span>'}</td>
-          <td style="white-space:nowrap">
-            <button class="btn btn-secondary btn-sm" onclick="openFuelModal(${f.id})">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteFuel(${f.id})">🗑</button>
-          </td>
-        </tr>`;
-      }).join('')}
-    </tbody>
-    <tfoot>
-      <tr style="background:var(--surface2);font-weight:600">
-        <td colspan="7" style="padding:10px 12px;font-size:0.82rem">CELKOM</td>
-        <td style="padding:10px 12px">${totalLiters.toFixed(2)} l</td>
-        <td style="padding:10px 12px">${totalFuel.toFixed(2)} €</td>
-        <td colspan="2"></td>
-      </tr>
-    </tfoot>
-  </table>`;
+  const db=udb(), tf=db.fuelLogs.reduce((s,f)=>s+f.total,0), tl=db.fuelLogs.reduce((s,f)=>s+f.liters,0);
+  $('fuelStats').innerHTML=`<div class="stat-card au"><div class="stat-label">Celkové náklady</div><div class="stat-value">${tf.toFixed(2)} €</div><div class="stat-sub">${db.fuelLogs.length} tankovania</div></div><div class="stat-card ag"><div class="stat-label">Celkové litre</div><div class="stat-value">${tl.toFixed(2)} l</div><div class="stat-sub">priem. ${tl>0?(tf/tl).toFixed(3):0} €/l</div></div>`;
+  const sorted=[...db.fuelLogs].sort((a,b)=>a.date>b.date?1:-1);
+  $('fuelTable').innerHTML=`<table><thead><tr><th>#</th><th>Dátum</th><th>Čas</th><th>EČV</th><th>Miesto</th><th>Tachometer</th><th>€/l</th><th>Litre</th><th>Suma</th><th>Jazda v deň</th><th></th></tr></thead><tbody>${sorted.map(f=>{
+    const ht=db.trips.some(t=>t.ecv===f.ecv&&t.startDate===f.date);
+    return `<tr><td style="color:var(--text3);font-size:0.73rem">${f.id}</td><td>${fmtDate(f.date)}</td><td style="color:var(--text2)">${f.time}</td><td><span class="badge bz">${f.ecv}</span></td><td>${f.place}</td><td class="odo">${f.odometer.toLocaleString('sk')}</td><td>${f.pricePerLiter.toFixed(3)}</td><td>${f.liters.toFixed(2)} l</td><td><strong>${f.total.toFixed(2)} €</strong></td><td>${ht?'<span class="badge bg">✓</span>':'<span class="badge br">✗ Chýba</span>'}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openFuelModal(${f.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteFuel(${f.id})">🗑</button></td></tr>`;
+  }).join('')}</tbody><tfoot><tr style="background:var(--surface2);font-weight:600"><td colspan="7" style="padding:9px 11px;font-size:0.79rem">CELKOM</td><td style="padding:9px 11px">${tl.toFixed(2)} l</td><td style="padding:9px 11px">${tf.toFixed(2)} €</td><td colspan="2"></td></tr></tfoot></table>`;
 }
 
 function openFuelModal(id) {
-  editingFuelId = id || null;
-  document.getElementById('fuelModalTitle').textContent = id ? `Upraviť tankovanie #${id}` : 'Nové tankovanie';
-  document.getElementById('fuelFormAlerts').innerHTML = '';
-
-  populateSelect('ff_ecv', db.vehicles.map(v => ({value:v.ecv, label:`${v.name} (${v.ecv})`})));
-  populateSelect('ff_place', [{value:'',label:'— vybrať —'}, ...db.places.map(p => ({value:p.name, label:p.name}))]);
-
-  if (id) {
-    const f = db.fuelLogs.find(x => x.id === id);
-    if (f) {
-      document.getElementById('ff_date').value = f.date;
-      document.getElementById('ff_time').value = f.time;
-      document.getElementById('ff_ecv').value = f.ecv;
-      document.getElementById('ff_odometer').value = f.odometer;
-      document.getElementById('ff_place').value = f.place;
-      document.getElementById('ff_pricePerLiter').value = f.pricePerLiter;
-      document.getElementById('ff_liters').value = f.liters;
-      document.getElementById('ff_total').value = f.total.toFixed(2);
-    }
-  } else {
-    document.getElementById('ff_date').value = new Date().toISOString().split('T')[0];
-    document.getElementById('ff_time').value = '';
-    document.getElementById('ff_odometer').value = '';
-    document.getElementById('ff_pricePerLiter').value = '';
-    document.getElementById('ff_liters').value = '';
-    document.getElementById('ff_total').value = '';
-    document.getElementById('ff_place').value = '';
-  }
-
-  document.getElementById('fuelModal').classList.add('open');
+  eIds.fuel=id||null; $('fuelModalTitle').textContent=id?`Upraviť tankovanie #${id}`:'Nové tankovanie'; $('fuelAlerts').innerHTML='';
+  const db=udb();
+  popSel('ff_ecv', db.vehicles.map(v=>({v:v.ecv,l:`${v.name} (${v.ecv})`})));
+  popSel('ff_place', [{v:'',l:'— vybrať —'},...db.places.map(p=>({v:p.name,l:p.name}))]);
+  if(id){const f=db.fuelLogs.find(x=>x.id===id);if(f){$('ff_date').value=f.date;$('ff_time').value=f.time;$('ff_ecv').value=f.ecv;$('ff_odo').value=f.odometer;$('ff_place').value=f.place;$('ff_ppl').value=f.pricePerLiter;$('ff_l').value=f.liters;$('ff_total').value=f.total.toFixed(2);}}
+  else{$('ff_date').value=new Date().toISOString().split('T')[0];['ff_time','ff_odo','ff_ppl','ff_l','ff_total'].forEach(i=>$(i).value='');$('ff_place').value='';}
+  $('fuelModal').classList.add('open');
 }
 
-function calcFuelTotal() {
-  const p = parseFloat(document.getElementById('ff_pricePerLiter').value);
-  const l = parseFloat(document.getElementById('ff_liters').value);
-  if (p && l) document.getElementById('ff_total').value = (p * l).toFixed(2);
-}
-
-function calcFuelFromTotal() {
-  const t = parseFloat(document.getElementById('ff_total').value);
-  const l = parseFloat(document.getElementById('ff_liters').value);
-  if (t && l) document.getElementById('ff_pricePerLiter').value = (t / l).toFixed(3);
-}
+function calcFuelT(){const p=parseFloat($('ff_ppl').value),l=parseFloat($('ff_l').value);if(p&&l)$('ff_total').value=(p*l).toFixed(2);}
+function calcFuelP(){const t=parseFloat($('ff_total').value),l=parseFloat($('ff_l').value);if(t&&l)$('ff_ppl').value=(t/l).toFixed(3);}
 
 function saveFuel() {
-  const date = document.getElementById('ff_date').value;
-  const time = document.getElementById('ff_time').value;
-  const ecv = document.getElementById('ff_ecv').value;
-  const odometer = parseInt(document.getElementById('ff_odometer').value);
-  const place = document.getElementById('ff_place').value;
-  const pricePerLiter = parseFloat(document.getElementById('ff_pricePerLiter').value);
-  const liters = parseFloat(document.getElementById('ff_liters').value);
-  const total = parseFloat(document.getElementById('ff_total').value);
-
-  const alerts = document.getElementById('fuelFormAlerts');
-  alerts.innerHTML = '';
-  const errs = [];
-  if (!date) errs.push('Dátum je povinný');
-  if (!ecv) errs.push('Vozidlo je povinné');
-  if (!odometer || isNaN(odometer)) errs.push('Tachometer je povinný');
-  if (!place) errs.push('Miesto tankovania je povinné');
-  if (!pricePerLiter || isNaN(pricePerLiter)) errs.push('Cena / liter je povinná');
-  if (!liters || isNaN(liters)) errs.push('Množstvo litrov je povinné');
-
-  if (errs.length > 0) {
-    alerts.innerHTML = errs.map(e => `<div class="alert alert-danger">⛔ ${e}</div>`).join('');
-    return;
-  }
-
-  // Check if trip exists for this date
-  const hasTrip = db.trips.some(t => t.ecv === ecv && t.startDate === date);
-  if (!hasTrip) {
-    alerts.innerHTML += `<div class="alert alert-warning">⚠️ Žiadna jazda pre toto vozidlo v deň tankovania (${fmtDate(date)}). Nezabudnite pridať záznam jazdy.</div>`;
-  }
-
-  const fuel = {
-    id: editingFuelId || nextId(db.fuelLogs),
-    ecv, date, time, place, pricePerLiter, liters,
-    total: total || pricePerLiter * liters,
-    odometer
-  };
-
-  if (editingFuelId) {
-    const idx = db.fuelLogs.findIndex(f => f.id === editingFuelId);
-    db.fuelLogs[idx] = fuel;
-  } else {
-    db.fuelLogs.push(fuel);
-  }
-
-  saveData();
-  closeModal('fuelModal');
-  renderFuel();
+  const date=$('ff_date').value,time=$('ff_time').value,ecv=$('ff_ecv').value,odo=parseInt($('ff_odo').value);
+  const place=$('ff_place').value,ppl=parseFloat($('ff_ppl').value),l=parseFloat($('ff_l').value),total=parseFloat($('ff_total').value)||(ppl*l);
+  const ae=$('fuelAlerts'); ae.innerHTML='';
+  const errs=[];
+  if(!date) errs.push('Dátum je povinný'); if(!ecv) errs.push('Vozidlo je povinné');
+  if(!odo||isNaN(odo)) errs.push('Tachometer je povinný'); if(!place) errs.push('Miesto je povinné');
+  if(!ppl||isNaN(ppl)) errs.push('Cena/liter je povinná'); if(!l||isNaN(l)) errs.push('Množstvo je povinné');
+  if(errs.length){ae.innerHTML=errs.map(e=>`<div class="alert ad">⛔ ${e}</div>`).join('');return;}
+  if(!udb().trips.some(t=>t.ecv===ecv&&t.startDate===date)) ae.innerHTML=`<div class="alert aw">⚠️ Žiadna jazda pre ${ecv} v deň tankovania</div>`;
+  const db=udb(), fuel={id:eIds.fuel||nextId(db.fuelLogs),ecv,date,time,place,pricePerLiter:ppl,liters:l,total,odometer:odo};
+  if(eIds.fuel){const i=db.fuelLogs.findIndex(f=>f.id===eIds.fuel);db.fuelLogs[i]=fuel;}else db.fuelLogs.push(fuel);
+  debouncedSave(); closeModal('fuelModal'); renderFuel(); toast('Tankovanie uložené','ok');
 }
 
-function deleteFuel(id) {
-  showConfirm(`Naozaj zmazať tankovanie #${id}?`, () => {
-    db.fuelLogs = db.fuelLogs.filter(f => f.id !== id);
-    saveData();
-    renderFuel();
-  });
-}
+function deleteFuel(id) { showConfirm(`Zmazať tankovanie #${id}?`,()=>{udb().fuelLogs=udb().fuelLogs.filter(f=>f.id!==id);debouncedSave();renderFuel();toast('Zmazané');}); }
 
-// =====================================================
+// ══════════════════════════════════════════════════
 // ROUTES
-// =====================================================
+// ══════════════════════════════════════════════════
 function renderRoutes() {
-  document.getElementById('routesTable').innerHTML = `<table>
-    <thead>
-      <tr><th>Názov trasy</th><th>Odkiaľ</th><th>Kam</th><th>Km</th><th>Čas (min)</th><th>Dôvod</th><th></th></tr>
-    </thead>
-    <tbody>
-      ${db.routes.map(r => `<tr>
-        <td><strong>${r.name}</strong></td>
-        <td>${r.start}</td>
-        <td>${r.end}</td>
-        <td>${r.distance}</td>
-        <td>${r.duration || '—'}</td>
-        <td style="font-size:0.82rem;color:var(--text2)">${r.reason || '—'}</td>
-        <td style="white-space:nowrap">
-          <button class="btn btn-secondary btn-sm" onclick="openRouteModal(${db.routes.indexOf(r)})">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteRoute(${db.routes.indexOf(r)})">🗑</button>
-        </td>
-      </tr>`).join('')}
-    </tbody>
-  </table>`;
+  $('routesTable').innerHTML=`<table><thead><tr><th>Názov</th><th>Odkiaľ</th><th>Kam</th><th>km</th><th>min</th><th>Dôvod</th><th></th></tr></thead><tbody>${udb().routes.map((r,i)=>`<tr><td><strong>${r.name}</strong></td><td>${r.start}</td><td>${r.end}</td><td>${r.distance}</td><td>${r.duration||'—'}</td><td style="font-size:0.79rem;color:var(--text2)">${r.reason||'—'}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openRouteModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteRoute(${i})">🗑</button></td></tr>`).join('')}</tbody></table>`;
 }
 
 function openRouteModal(idx) {
-  editingRouteId = idx !== undefined ? idx : null;
-  document.getElementById('routeModalTitle').textContent = idx !== undefined ? 'Upraviť trasu' : 'Nová trasa';
-  populateSelect('fr_start', [{value:'',label:'— vybrať —'}, ...db.places.map(p => ({value:p.name,label:p.name}))]);
-  populateSelect('fr_end', [{value:'',label:'— vybrať —'}, ...db.places.map(p => ({value:p.name,label:p.name}))]);
-  if (idx !== undefined) {
-    const r = db.routes[idx];
-    document.getElementById('fr_name').value = r.name;
-    document.getElementById('fr_start').value = r.start;
-    document.getElementById('fr_end').value = r.end;
-    document.getElementById('fr_distance').value = r.distance;
-    document.getElementById('fr_duration').value = r.duration || '';
-    document.getElementById('fr_reason').value = r.reason || '';
-  } else {
-    ['fr_name','fr_distance','fr_duration','fr_reason'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('fr_start').value = '';
-    document.getElementById('fr_end').value = '';
-  }
-  document.getElementById('routeModal').classList.add('open');
+  eIds.route=idx!==undefined?idx:null; $('routeModalTitle').textContent=idx!==undefined?'Upraviť trasu':'Nová trasa';
+  const po=[{v:'',l:'—'},...udb().places.map(p=>({v:p.name,l:p.name}))];
+  popSel('fr_s',po); popSel('fr_e',po);
+  if(idx!==undefined){const r=udb().routes[idx];$('fr_name').value=r.name;$('fr_s').value=r.start;$('fr_e').value=r.end;$('fr_d').value=r.distance;$('fr_t').value=r.duration||'';$('fr_r').value=r.reason||'';}
+  else{['fr_name','fr_d','fr_t','fr_r'].forEach(i=>$(i).value='');$('fr_s').value=$('fr_e').value='';}
+  $('routeModal').classList.add('open');
 }
 
-function saveRoute() {
-  const name = document.getElementById('fr_name').value.trim();
-  const start = document.getElementById('fr_start').value;
-  const end = document.getElementById('fr_end').value;
-  const distance = parseFloat(document.getElementById('fr_distance').value);
-  const duration = parseInt(document.getElementById('fr_duration').value) || null;
-  const reason = document.getElementById('fr_reason').value.trim();
-  if (!name || !start || !end || !distance) { alert('Vyplňte povinné polia'); return; }
-  const route = { name, start, end, distance, duration, reason: reason || null };
-  if (editingRouteId !== null) db.routes[editingRouteId] = route;
-  else db.routes.push(route);
-  saveData();
-  closeModal('routeModal');
-  renderRoutes();
-}
+function saveRoute(){const name=$('fr_name').value.trim(),s=$('fr_s').value,e=$('fr_e').value,d=parseFloat($('fr_d').value),t=parseInt($('fr_t').value)||null,r=$('fr_r').value.trim();if(!name||!s||!e||!d){toast('Vyplňte povinné polia','err');return;}const route={name,start:s,end:e,distance:d,duration:t,reason:r||null};if(eIds.route!==null)udb().routes[eIds.route]=route;else udb().routes.push(route);debouncedSave();closeModal('routeModal');renderRoutes();toast('Trasa uložená','ok');}
+function deleteRoute(i){showConfirm(`Zmazať trasu "${udb().routes[i].name}"?`,()=>{udb().routes.splice(i,1);debouncedSave();renderRoutes();});}
 
-function deleteRoute(idx) {
-  showConfirm(`Naozaj zmazať trasu "${db.routes[idx].name}"?`, () => {
-    db.routes.splice(idx, 1);
-    saveData();
-    renderRoutes();
-  });
-}
-
-// =====================================================
+// ══════════════════════════════════════════════════
 // PLACES
-// =====================================================
-function renderPlaces() {
-  document.getElementById('placesTable').innerHTML = `<table>
-    <thead><tr><th>Názov</th><th>Adresa</th><th></th></tr></thead>
-    <tbody>
-      ${db.places.map((p, idx) => `<tr>
-        <td><strong>${p.name}</strong></td>
-        <td style="color:var(--text2)">${p.address}</td>
-        <td style="white-space:nowrap">
-          <button class="btn btn-secondary btn-sm" onclick="openPlaceModal(${idx})">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="deletePlace(${idx})">🗑</button>
-        </td>
-      </tr>`).join('')}
-    </tbody>
-  </table>`;
-}
+// ══════════════════════════════════════════════════
+function renderPlaces(){$('placesTable').innerHTML=`<table><thead><tr><th>Názov</th><th>Adresa</th><th></th></tr></thead><tbody>${udb().places.map((p,i)=>`<tr><td><strong>${p.name}</strong></td><td style="color:var(--text2)">${p.address}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openPlaceModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deletePlace(${i})">🗑</button></td></tr>`).join('')}</tbody></table>`;}
 
-function openPlaceModal(idx) {
-  editingPlaceId = idx !== undefined ? idx : null;
-  document.getElementById('placeModalTitle').textContent = idx !== undefined ? 'Upraviť miesto' : 'Nové miesto';
-  if (idx !== undefined) {
-    document.getElementById('fp_name').value = db.places[idx].name;
-    document.getElementById('fp_address').value = db.places[idx].address;
-  } else {
-    document.getElementById('fp_name').value = '';
-    document.getElementById('fp_address').value = '';
-  }
-  document.getElementById('placeModal').classList.add('open');
-}
+function openPlaceModal(idx){eIds.place=idx!==undefined?idx:null;$('placeModalTitle').textContent=idx!==undefined?'Upraviť miesto':'Nové miesto';if(idx!==undefined){$('fp_n').value=udb().places[idx].name;$('fp_a').value=udb().places[idx].address;}else{$('fp_n').value='';$('fp_a').value='';}$('placeModal').classList.add('open');}
 
-function savePlace() {
-  const name = document.getElementById('fp_name').value.trim();
-  const address = document.getElementById('fp_address').value.trim();
-  if (!name || !address) { alert('Vyplňte povinné polia'); return; }
-  if (editingPlaceId !== null) db.places[editingPlaceId] = {name, address};
-  else db.places.push({name, address});
-  saveData();
-  closeModal('placeModal');
-  renderPlaces();
-}
+function savePlace(){const n=$('fp_n').value.trim(),a=$('fp_a').value.trim();if(!n||!a){toast('Vyplňte polia','err');return;}if(eIds.place!==null)udb().places[eIds.place]={name:n,address:a};else udb().places.push({name:n,address:a});debouncedSave();closeModal('placeModal');renderPlaces();toast('Miesto uložené','ok');}
+function deletePlace(i){showConfirm(`Zmazať "${udb().places[i].name}"?`,()=>{udb().places.splice(i,1);debouncedSave();renderPlaces();});}
 
-function deletePlace(idx) {
-  showConfirm(`Naozaj zmazať miesto "${db.places[idx].name}"?`, () => {
-    db.places.splice(idx, 1);
-    saveData();
-    renderPlaces();
-  });
-}
-
-// =====================================================
+// ══════════════════════════════════════════════════
 // SETTINGS
-// =====================================================
-function renderSettings() {
-  // Vehicles
-  document.getElementById('vehicleList').innerHTML = db.vehicles.map((v, i) =>
-    `<div class="list-item">
-      <span>${v.name} — <strong>${v.ecv}</strong></span>
-      <div class="list-item-actions">
-        <button class="btn btn-danger btn-sm" onclick="deleteVehicle(${i})">🗑</button>
-      </div>
-    </div>`
-  ).join('') || '<div class="text-muted">Žiadne vozidlá</div>';
-
-  // Reasons
-  document.getElementById('reasonList').innerHTML = db.tripReasons.map((r, i) =>
-    `<div class="list-item">
-      <span>${r}</span>
-      <button class="btn btn-danger btn-sm" onclick="deleteReason(${i})">🗑</button>
-    </div>`
-  ).join('') || '<div class="text-muted">Žiadne dôvody</div>';
-
-  // Holidays
-  const sortedHols = [...db.holidays].sort((a,b) => a.date > b.date ? 1 : -1);
-  document.getElementById('holidayList').innerHTML = sortedHols.map((h, i) =>
-    `<div class="list-item" style="font-size:0.82rem">
-      <span>${fmtDate(h.date)} — ${h.name}</span>
-      <button class="btn btn-danger btn-sm" onclick="deleteHoliday('${h.date}')">🗑</button>
-    </div>`
-  ).join('');
+// ══════════════════════════════════════════════════
+function renderSettings(){
+  const db=udb();
+  $('vehicleList').innerHTML=db.vehicles.map((v,i)=>`<div class="li"><span>${v.name} — <strong>${v.ecv}</strong></span><button class="btn btn-danger btn-sm" onclick="deleteVehicle(${i})">🗑</button></div>`).join('')||'<div class="tm">Žiadne vozidlá</div>';
+  $('reasonList').innerHTML=db.tripReasons.map((r,i)=>`<div class="li"><span>${r}</span><button class="btn btn-danger btn-sm" onclick="deleteReason(${i})">🗑</button></div>`).join('')||'<div class="tm">Žiadne dôvody</div>';
+  $('holidayList').innerHTML=[...db.holidays].sort((a,b)=>a.date>b.date?1:-1).map(h=>`<div class="li" style="font-size:0.8rem"><span>${fmtDate(h.date)} — ${h.name}</span><button class="btn btn-danger btn-sm" onclick="deleteHoliday('${h.date}')">🗑</button></div>`).join('');
+  const m=mode(), ml={local:'🖥️ Lokálny server (data.json)',github:'🐙 GitHub repozitár',ls:'💾 Len localStorage'}, mc={local:'ai',github:'as',ls:'aw'};
+  $('storagePanel').innerHTML=`<div class="alert ${mc[m]}">${ml[m]}</div><p class="tm mb2">Aktuálny spôsob ukladania.</p><button class="btn btn-secondary btn-sm" onclick="openGithubSetup()">⚙️ Nastavenia ukladania</button>`;
 }
 
-function openVehicleModal() { document.getElementById('vehicleModal').classList.add('open'); }
-function openReasonModal() { document.getElementById('reasonModal').classList.add('open'); }
-function openHolidayModal() { document.getElementById('holidayModal').classList.add('open'); }
+function openVehicleModal(){$('vehicleModal').classList.add('open');}
+function openReasonModal(){$('reasonModal').classList.add('open');}
+function openHolidayModal(){$('holidayModal').classList.add('open');}
+function saveVehicle(){const n=$('fv_n').value.trim(),e=$('fv_e').value.trim().toUpperCase();if(!n||!e){toast('Vyplňte polia','err');return;}udb().vehicles.push({name:n,ecv:e});debouncedSave();closeModal('vehicleModal');renderSettings();$('fv_n').value='';$('fv_e').value='';toast('Vozidlo uložené','ok');}
+function deleteVehicle(i){showConfirm(`Zmazať "${udb().vehicles[i].name}"?`,()=>{udb().vehicles.splice(i,1);debouncedSave();renderSettings();});}
+function saveReason(){const t=$('freason').value.trim();if(!t)return;udb().tripReasons.push(t);debouncedSave();closeModal('reasonModal');renderSettings();$('freason').value='';toast('Dôvod uložený','ok');}
+function deleteReason(i){udb().tripReasons.splice(i,1);debouncedSave();renderSettings();}
+function saveHoliday(){const d=$('fh_d').value,n=$('fh_n').value.trim();if(!d||!n){toast('Vyplňte polia','err');return;}udb().holidays.push({date:d,name:n});debouncedSave();closeModal('holidayModal');renderSettings();$('fh_d').value='';$('fh_n').value='';toast('Sviatok uložený','ok');}
+function deleteHoliday(d){udb().holidays=udb().holidays.filter(h=>h.date!==d);debouncedSave();renderSettings();}
 
-function saveVehicle() {
-  const name = document.getElementById('fv_name').value.trim();
-  const ecv = document.getElementById('fv_ecv').value.trim().toUpperCase();
-  if (!name || !ecv) { alert('Vyplňte povinné polia'); return; }
-  db.vehicles.push({name, ecv});
-  saveData(); closeModal('vehicleModal'); renderSettings();
-  document.getElementById('fv_name').value = ''; document.getElementById('fv_ecv').value = '';
-}
+// ══════════════════════════════════════════════════
+// EXPORT / IMPORT
+// ══════════════════════════════════════════════════
+function exportData(){const p={exportedAt:new Date().toISOString(),user:rootData.users.find(u=>u.id===uid),data:udb()};const b=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='knjazd_export_'+new Date().toISOString().split('T')[0]+'.json';a.click();}
+function importData(event){const f=event.target.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const imp=JSON.parse(e.target.result);const d=imp.data||imp;if(!d.trips){toast('Neplatný formát','err');return;}if(confirm('Nahradiť dáta tohto používateľa?')){rootData.userData[uid]=d;debouncedSave();renderDashboard();toast('Import úspešný','ok');}}catch(err){toast('Chyba importu: '+err.message,'err');}};r.readAsText(f);event.target.value='';}
 
-function deleteVehicle(idx) {
-  showConfirm(`Zmazať vozidlo "${db.vehicles[idx].name}"?`, () => {
-    db.vehicles.splice(idx, 1); saveData(); renderSettings();
-  });
-}
-
-function saveReason() {
-  const t = document.getElementById('freason_text').value.trim();
-  if (!t) return;
-  db.tripReasons.push(t);
-  saveData(); closeModal('reasonModal'); renderSettings();
-  document.getElementById('freason_text').value = '';
-}
-
-function deleteReason(idx) {
-  db.tripReasons.splice(idx, 1); saveData(); renderSettings();
-}
-
-function saveHoliday() {
-  const date = document.getElementById('fh_date').value;
-  const name = document.getElementById('fh_name').value.trim();
-  if (!date || !name) { alert('Vyplňte povinné polia'); return; }
-  db.holidays.push({date, name});
-  saveData(); closeModal('holidayModal'); renderSettings();
-  document.getElementById('fh_date').value = ''; document.getElementById('fh_name').value = '';
-}
-
-function deleteHoliday(date) {
-  db.holidays = db.holidays.filter(h => h.date !== date);
-  saveData(); renderSettings();
-}
-
-// =====================================================
-// DATA IMPORT/EXPORT
-// =====================================================
-function exportData() {
-  const blob = new Blob([JSON.stringify(db, null, 2)], {type: 'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'kniha_jazd_export_' + new Date().toISOString().split('T')[0] + '.json';
-  a.click();
-}
-
-function importData(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const imported = JSON.parse(e.target.result);
-      if (!imported.trips || !imported.vehicles) { alert('Neplatný formát súboru!'); return; }
-      if (confirm('Nahradiť všetky dáta importovanými? Aktuálne dáta budú stratené.')) {
-        db = imported;
-        saveData();
-        renderSettings();
-        alert('Import úspešný!');
-      }
-    } catch(err) { alert('Chyba pri parsovaní súboru: ' + err.message); }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
-// =====================================================
-// HELPERS
-// =====================================================
-function populateSelect(id, items) {
-  const sel = document.getElementById(id);
-  sel.innerHTML = items.map(i => `<option value="${i.value}">${i.label}</option>`).join('');
-}
-
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
-
-function showConfirm(text, onOk) {
-  document.getElementById('confirmText').textContent = text;
-  document.getElementById('confirmOkBtn').onclick = () => { onOk(); closeModal('confirmModal'); };
-  document.getElementById('confirmModal').classList.add('open');
-}
-
-// Close modals on overlay click
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) overlay.classList.remove('open');
-  });
-});
-
-// ESC closes modal
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
-});
-
-// =====================================================
+// ══════════════════════════════════════════════════
 // INIT
-// =====================================================
+// ══════════════════════════════════════════════════
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
+
 async function init() {
   await loadData();
-  // Set today as default filter month
-  const today = new Date();
-  const monthStr = today.toISOString().substring(0, 7);
-  document.getElementById('filterMonth').value = monthStr;
-  renderDashboard();
-  if (db.vehicles.length > 0) {
-    document.getElementById('sidebarVehicleName').textContent = `${db.vehicles[0].name} (${db.vehicles[0].ecv})`;
+  // Migrate v1 flat format → v2 multi-user format
+  if (rootData.vehicles && !rootData.users) {
+    const oid='u_migrated', od=JSON.parse(JSON.stringify(rootData));
+    delete od.users; delete od.userData;
+    rootData={users:[{id:oid,name:'Radovan',color:'#2c5f4a'}],userData:{[oid]:od}};
+    debouncedSave();
   }
+  if(!rootData.users) rootData.users=[];
+  if(!rootData.userData) rootData.userData={};
+
+  $('filterMonth').value = new Date().toISOString().substring(0,7);
+
+  // Auto-login last user
+  const lastUid=localStorage.getItem(LS_USER), lastUser=lastUid&&rootData.users.find(u=>u.id===lastUid);
+  if(lastUser){selectUser(lastUser.id);return;}
+  $('userScreen').style.display='flex'; renderUserScreen();
 }
 
 init();

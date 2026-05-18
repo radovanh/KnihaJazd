@@ -1,69 +1,70 @@
-# 📋 Kniha Jazd — Firemná evidencia jázd
+# 📋 Kniha Jazd
 
-Webová aplikácia pre evidenciu firemných ciest, PHM a súvisiacich nákladov.
+Webová aplikácia pre evidenciu firemných ciest, PHM a súvisiacich nákladov.  
+Podporuje viacerých používateľov a tri spôsoby ukladania dát.
 
-## Spustenie
+---
 
-**Požiadavky:** Python 3.6+
+## 🚀 Spustenie
 
+### Lokálne (Python server)
 ```bash
 python3 server.py
 ```
+Aplikácia sa otvorí na **http://localhost:8765** a dáta sa ukladajú do `data.json`.
 
-Aplikácia sa automaticky otvorí na adrese: **http://localhost:8765**
+### GitHub Pages
+1. Pushujte priečinok do GitHub repozitára
+2. Zapnite **Settings → Pages → Deploy from branch → main**
+3. Otvorte `https://<vas-username>.github.io/<nazov-repozitara>/`
+4. Nakonfigurujte GitHub PAT cez **⚙️ Nastavenia ukladania dát**
 
-Na zastavenie stlačte `Ctrl+C`.
+---
+
+## 💾 Ukladanie dát
+
+| Prostredie | Uloženie |
+|---|---|
+| `localhost` | `data.json` na disku (Python server) + localStorage záloha |
+| GitHub Pages + PAT | Commit priamo do repozitára cez GitHub API |
+| GitHub Pages bez PAT | Len `localStorage` v prehliadači |
+
+---
+
+## 👥 Viacerí používatelia
+
+- Každý používateľ má vlastné vozidlá, miesta, trasy, jazdy a PHM záznamy
+- Používatelia sa spravujú na úvodnej obrazovke
+- Všetci zdieľajú jeden `data.json` súbor (oddelené sekcie per-user)
+
+---
+
+## 🔑 GitHub PAT — nastavenie
+
+1. GitHub → **Settings → Developer settings → Personal access tokens → Fine-grained tokens**
+2. Scope: **Contents → Read and write** pre váš repozitár
+3. Vložte token v aplikácii cez **⚙️ Nastavenia ukladania dát**
 
 ---
 
 ## Funkcie
 
-### 🚗 Evidencia jázd
-- Pridávanie, úprava a mazanie záznamov jázd
-- Predvolené miesta a trasy pre rýchle zadávanie
-- Automatický výpočet prejdenej vzdialenosti
-- Filtrovanie podľa mesiaca, vozidla a vyhľadávanie
-
-### ⛽ Evidencia PHM
-- Záznamy tankovania s cenou, množstvom a sumou
-- Automatický výpočet celkovej sumy z ceny × množstvo
-- Kontrola existencie jazdy v deň tankovania
-- Štatistiky spotreby
-
-### ✅ Validácia
-- **Kontrola tachometra:** upozornenie pri nezhodujúcich sa hodnotách medzi jazdami
-- **Víkendy:** upozornenie pri jazdách cez sobotu/nedeľu
-- **Sviatky:** upozornenie pri jazdách na sviatky
-- **PHM bez jazdy:** upozornenie pri tankovacích záznamoch bez príslušnej jazdy
-- **Nekonzistentná vzdialenosť:** upozornenie pri vzdialenosti 0 km
-
-### 🗺️ Trasy a Miesta
-- Definícia predvolených trás so vzdialenosťou a dôvodom jazdy
-- Správa miest/cieľov s adresami
-- Automatické vyplnenie adresy pri výbere trasy
-
-### ⚙️ Nastavenia
-- Správa vozidiel (názov + EČV)
-- Dôvody jázd
-- Sviatky (SK + vlastné)
-- Export/Import dát vo formáte JSON
+- 🚗 Evidencia jázd s predvolenými miestami a trasami
+- ⛽ Evidencia PHM (cena, litre, suma, tachometer)
+- ✅ Validácia (tachometer, víkendy, sviatky, PHM bez jazdy)
+- 🗺️ Definovateľné trasy a miesta
+- 📊 Prehľad so štatistikami a validačnými upozorneniami
+- 💾 Export/Import JSON zálohy
 
 ---
 
-## Dáta
-
-Všetky dáta sú ukladané do súboru `data.json` v priečinku aplikácie.
-
-Zálohovanie: použite **Nastavenia → Exportovať JSON**.
-
----
-
-## Štruktúra súborov
+## Súbory
 
 ```
 kniha_jazd/
-├── index.html      — webová aplikácia
-├── server.py       — lokálny HTTP server
-├── data.json       — dáta (jazdy, PHM, nastavenia)
-└── README.md       — tento súbor
+├── index.html      — aplikácia (všetko v jedinom súbore)
+├── server.py       — lokálny Python HTTP server
+├── data.json       — dáta (jazdy, PHM, používatelia)
+├── .nojekyll       — pre správne fungovanie GitHub Pages
+└── README.md
 ```
