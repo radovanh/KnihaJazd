@@ -2,6 +2,7 @@
 <html lang="sk">
 <head>
 <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%232c5f4a'/><text y='46' x='8' font-size='42' font-family='serif'>🚗</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kniha Jazd</title>
 <style>
@@ -171,7 +172,52 @@
   .cal-legend-item { display:flex; align-items:center; gap:4px; }
   .cal-swatch { width:12px; height:12px; border-radius:3px; }
 
-  @media print { .sidebar,.topbar,.topbar-actions,.btn,.filter-bar{display:none!important} .main{margin-left:0} }
+  @media print {
+    .sidebar,.topbar,.topbar-actions,.btn,.filter-bar,.nav-item{display:none!important}
+    .main{margin-left:0!important}
+    .content{padding:0!important}
+    .page{display:none!important}
+    .page.print-active{display:block!important}
+    #reportContent{padding:0}
+    .report-sheet{box-shadow:none!important;border:none!important}
+    .no-print{display:none!important}
+  }
+  .report-sheet {
+    background:white; max-width:900px; margin:0 auto;
+    border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .report-header {
+    background:var(--accent); color:#fff; padding:24px 30px 20px;
+  }
+  .report-header h2 { font-family:'DM Serif Display',serif; font-size:1.5rem; margin-bottom:4px; }
+  .report-header .meta { font-size:0.82rem; opacity:0.8; }
+  .report-vehicle-row {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:0;
+    border-bottom:2px solid var(--accent);
+  }
+  .report-vfield {
+    padding:12px 16px; border-right:1px solid var(--border);
+    font-size:0.8rem;
+  }
+  .report-vfield:last-child{border-right:none}
+  .report-vfield .lbl{color:var(--text3);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px}
+  .report-vfield .val{font-weight:700;font-size:0.92rem}
+  .rep-table{width:100%;border-collapse:collapse;font-size:0.82rem}
+  .rep-table thead th{background:var(--surface2);padding:8px 12px;text-align:left;font-size:0.71rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.03em;border-bottom:2px solid var(--accent);white-space:nowrap}
+  .rep-table tbody tr{border-bottom:1px solid var(--border)}
+  .rep-table tbody tr:hover{background:rgba(44,95,74,0.03)}
+  .rep-table tbody td{padding:8px 12px;vertical-align:middle}
+  .rep-table tbody tr.we-row td{background:rgba(230,126,34,0.05)}
+  .rep-table tbody tr.hd-row td{background:rgba(192,57,43,0.06)}
+  .rep-table tfoot td{padding:10px 12px;font-weight:700;background:var(--surface2);border-top:2px solid var(--accent)}
+  .rep-summary { display:grid; grid-template-columns:repeat(4,1fr); border-top:2px solid var(--accent); }
+  .rep-sum-cell { padding:14px 16px; border-right:1px solid var(--border); }
+  .rep-sum-cell:last-child{border-right:none}
+  .rep-sum-cell .lbl{font-size:0.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px}
+  .rep-sum-cell .val{font-size:1.3rem;font-weight:700}
+  .rep-sig { display:grid; grid-template-columns:1fr 1fr; gap:40px; padding:30px 30px 20px; margin-top:10px; }
+  .rep-sig-line { border-top:1px solid var(--text); padding-top:6px; font-size:0.78rem; color:var(--text2); text-align:center; margin-top:40px; }
 </style>
 </head>
 <body>
@@ -204,6 +250,7 @@
       <div class="nav-item" onclick="showPage('costs')" data-page="costs"><span class="icon">💶</span> Náklady</div>
       <div class="nav-item" onclick="showPage('routes')" data-page="routes"><span class="icon">🗺️</span> Trasy</div>
       <div class="nav-item" onclick="showPage('places')" data-page="places"><span class="icon">📍</span> Miesta</div>
+      <div class="nav-item" onclick="showPage('report')" data-page="report"><span class="icon">📄</span> Výkaz</div>
       <div class="nav-item" onclick="showPage('settings')" data-page="settings"><span class="icon">⚙️</span> Nastavenia</div>
     </nav>
     <div class="sidebar-footer"><div class="sync-dot" id="syncDot"></div><span id="syncLabel">—</span></div>
@@ -266,6 +313,21 @@
       </div>
       <div class="page" id="page-places">
         <div class="card"><div class="card-header"><h3>Miesta / Ciele</h3></div><div class="table-wrap" id="placesTable"></div></div>
+      </div>
+      <div class="page" id="page-report">
+        <div class="filter-bar" style="margin-bottom:16px">
+          <select id="repVehicle" onchange="renderReport()" style="min-width:200px">
+            <option value="">— vybrať vozidlo —</option>
+          </select>
+          <label style="font-size:0.82rem;color:var(--text2);margin-left:4px">Od:</label>
+          <input type="date" id="repFrom" onchange="renderReport()">
+          <label style="font-size:0.82rem;color:var(--text2)">Do:</label>
+          <input type="date" id="repTo" onchange="renderReport()">
+          <button class="btn btn-secondary btn-sm" onclick="setRepMonth(-1)">◀ Prev. mesiac</button>
+          <button class="btn btn-secondary btn-sm" onclick="setRepMonth(0)">Tento mesiac</button>
+          <button class="btn btn-primary btn-sm" onclick="printReport()">🖨️ Tlačiť / PDF</button>
+        </div>
+        <div id="reportContent"></div>
       </div>
       <div class="page" id="page-settings">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:17px">
@@ -641,8 +703,14 @@ const vacName = d  => { const db=udb(); if(!db.vacations) return null; const v=d
 const nextId  = a  => a.length ? Math.max(...a.map(x=>x.id))+1 : 1;
 const $       = id => document.getElementById(id);
 const popSel  = (id, items) => $(id).innerHTML = items.map(i=>`<option value="${i.v}">${i.l}</option>`).join('');
-const closeModal = id => { const m=$(id); m.classList.remove('open'); const mb=m.querySelector('.modal-body'); if(mb) mb.scrollTop=0; };
-function openModal(id) { const m=$(id); m.classList.add('open'); const mb=m.querySelector('.modal-body'); if(mb) mb.scrollTop=0; }
+const closeModal = id => { $(id).classList.remove('open'); };
+function openModal(id) {
+  const overlay = $(id);
+  overlay.classList.add('open');
+  // scroll the .modal box itself to top (it holds overflow-y:auto)
+  const box = overlay.querySelector('.modal');
+  if (box) { box.scrollTop = 0; }
+}
 const toast   = (msg, t='ok') => { const el=$('toast'); el.textContent=msg; el.className='show t'+t; setTimeout(()=>el.className='',2600); };
 const emptyRoot = () => ({ users:[], userData:{} });
 const emptyUser = () => ({ vehicles:[], places:[], routes:[], tripReasons:[], holidays:[], trips:[], fuelLogs:[], costs:[], vacations:[] });
@@ -847,10 +915,10 @@ function showPage(page) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   $('page-'+page).classList.add('active');
   document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
-  const titles={dashboard:'Prehľad',trips:'Evidencia jázd',fuel:'Evidencia PHM',costs:'Náklady na vozidlá',routes:'Trasy',places:'Miesta / Ciele',settings:'Nastavenia'};
+  const titles={dashboard:'Prehľad',trips:'Evidencia jázd',fuel:'Evidencia PHM',costs:'Náklady na vozidlá',routes:'Trasy',places:'Miesta / Ciele',report:'Výkaz jázd',settings:'Nastavenia'};
   $('pageTitle').textContent = titles[page]||page;
   $('topAct').innerHTML = {trips:'<button class="btn btn-primary" onclick="openTripModal()">＋ Nová jazda</button>',fuel:'<button class="btn btn-primary" onclick="openFuelModal()">＋ Tankovanie</button>',costs:'<button class="btn btn-primary" onclick="openCostModal()">＋ Nový náklad</button>',routes:'<button class="btn btn-primary" onclick="openRouteModal()">＋ Nová trasa</button>',places:'<button class="btn btn-primary" onclick="openPlaceModal()">＋ Nové miesto</button>'}[page]||'';
-  ({dashboard:renderDashboard,trips:renderTrips,fuel:renderFuel,costs:renderCosts,routes:renderRoutes,places:renderPlaces,settings:renderSettings})[page]?.();
+  ({dashboard:renderDashboard,trips:renderTrips,fuel:renderFuel,costs:renderCosts,routes:renderRoutes,places:renderPlaces,report:initReport,settings:renderSettings})[page]?.();
 }
 
 // ══════════════════════════════════════════════════
@@ -1405,6 +1473,177 @@ function saveCost(){
 }
 
 function deleteCost(id){showConfirm(`Naozaj zmazať náklad #${id}?`,()=>{udb().costs=udb().costs.filter(c=>c.id!==id);debouncedSave();renderCosts();toast('Zmazané');});}
+
+
+// ══════════════════════════════════════════════════
+// REPORT
+// ══════════════════════════════════════════════════
+function setRepMonth(offset) {
+  const d = new Date(); d.setDate(1);
+  if (offset !== 0) d.setMonth(d.getMonth() + offset);
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0');
+  const last=new Date(y, d.getMonth()+1, 0).getDate();
+  $('repFrom').value = `${y}-${m}-01`;
+  $('repTo').value   = `${y}-${m}-${String(last).padStart(2,'0')}`;
+  renderReport();
+}
+
+function initReport() {
+  const db = udb();
+  // populate vehicle select
+  const vs = $('repVehicle');
+  while(vs.options.length>1) vs.remove(1);
+  db.vehicles.forEach(v=>{const o=document.createElement('option');o.value=v.ecv;o.textContent=`${v.name} (${v.ecv})`;vs.appendChild(o);});
+  if(db.vehicles.length===1) vs.value=db.vehicles[0].ecv;
+  // default: current month
+  if(!$('repFrom').value) setRepMonth(0);
+  else renderReport();
+}
+
+function renderReport() {
+  const db   = udb();
+  const ecv  = $('repVehicle').value;
+  const from = $('repFrom').value;
+  const to   = $('repTo').value;
+  const el   = $('reportContent');
+
+  if (!ecv || !from || !to) {
+    el.innerHTML = `<div class="alert ai" style="max-width:500px">Vyberte vozidlo a dátumové obdobie.</div>`;
+    return;
+  }
+
+  const vehicle = db.vehicles.find(v=>v.ecv===ecv);
+  const trips = [...db.trips]
+    .filter(t=>t.ecv===ecv && t.startDate>=from && t.startDate<=to)
+    .sort((a,b)=>a.startDate<b.startDate?-1:1);
+
+  const totalKm   = trips.reduce((s,t)=>s+(t.endOdo-t.startOdo),0);
+  const startOdo  = trips.length ? trips[0].startOdo : '—';
+  const endOdo    = trips.length ? trips[trips.length-1].endOdo : '—';
+  const fuelCosts = db.fuelLogs
+    .filter(f=>f.ecv===ecv && f.date>=from && f.date<=to)
+    .reduce((s,f)=>s+f.total,0);
+  const otherCosts = (db.costs||[])
+    .filter(co=>co.ecv===ecv && co.date>=from && co.date<=to)
+    .reduce((s,co)=>s+co.amount,0);
+
+  const fromFmt = fmtDate(from), toFmt = fmtDate(to);
+  const genDate = new Date().toLocaleDateString('sk-SK',{day:'2-digit',month:'2-digit',year:'numeric'});
+
+  const makeModel = [vehicle?.make, vehicle?.model].filter(Boolean).join(' ');
+
+  // Row numbering counter (only business days / valid trips)
+  let rowNum = 0;
+
+  const rows = trips.map(t => {
+    rowNum++;
+    const dist = t.endOdo - t.startOdo;
+    const we   = isWE(t.startDate);
+    const hd   = isHD(t.startDate);
+    const vac  = isVac(t.startDate);
+    const rowCls = hd ? 'hd-row' : we ? 'we-row' : '';
+    const flags = [
+      we  ? '<span style="color:var(--warn);font-size:0.72rem">VÍK</span>' : '',
+      hd  ? `<span style="color:var(--accent3);font-size:0.72rem" title="${hdName(t.startDate)||''}">SVT</span>` : '',
+      vac ? '<span style="color:#8e44ad;font-size:0.72rem">DOV</span>' : '',
+    ].filter(Boolean).join(' ');
+    const timeRange = (t.startTime||t.endTime)
+      ? `<span style="color:var(--text3);font-size:0.76rem">${t.startTime||''}${t.startTime&&t.endTime?'–':''}${t.endTime||''}</span>`
+      : '';
+    return `<tr class="${rowCls}">
+      <td style="color:var(--text3);text-align:right;padding-right:8px">${rowNum}.</td>
+      <td style="white-space:nowrap"><strong>${fmtDate(t.startDate)}</strong> ${timeRange}</td>
+      <td>${t.startPlace||t.startAddress}</td>
+      <td>${t.endPlace||t.endAddress}</td>
+      <td style="text-align:right">${t.startOdo.toLocaleString('sk')}</td>
+      <td style="text-align:right">${t.endOdo.toLocaleString('sk')}</td>
+      <td style="text-align:right;font-weight:600">${dist}</td>
+      <td style="font-size:0.78rem">${t.reason||''}</td>
+      <td style="text-align:center">${flags}</td>
+    </tr>`;
+  }).join('');
+
+  const emptyMsg = `<tr><td colspan="9" style="padding:24px;text-align:center;color:var(--text3)">Žiadne jazdy v zvolenom období</td></tr>`;
+
+  el.innerHTML = `
+  <div class="report-sheet">
+    <div class="report-header">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <h2>Kniha jázd</h2>
+          <div class="meta">Obdobie: <strong>${fromFmt} — ${toFmt}</strong> &nbsp;·&nbsp; Vygenerované: ${genDate}</div>
+        </div>
+        <div style="text-align:right;opacity:0.85;font-size:0.82rem">
+          <div style="font-size:1.2rem;font-weight:700">${ecv}</div>
+          ${makeModel ? `<div>${makeModel}</div>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="report-vehicle-row">
+      <div class="report-vfield"><div class="lbl">Vozidlo</div><div class="val">${vehicle?.name||ecv}</div></div>
+      <div class="report-vfield"><div class="lbl">EČV</div><div class="val">${ecv}</div></div>
+      <div class="report-vfield"><div class="lbl">VIN</div><div class="val">${vehicle?.vin||'—'}</div></div>
+      <div class="report-vfield"><div class="lbl">Výrobca / Model</div><div class="val">${makeModel||'—'}</div></div>
+    </div>
+
+    <table class="rep-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Dátum / Čas</th>
+          <th>Miesto odchodu</th>
+          <th>Miesto príchodu</th>
+          <th style="text-align:right">Tach. začiatok</th>
+          <th style="text-align:right">Tach. koniec</th>
+          <th style="text-align:right">km</th>
+          <th>Účel jazdy</th>
+          <th>Pozn.</th>
+        </tr>
+      </thead>
+      <tbody>${trips.length ? rows : emptyMsg}</tbody>
+      ${trips.length ? `<tfoot>
+        <tr>
+          <td colspan="4">Celkom jázd: ${trips.length}</td>
+          <td style="text-align:right">${trips.length?trips[0].startOdo.toLocaleString('sk'):'—'}</td>
+          <td style="text-align:right">${trips.length?trips[trips.length-1].endOdo.toLocaleString('sk'):'—'}</td>
+          <td style="text-align:right">${totalKm.toLocaleString('sk')}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tfoot>` : ''}
+    </table>
+
+    <div class="rep-summary">
+      <div class="rep-sum-cell"><div class="lbl">Celkové km</div><div class="val">${totalKm.toLocaleString('sk')}</div></div>
+      <div class="rep-sum-cell"><div class="lbl">Počiatočný stav</div><div class="val">${trips.length?trips[0].startOdo.toLocaleString('sk'):'—'}</div></div>
+      <div class="rep-sum-cell"><div class="lbl">Konečný stav</div><div class="val">${trips.length?trips[trips.length-1].endOdo.toLocaleString('sk'):'—'}</div></div>
+      <div class="rep-sum-cell"><div class="lbl">Náklady PHM + iné</div><div class="val">${(fuelCosts+otherCosts).toFixed(2)} €</div></div>
+    </div>
+
+    <div class="rep-sig no-print">
+      <div>
+        <div class="rep-sig-line">Podpis vodiča / zodpovednej osoby</div>
+      </div>
+      <div>
+        <div class="rep-sig-line">Pečiatka a podpis zamestnávateľa</div>
+      </div>
+    </div>
+    <div style="display:none" class="rep-sig" id="repSigPrint">
+      <div><div style="height:50px"></div><div class="rep-sig-line">Podpis vodiča / zodpovednej osoby</div></div>
+      <div><div style="height:50px"></div><div class="rep-sig-line">Pečiatka a podpis zamestnávateľa</div></div>
+    </div>
+  </div>`;
+}
+
+function printReport() {
+  if(!$('repVehicle').value){toast('Vyberte vozidlo','err');return;}
+  // Mark report page for print, show sig lines
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('print-active'));
+  $('page-report').classList.add('print-active');
+  const ps=$('repSigPrint'); if(ps) ps.style.display='grid';
+  window.print();
+  if(ps) ps.style.display='none';
+}
 
 // ══════════════════════════════════════════════════
 // EXPORT / IMPORT
