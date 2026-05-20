@@ -246,11 +246,11 @@
           <div style="font-size:0.71rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:9px">Začiatok cesty</div>
           <div class="form-row">
             <div class="form-group"><label>Dátum *</label><input type="date" id="f_sd" onchange="onDateChange()"></div>
-            <div class="form-group"><label>Čas</label><input type="time" id="f_st"></div>
+            <div class="form-group"><label>Čas</label><input type="time" id="f_st" onchange="if($('f_route').value) onRouteChange()"></div>
           </div>
           <div class="form-group mt2"><label>Miesto</label><select id="f_sp" onchange="onSPChange()"><option value="">— vlastná adresa —</option></select></div>
           <div class="form-group mt2"><label>Adresa *</label><input type="text" id="f_sa"></div>
-          <div class="form-group mt2"><label>Tachometer (km) *</label><input type="number" id="f_so" oninput="calcDist()"><span class="ferr" id="odoErr"></span></div>
+          <div class="form-group mt2"><label>Tachometer (km) *</label><input type="number" id="f_so" oninput="onStartOdoChange()"><span class="ferr" id="odoErr"></span></div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:13px">
           <div style="font-size:0.71rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:9px">Koniec cesty</div>
@@ -816,6 +816,26 @@ function onRouteChange() {
   if(sp){$('f_sp').value=r.start;$('f_sa').value=sp.address;}
   if(ep){$('f_ep').value=r.end;$('f_ea').value=ep.address;}
   if(r.reason) $('f_reason').value=r.reason;
+
+  // Auto-calculate end odometer from start odo + route distance
+  const startOdo=parseInt($('f_so').value);
+  if(startOdo && r.distance) {
+    $('f_eo').value = startOdo + Math.round(r.distance);
+    calcDist();
+  }
+
+  // Auto-calculate end time from start date+time + route duration
+  const startDate=$('f_sd').value, startTime=$('f_st').value;
+  if(startDate && startTime && r.duration) {
+    const [h,m] = startTime.split(':').map(Number);
+    const start = new Date(startDate + 'T' + startTime + ':00');
+    start.setMinutes(start.getMinutes() + r.duration);
+    const endDate = start.toISOString().split('T')[0];
+    const endHH = String(start.getHours()).padStart(2,'0');
+    const endMM = String(start.getMinutes()).padStart(2,'0');
+    $('f_ed').value = endDate;
+    $('f_et').value = endHH + ':' + endMM;
+  }
 }
 function onSPChange() { const p=udb().places.find(x=>x.name===$('f_sp').value); if(p) $('f_sa').value=p.address; }
 function onEPChange() { const p=udb().places.find(x=>x.name===$('f_ep').value); if(p) $('f_ea').value=p.address; }
@@ -824,6 +844,13 @@ function onDateChange() {
   const d=$('f_sd').value, f=$('dateFlags'); f.innerHTML='';
   if(isWE(d)) f.innerHTML+='<span class="badge bo">Víkend</span>';
   const hn=hdName(d); if(hn) f.innerHTML+=`<span class="badge br">${hn}</span>`;
+  // recalc end time if a route with duration is selected
+  if($('f_route').value) onRouteChange();
+}
+function onStartOdoChange() {
+  calcDist();
+  // recalc end odo if a route with distance is selected
+  if($('f_route').value) onRouteChange();
 }
 function calcDist() {
   const s=parseInt($('f_so').value), e=parseInt($('f_eo').value);
