@@ -145,6 +145,32 @@
   #toast.show { transform:translateY(0); opacity:1; }
   #toast.tok { background:var(--accent); } #toast.terr { background:var(--accent3); }
 
+  /* ── CALENDAR ── */
+  .cal-nav { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .cal-nav button { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:4px 10px; cursor:pointer; font-size:0.85rem; }
+  .cal-nav button:hover { background:var(--border); }
+  .cal-nav h4 { flex:1; text-align:center; font-size:0.95rem; font-weight:600; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .cal-dow { text-align:center; font-size:0.68rem; font-weight:700; color:var(--text3); text-transform:uppercase; padding:4px 0; }
+  .cal-dow.we { color:var(--warn); }
+  .cal-day {
+    aspect-ratio:1; border-radius:7px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; font-size:0.78rem; cursor:default;
+    border:1px solid transparent; position:relative; padding:2px;
+    transition:background 0.1s;
+  }
+  .cal-day.other-month { color:var(--text3); }
+  .cal-day.weekend { background:rgba(230,126,34,0.08); }
+  .cal-day.holiday { background:rgba(192,57,43,0.1); }
+  .cal-day.vacation { background:rgba(142,68,173,0.09); }
+  .cal-day.has-trip { font-weight:700; color:var(--accent); }
+  .cal-day.has-trip::after { content:''; width:5px; height:5px; border-radius:50%; background:var(--accent); position:absolute; bottom:3px; }
+  .cal-day.today { border-color:var(--accent); font-weight:700; }
+  .cal-day-num { line-height:1; }
+  .cal-legend { display:flex; gap:12px; flex-wrap:wrap; margin-top:10px; font-size:0.73rem; color:var(--text2); align-items:center; }
+  .cal-legend-item { display:flex; align-items:center; gap:4px; }
+  .cal-swatch { width:12px; height:12px; border-radius:3px; }
+
   @media print { .sidebar,.topbar,.topbar-actions,.btn,.filter-bar{display:none!important} .main{margin-left:0} }
 </style>
 </head>
@@ -188,9 +214,29 @@
       <div class="page active" id="page-dashboard">
         <div class="stats-grid" id="statsGrid"></div>
         <div id="valSummary"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:17px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:17px;margin-bottom:17px">
           <div class="card"><div class="card-header"><h3>Posledné jazdy</h3></div><div class="table-wrap" id="dashTrips"></div></div>
           <div class="card"><div class="card-header"><h3>Posledné tankovania</h3></div><div class="table-wrap" id="dashFuel"></div></div>
+        </div>
+        <div class="card" style="max-width:480px">
+          <div class="card-header">
+            <h3>Kalendár jázd</h3>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-secondary btn-sm" onclick="calPrev()">‹</button>
+              <button class="btn btn-secondary btn-sm" onclick="calToday()">Dnes</button>
+              <button class="btn btn-secondary btn-sm" onclick="calNext()">›</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="calTitle" style="text-align:center;font-weight:600;font-size:0.92rem;margin-bottom:10px"></div>
+            <div class="cal-grid" id="calGrid"></div>
+            <div class="cal-legend">
+              <span class="cal-legend-item"><span class="cal-swatch" style="background:rgba(44,95,74,0.8)"></span> Jazda</span>
+              <span class="cal-legend-item"><span class="cal-swatch" style="background:rgba(230,126,34,0.2)"></span> Víkend</span>
+              <span class="cal-legend-item"><span class="cal-swatch" style="background:rgba(192,57,43,0.2)"></span> Sviatok</span>
+              <span class="cal-legend-item"><span class="cal-swatch" style="background:rgba(142,68,173,0.15)"></span> Dovolenka</span>
+            </div>
+          </div>
         </div>
       </div>
       <div class="page" id="page-trips">
@@ -226,6 +272,7 @@
           <div class="card"><div class="card-header"><h3>Vozidlá</h3><button class="btn btn-primary btn-sm" onclick="openVehicleModal()">+ Pridať</button></div><div class="card-body" id="vehicleList"></div></div>
           <div class="card"><div class="card-header"><h3>Dôvody jazdy</h3><button class="btn btn-primary btn-sm" onclick="openReasonModal()">+ Pridať</button></div><div class="card-body" id="reasonList"></div></div>
           <div class="card"><div class="card-header"><h3>Sviatky</h3><button class="btn btn-primary btn-sm" onclick="openHolidayModal()">+ Pridať</button></div><div class="card-body" id="holidayList"></div></div>
+          <div class="card"><div class="card-header"><h3>Dovolenky</h3><button class="btn btn-primary btn-sm" onclick="openVacationModal()">+ Pridať</button></div><div class="card-body" id="vacationList"></div></div>
           <div class="card"><div class="card-header"><h3>Ukladanie dát</h3></div><div class="card-body" id="storagePanel"></div></div>
           <div class="card" style="grid-column:1/-1"><div class="card-header"><h3>Export / Import</h3></div>
             <div class="card-body">
@@ -383,8 +430,16 @@
         </div>
         <div class="form-group"><label>VIN číslo</label><input type="text" id="fv_vin" style="text-transform:uppercase;font-family:monospace" placeholder="17-znakový identifikátor vozidla" maxlength="17"></div>
         <div class="form-row">
+          <div class="form-group"><label>Výrobca</label><input type="text" id="fv_make" placeholder="napr. Hyundai"></div>
+          <div class="form-group"><label>Model</label><input type="text" id="fv_model" placeholder="napr. Santa Fe"></div>
+        </div>
+        <div class="form-row">
           <div class="form-group"><label>Rok výroby</label><input type="number" id="fv_year" placeholder="napr. 2020" min="1980" max="2099"></div>
           <div class="form-group"><label>Farba</label><input type="text" id="fv_color" placeholder="napr. Čierna metalíza"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Objem nádrže (l)</label><input type="number" step="0.1" id="fv_tank" placeholder="napr. 67"></div>
+          <div class="form-group"><label>Typ paliva</label><select id="fv_fuel"><option value="">—</option><option>Benzín</option><option>Nafta</option><option>LPG</option><option>Hybridný</option><option>Elektrický</option></select></div>
         </div>
         <div class="form-group"><label>Poznámka</label><input type="text" id="fv_note" placeholder="voliteľná poznámka"></div>
       </div>
@@ -467,6 +522,26 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('holidayModal')">Zrušiť</button>
       <button class="btn btn-primary" onclick="saveHoliday()">Uložiť</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VACATION MODAL ══ -->
+<div class="modal-overlay" id="vacationModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header"><h3 id="vacModalTitle">Nová dovolenka</h3><button class="close-btn" onclick="closeModal('vacationModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Názov / popis</label><input type="text" id="fvac_name" placeholder="napr. Letná dovolenka 2026"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Od *</label><input type="date" id="fvac_start"></div>
+          <div class="form-group"><label>Do *</label><input type="date" id="fvac_end"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('vacationModal')">Zrušiť</button>
+      <button class="btn btn-primary" onclick="saveVacation()">Uložiť</button>
     </div>
   </div>
 </div>
@@ -561,18 +636,21 @@ const fmtDate = d  => d ? d.split('-').reverse().join('.') : '—';
 const isWE    = d  => { const w = new Date(d+'T12:00:00').getDay(); return w===0||w===6; };
 const isHD    = d  => udb().holidays.some(h => h.date === d);
 const hdName  = d  => (udb().holidays.find(h => h.date === d)||{}).name || null;
+const isVac   = d  => { const db=udb(); if(!db.vacations) return false; return db.vacations.some(v=>d>=v.start&&d<=v.end); };
+const vacName = d  => { const db=udb(); if(!db.vacations) return null; const v=db.vacations.find(x=>d>=x.start&&d<=x.end); return v?v.name||'Dovolenka':null; };
 const nextId  = a  => a.length ? Math.max(...a.map(x=>x.id))+1 : 1;
 const $       = id => document.getElementById(id);
 const popSel  = (id, items) => $(id).innerHTML = items.map(i=>`<option value="${i.v}">${i.l}</option>`).join('');
-const closeModal = id => $(id).classList.remove('open');
+const closeModal = id => { const m=$(id); m.classList.remove('open'); const mb=m.querySelector('.modal-body'); if(mb) mb.scrollTop=0; };
+function openModal(id) { const m=$(id); m.classList.add('open'); const mb=m.querySelector('.modal-body'); if(mb) mb.scrollTop=0; }
 const toast   = (msg, t='ok') => { const el=$('toast'); el.textContent=msg; el.className='show t'+t; setTimeout(()=>el.className='',2600); };
 const emptyRoot = () => ({ users:[], userData:{} });
-const emptyUser = () => ({ vehicles:[], places:[], routes:[], tripReasons:[], holidays:[], trips:[], fuelLogs:[], costs:[] });
+const emptyUser = () => ({ vehicles:[], places:[], routes:[], tripReasons:[], holidays:[], trips:[], fuelLogs:[], costs:[], vacations:[] });
 
 function showConfirm(text, cb) {
   $('confirmText').textContent = text;
   $('confirmOk').onclick = () => { cb(); closeModal('confirmModal'); };
-  $('confirmModal').classList.add('open');
+  openModal('confirmModal');
 }
 
 // ══════════════════════════════════════════════════
@@ -675,7 +753,7 @@ function openGithubSetup() {
   const cls    = { local:'ai', github:'as', ls:'aw' };
   $('ghModeBanner').innerHTML = `<div class="alert ${cls[m]}">${labels[m]}</div>`;
   $('ghTest').textContent = '';
-  $('githubModal').classList.add('open');
+  openModal('githubModal');
 }
 
 function readGHForm() {
@@ -743,7 +821,7 @@ function switchUser() {
 function openAddUserModal() {
   const picker=$('colorPicker');
   picker.innerHTML = COLORS.map(c=>`<div onclick="pickColor('${c}')" data-c="${c}" style="width:27px;height:27px;border-radius:50%;background:${c};cursor:pointer;border:3px solid transparent;transition:border 0.12s"></div>`).join('');
-  $('nu_name').value = ''; $('addUserModal').classList.add('open');
+  $('nu_name').value = ''; openModal('addUserModal');
 }
 
 function pickColor(c) {
@@ -795,6 +873,8 @@ function validate() {
     }
     if (t.fuelPlace && !db.fuelLogs.some(f=>f.ecv===t.ecv&&f.date===t.startDate))
       errs.push({type:'warning',tid:t.id,msg:`${pfx}: Označené tankovanie, chýba záznam PHM`});
+    const vn = vacName(t.startDate);
+    if (vn) errs.push({type:'warning',tid:t.id,msg:`${pfx}: Jazda počas dovolenky — ${vn}`});
   });
   db.fuelLogs.forEach(f => {
     if (!db.trips.some(t=>t.ecv===f.ecv&&t.startDate===f.date))
@@ -803,6 +883,87 @@ function validate() {
   return errs;
 }
 
+
+// ══════════════════════════════════════════════════
+// CALENDAR
+// ══════════════════════════════════════════════════
+let calMonth = new Date().getMonth(), calYear = new Date().getFullYear();
+const SK_MONTHS = ['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
+const SK_DAYS   = ['Po','Ut','St','Št','Pi','So','Ne'];
+
+function calPrev() { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function calNext() { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+function calToday(){ calMonth=new Date().getMonth(); calYear=new Date().getFullYear(); renderCalendar(); }
+
+function renderCalendar() {
+  const db = udb();
+  const today = new Date().toISOString().split('T')[0];
+  $('calTitle').textContent = SK_MONTHS[calMonth] + ' ' + calYear;
+
+  // Build trip day set
+  const tripDays = new Set(db.trips.map(t=>t.startDate));
+  if(!db.vacations) db.vacations=[];
+
+  // Day-of-week header (Mon first)
+  const dowHtml = SK_DAYS.map((d,i)=>`<div class="cal-dow${i>=5?' we':''}">${d}</div>`).join('');
+
+  // First day of month; Monday=0 offset
+  const first = new Date(calYear, calMonth, 1);
+  const startDow = (first.getDay()+6)%7; // Mon=0
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrev  = new Date(calYear, calMonth, 0).getDate();
+
+  let cells = '';
+  const totalCells = Math.ceil((startDow + daysInMonth) / 7) * 7;
+
+  for (let i=0; i<totalCells; i++) {
+    let dayNum, dateStr, isOther=false;
+    if (i < startDow) {
+      dayNum = daysInPrev - startDow + 1 + i;
+      const m = calMonth===0 ? 12 : calMonth;
+      const y = calMonth===0 ? calYear-1 : calYear;
+      dateStr = `${y}-${String(m).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+      isOther = true;
+    } else if (i >= startDow + daysInMonth) {
+      dayNum = i - startDow - daysInMonth + 1;
+      const m = calMonth===11 ? 1 : calMonth+2;
+      const y = calMonth===11 ? calYear+1 : calYear;
+      dateStr = `${y}-${String(m).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+      isOther = true;
+    } else {
+      dayNum = i - startDow + 1;
+      dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+    }
+
+    const dow = (i % 7);
+    const isWEnd = dow >= 5;
+    const isHol  = isHD(dateStr);
+    const isVacD = !isOther && isVac(dateStr);
+    const hasTrip= tripDays.has(dateStr);
+    const isTdy  = dateStr === today;
+
+    let cls = 'cal-day';
+    if(isOther)  cls += ' other-month';
+    if(isVacD)   cls += ' vacation';
+    else if(isHol) cls += ' holiday';
+    else if(isWEnd) cls += ' weekend';
+    if(hasTrip)  cls += ' has-trip';
+    if(isTdy)    cls += ' today';
+
+    const tipParts = [];
+    if(isHol) tipParts.push(hdName(dateStr));
+    if(isVacD) tipParts.push(vacName(dateStr));
+    if(hasTrip){
+      const ts = db.trips.filter(t=>t.startDate===dateStr);
+      ts.forEach(t=>tipParts.push(`${t.startPlace||t.startAddress.split(',')[0]} → ${t.endPlace||t.endAddress.split(',')[0]} (${t.endOdo-t.startOdo} km)`));
+    }
+    const tip = tipParts.join('\n');
+
+    cells += `<div class="${cls}" title="${tip}"><span class="cal-day-num">${dayNum}</span></div>`;
+  }
+
+  $('calGrid').innerHTML = dowHtml + cells;
+}
 // ══════════════════════════════════════════════════
 // DASHBOARD
 // ══════════════════════════════════════════════════
@@ -822,6 +983,7 @@ function renderDashboard() {
   </div>` : '';
   $('dashTrips').innerHTML=`<table><thead><tr><th>Dátum</th><th>Trasa</th><th>km</th></tr></thead><tbody>${[...db.trips].sort((a,b)=>b.id-a.id).slice(0,7).map(t=>`<tr><td>${fmtDate(t.startDate)}</td><td style="font-size:0.79rem">${(t.startPlace||t.startAddress.split(',')[0])} → ${(t.endPlace||t.endAddress.split(',')[0])}</td><td>${t.endOdo-t.startOdo}</td></tr>`).join('')}</tbody></table>`;
   $('dashFuel').innerHTML=`<table><thead><tr><th>Dátum</th><th>Miesto</th><th>Suma</th></tr></thead><tbody>${[...db.fuelLogs].sort((a,b)=>b.id-a.id).slice(0,5).map(f=>`<tr><td>${fmtDate(f.date)}</td><td>${f.place}</td><td>${f.total.toFixed(2)} €</td></tr>`).join('')}</tbody></table>`;
+  renderCalendar();
 }
 
 // ══════════════════════════════════════════════════
@@ -888,7 +1050,7 @@ function openTripModal(id) {
     const last=[...db.trips].filter(t=>db.vehicles[0]&&t.ecv===db.vehicles[0].ecv).sort((a,b)=>a.id-b.id).pop();
     $('f_so').value=last?last.endOdo:''; $('f_eo').value='';
   }
-  onDateChange(); calcDist(); $('tripModal').classList.add('open');
+  onDateChange(); calcDist(); openModal('tripModal');
 }
 
 function onRouteChange() {
@@ -925,6 +1087,7 @@ function onDateChange() {
   const d=$('f_sd').value, f=$('dateFlags'); f.innerHTML='';
   if(isWE(d)) f.innerHTML+='<span class="badge bo">Víkend</span>';
   const hn=hdName(d); if(hn) f.innerHTML+=`<span class="badge br">${hn}</span>`;
+  const vn=vacName(d); if(vn) f.innerHTML+=`<span class="badge" style="background:#e8d5f5;color:#5a2d82">${vn}</span>`;
   // recalc end time if a route with duration is selected
   if($('f_route').value) onRouteChange();
 }
@@ -982,7 +1145,7 @@ function openFuelModal(id) {
   popSel('ff_place', [{v:'',l:'— vybrať —'},...db.places.map(p=>({v:p.name,l:p.name}))]);
   if(id){const f=db.fuelLogs.find(x=>x.id===id);if(f){$('ff_date').value=f.date;$('ff_time').value=f.time;$('ff_ecv').value=f.ecv;$('ff_odo').value=f.odometer;$('ff_place').value=f.place;$('ff_ppl').value=f.pricePerLiter;$('ff_l').value=f.liters;$('ff_total').value=f.total.toFixed(2);}}
   else{$('ff_date').value=new Date().toISOString().split('T')[0];['ff_time','ff_odo','ff_ppl','ff_l','ff_total'].forEach(i=>$(i).value='');$('ff_place').value='';}
-  $('fuelModal').classList.add('open');
+  openModal('fuelModal');
 }
 
 function calcFuelT(){const p=parseFloat($('ff_ppl').value),l=parseFloat($('ff_l').value);if(p&&l)$('ff_total').value=(p*l).toFixed(2);}
@@ -1018,7 +1181,7 @@ function openRouteModal(idx) {
   popSel('fr_s',po); popSel('fr_e',po);
   if(idx!==undefined){const r=udb().routes[idx];$('fr_name').value=r.name;$('fr_s').value=r.start;$('fr_e').value=r.end;$('fr_d').value=r.distance;$('fr_t').value=r.duration||'';$('fr_r').value=r.reason||'';}
   else{['fr_name','fr_d','fr_t','fr_r'].forEach(i=>$(i).value='');$('fr_s').value=$('fr_e').value='';}
-  $('routeModal').classList.add('open');
+  openModal('routeModal');
 }
 
 function saveRoute(){const name=$('fr_name').value.trim(),s=$('fr_s').value,e=$('fr_e').value,d=parseFloat($('fr_d').value),t=parseInt($('fr_t').value)||null,r=$('fr_r').value.trim();if(!name||!s||!e||!d){toast('Vyplňte povinné polia','err');return;}const route={name,start:s,end:e,distance:d,duration:t,reason:r||null};if(eIds.route!==null)udb().routes[eIds.route]=route;else udb().routes.push(route);debouncedSave();closeModal('routeModal');renderRoutes();toast('Trasa uložená','ok');}
@@ -1029,7 +1192,7 @@ function deleteRoute(i){showConfirm(`Zmazať trasu "${udb().routes[i].name}"?`,(
 // ══════════════════════════════════════════════════
 function renderPlaces(){$('placesTable').innerHTML=`<table><thead><tr><th>Názov</th><th>Adresa</th><th></th></tr></thead><tbody>${udb().places.map((p,i)=>`<tr><td><strong>${p.name}</strong></td><td style="color:var(--text2)">${p.address}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openPlaceModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deletePlace(${i})">🗑</button></td></tr>`).join('')}</tbody></table>`;}
 
-function openPlaceModal(idx){eIds.place=idx!==undefined?idx:null;$('placeModalTitle').textContent=idx!==undefined?'Upraviť miesto':'Nové miesto';if(idx!==undefined){$('fp_n').value=udb().places[idx].name;$('fp_a').value=udb().places[idx].address;}else{$('fp_n').value='';$('fp_a').value='';}$('placeModal').classList.add('open');}
+function openPlaceModal(idx){eIds.place=idx!==undefined?idx:null;$('placeModalTitle').textContent=idx!==undefined?'Upraviť miesto':'Nové miesto';if(idx!==undefined){$('fp_n').value=udb().places[idx].name;$('fp_a').value=udb().places[idx].address;}else{$('fp_n').value='';$('fp_a').value='';}openModal('placeModal');}
 
 function savePlace(){const n=$('fp_n').value.trim(),a=$('fp_a').value.trim();if(!n||!a){toast('Vyplňte polia','err');return;}if(eIds.place!==null)udb().places[eIds.place]={name:n,address:a};else udb().places.push({name:n,address:a});debouncedSave();closeModal('placeModal');renderPlaces();toast('Miesto uložené','ok');}
 function deletePlace(i){showConfirm(`Zmazať "${udb().places[i].name}"?`,()=>{udb().places.splice(i,1);debouncedSave();renderPlaces();});}
@@ -1039,9 +1202,11 @@ function deletePlace(i){showConfirm(`Zmazať "${udb().places[i].name}"?`,()=>{ud
 // ══════════════════════════════════════════════════
 function renderSettings(){
   const db=udb();
-  $('vehicleList').innerHTML=db.vehicles.map((v,i)=>`<div class="li"><span>${v.name} — <strong>${v.ecv}</strong>${v.vin?' <span class="tm">VIN: '+v.vin+'</span>':''}</span><div style="display:flex;gap:5px"><button class="btn btn-secondary btn-sm" onclick="openVehicleModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteVehicle(${i})">🗑</button></div></div>`).join('')||'<div class="tm">Žiadne vozidlá</div>';
+  $('vehicleList').innerHTML=db.vehicles.map((v,i)=>`<div class="li" style="flex-direction:column;align-items:flex-start;gap:4px"><div style="display:flex;justify-content:space-between;width:100%;align-items:center"><span><strong>${v.name}</strong> <span class="badge bz">${v.ecv}</span>${v.make||v.model?' <span class="tm">${v.make||''} ${v.model||''}</span>':''}</span><div style="display:flex;gap:5px"><button class="btn btn-secondary btn-sm" onclick="openVehicleModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteVehicle(${i})">🗑</button></div></div><div style="font-size:0.74rem;color:var(--text3);display:flex;gap:10px;flex-wrap:wrap">${v.year?'<span>'+v.year+'</span>':''}${v.vin?'<span>VIN: '+v.vin+'</span>':''}${v.tank?'<span>Nádrž: '+v.tank+' l</span>':''}${v.fuel?'<span>'+v.fuel+'</span>':''}${v.color?'<span>'+v.color+'</span>':''}</div></div>`).join('')||'<div class="tm">Žiadne vozidlá</div>';
   $('reasonList').innerHTML=db.tripReasons.map((r,i)=>`<div class="li"><span>${r}</span><button class="btn btn-danger btn-sm" onclick="deleteReason(${i})">🗑</button></div>`).join('')||'<div class="tm">Žiadne dôvody</div>';
-  $('holidayList').innerHTML=[...db.holidays].sort((a,b)=>a.date>b.date?1:-1).map(h=>`<div class="li" style="font-size:0.8rem"><span>${fmtDate(h.date)} — ${h.name}</span><button class="btn btn-danger btn-sm" onclick="deleteHoliday('${h.date}')">🗑</button></div>`).join('');
+  $('holidayList').innerHTML=[...db.holidays].sort((a,b)=>a.date>b.date?1:-1).map(h=>`<div class="li" style="font-size:0.8rem"><span>${fmtDate(h.date)} — ${h.name}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openHolidayModal('${h.date}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteHoliday('${h.date}')">🗑</button></div></div>`).join('');
+  if(!db.vacations) db.vacations=[];
+  $('vacationList').innerHTML=[...db.vacations].sort((a,b)=>a.start>b.start?1:-1).map((v,i)=>`<div class="li" style="font-size:0.8rem"><span>${fmtDate(v.start)} – ${fmtDate(v.end)}${v.name?' — '+v.name:''}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openVacationModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteVacation(${i})">🗑</button></div></div>`).join('')||'<div class="tm">Žiadne dovolenky</div>';
   const m=mode(), ml={local:'🖥️ Lokálny server (data.json)',github:'🐙 GitHub repozitár',ls:'💾 Len localStorage'}, mc={local:'ai',github:'as',ls:'aw'};
   $('storagePanel').innerHTML=`<div class="alert ${mc[m]}">${ml[m]}</div><p class="tm mb2">Aktuálny spôsob ukladania.</p><button class="btn btn-secondary btn-sm" onclick="openGithubSetup()">⚙️ Nastavenia ukladania</button>`;
 }
@@ -1053,23 +1218,36 @@ function openVehicleModal(idx){
     const v = udb().vehicles[idx];
     $('fv_n').value     = v.name || '';
     $('fv_e').value     = v.ecv  || '';
-    $('fv_vin').value   = v.vin  || '';
-    $('fv_year').value  = v.year || '';
-    $('fv_color').value = v.color|| '';
-    $('fv_note').value  = v.note || '';
+    $('fv_vin').value   = v.vin   || '';
+    $('fv_make').value  = v.make  || '';
+    $('fv_model').value = v.model || '';
+    $('fv_year').value  = v.year  || '';
+    $('fv_color').value = v.color || '';
+    $('fv_tank').value  = v.tank  || '';
+    $('fv_fuel').value  = v.fuel  || '';
+    $('fv_note').value  = v.note  || '';
   } else {
-    ['fv_n','fv_e','fv_vin','fv_year','fv_color','fv_note'].forEach(i=>$(i).value='');
+    ['fv_n','fv_e','fv_vin','fv_make','fv_model','fv_year','fv_color','fv_tank','fv_note'].forEach(i=>$(i).value=''); $('fv_fuel').value='';
   }
-  $('vehicleModal').classList.add('open');
+  openModal('vehicleModal');
 }
-function openReasonModal(){$('reasonModal').classList.add('open');}
-function openHolidayModal(){$('holidayModal').classList.add('open');}
+function openReasonModal(){openModal('reasonModal');}
+function openHolidayModal(editDate){
+  eIds.holiday = editDate||null;
+  if(editDate){
+    const h=udb().holidays.find(x=>x.date===editDate);
+    if(h){$('fh_d').value=h.date;$('fh_n').value=h.name;}
+  } else { $('fh_d').value='';$('fh_n').value=''; }
+  openModal('holidayModal');
+}
 function saveVehicle(){
   const n=$('fv_n').value.trim(), e=$('fv_e').value.trim().toUpperCase();
   const vin=$('fv_vin').value.trim().toUpperCase(), year=parseInt($('fv_year').value)||null;
   const color=$('fv_color').value.trim(), note=$('fv_note').value.trim();
+  const make=$('fv_make').value.trim(), model=$('fv_model').value.trim();
+  const tank=parseFloat($('fv_tank').value)||null, fuel=$('fv_fuel').value;
   if(!n||!e){toast('Vyplňte povinné polia','err');return;}
-  const v={name:n,ecv:e,vin:vin||null,year,color:color||null,note:note||null};
+  const v={name:n,ecv:e,vin:vin||null,make:make||null,model:model||null,year,color:color||null,tank,fuel:fuel||null,note:note||null};
   if(eIds.vehicle!==null&&eIds.vehicle!==undefined) udb().vehicles[eIds.vehicle]=v;
   else udb().vehicles.push(v);
   debouncedSave();closeModal('vehicleModal');renderSettings();toast('Vozidlo uložené','ok');
@@ -1077,8 +1255,25 @@ function saveVehicle(){
 function deleteVehicle(i){showConfirm(`Zmazať "${udb().vehicles[i].name}"?`,()=>{udb().vehicles.splice(i,1);debouncedSave();renderSettings();});}
 function saveReason(){const t=$('freason').value.trim();if(!t)return;udb().tripReasons.push(t);debouncedSave();closeModal('reasonModal');renderSettings();$('freason').value='';toast('Dôvod uložený','ok');}
 function deleteReason(i){udb().tripReasons.splice(i,1);debouncedSave();renderSettings();}
-function saveHoliday(){const d=$('fh_d').value,n=$('fh_n').value.trim();if(!d||!n){toast('Vyplňte polia','err');return;}udb().holidays.push({date:d,name:n});debouncedSave();closeModal('holidayModal');renderSettings();$('fh_d').value='';$('fh_n').value='';toast('Sviatok uložený','ok');}
-function deleteHoliday(d){udb().holidays=udb().holidays.filter(h=>h.date!==d);debouncedSave();renderSettings();}
+function saveHoliday(){
+  const d=$('fh_d').value,n=$('fh_n').value.trim();
+  if(!d||!n){toast('Vyplňte polia','err');return;}
+  if(eIds.holiday){udb().holidays=udb().holidays.filter(h=>h.date!==eIds.holiday);}
+  udb().holidays.push({date:d,name:n});
+  debouncedSave();closeModal('holidayModal');renderSettings();toast('Sviatok uložený','ok');
+}
+function deleteHoliday(d){showConfirm(`Zmazať sviatok ${fmtDate(d)}?`,()=>{udb().holidays=udb().holidays.filter(h=>h.date!==d);debouncedSave();renderSettings();});}
+function saveVacation(){
+  const start=$('fvac_start').value, end=$('fvac_end').value, name=$('fvac_name').value.trim();
+  if(!start||!end){toast('Vyplňte dátumy','err');return;}
+  if(end<start){toast('Koniec musí byť po začiatku','err');return;}
+  const db=udb(); if(!db.vacations) db.vacations=[];
+  const vac={start,end,name:name||null};
+  if(eIds.vacation!==null&&eIds.vacation!==undefined) db.vacations[eIds.vacation]=vac;
+  else db.vacations.push(vac);
+  debouncedSave();closeModal('vacationModal');renderSettings();toast('Dovolenka uložená','ok');
+}
+function deleteVacation(i){showConfirm('Zmazať dovolenku?',()=>{udb().vacations.splice(i,1);debouncedSave();renderSettings();});}
 
 
 // ══════════════════════════════════════════════════
@@ -1175,7 +1370,7 @@ function openCostModal(id) {
     $('fc_type_sel').value='';
     if(db.vehicles.length) $('fc_ecv').value=db.vehicles[0].ecv;
   }
-  $('costModal').classList.add('open');
+  openModal('costModal');
 }
 
 function saveCost(){
