@@ -1515,51 +1515,34 @@ function renderReport() {
   const vehicle = db.vehicles.find(v=>v.ecv===ecv);
   const trips = [...db.trips]
     .filter(t=>t.ecv===ecv && t.startDate>=from && t.startDate<=to)
-    .sort((a,b)=>a.startDate<b.startDate?-1:1);
+    .sort((a,b)=>a.startDate<b.startDate?-1:a.startDate>b.startDate?1:
+      (a.startTime||'').localeCompare(b.startTime||''));
 
-  const totalKm   = trips.reduce((s,t)=>s+(t.endOdo-t.startOdo),0);
-  const startOdo  = trips.length ? trips[0].startOdo : '—';
-  const endOdo    = trips.length ? trips[trips.length-1].endOdo : '—';
-  const fuelCosts = db.fuelLogs
-    .filter(f=>f.ecv===ecv && f.date>=from && f.date<=to)
-    .reduce((s,f)=>s+f.total,0);
-  const otherCosts = (db.costs||[])
-    .filter(co=>co.ecv===ecv && co.date>=from && co.date<=to)
-    .reduce((s,co)=>s+co.amount,0);
+  const totalKm = trips.reduce((s,t)=>s+(t.endOdo-t.startOdo),0);
 
   const fromFmt = fmtDate(from), toFmt = fmtDate(to);
   const genDate = new Date().toLocaleDateString('sk-SK',{day:'2-digit',month:'2-digit',year:'numeric'});
-
   const makeModel = [vehicle?.make, vehicle?.model].filter(Boolean).join(' ');
 
-  // Row numbering counter (only business days / valid trips)
   let rowNum = 0;
-
   const rows = trips.map(t => {
     rowNum++;
     const dist = t.endOdo - t.startOdo;
-    const we   = isWE(t.startDate);
-    const hd   = isHD(t.startDate);
-    const vac  = isVac(t.startDate);
-    const rowCls = hd ? 'hd-row' : we ? 'we-row' : '';
-    const flags = [
-      we  ? '<span style="color:var(--warn);font-size:0.72rem">VÍK</span>' : '',
-      hd  ? `<span style="color:var(--accent3);font-size:0.72rem" title="${hdName(t.startDate)||''}">SVT</span>` : '',
-      vac ? '<span style="color:#8e44ad;font-size:0.72rem">DOV</span>' : '',
-    ].filter(Boolean).join(' ');
-    const timeRange = (t.startTime||t.endTime)
-      ? `<span style="color:var(--text3);font-size:0.76rem">${t.startTime||''}${t.startTime&&t.endTime?'–':''}${t.endTime||''}</span>`
-      : '';
-    return `<tr class="${rowCls}">
-      <td style="color:var(--text3);text-align:right;padding-right:8px">${rowNum}.</td>
-      <td style="white-space:nowrap"><strong>${fmtDate(t.startDate)}</strong> ${timeRange}</td>
-      <td>${t.startPlace||t.startAddress}</td>
-      <td>${t.endPlace||t.endAddress}</td>
-      <td style="text-align:right">${t.startOdo.toLocaleString('sk')}</td>
-      <td style="text-align:right">${t.endOdo.toLocaleString('sk')}</td>
-      <td style="text-align:right;font-weight:600">${dist}</td>
-      <td style="font-size:0.78rem">${t.reason||''}</td>
-      <td style="text-align:center">${flags}</td>
+    // start: date + time in two lines
+    const startDT = `<div style="white-space:nowrap"><strong>${fmtDate(t.startDate)}</strong></div>`
+      + (t.startTime ? `<div style="color:var(--text2);font-size:0.78rem">${t.startTime}</div>` : '');
+    const endDT = `<div style="white-space:nowrap"><strong>${fmtDate(t.endDate||t.startDate)}</strong></div>`
+      + (t.endTime ? `<div style="color:var(--text2);font-size:0.78rem">${t.endTime}</div>` : '');
+    return `<tr>
+      <td style="color:var(--text3);text-align:right;padding-right:6px;vertical-align:top;padding-top:10px">${rowNum}.</td>
+      <td style="vertical-align:top">${startDT}</td>
+      <td style="vertical-align:top">${endDT}</td>
+      <td style="font-size:0.81rem;vertical-align:top">${t.startAddress}</td>
+      <td style="font-size:0.81rem;vertical-align:top">${t.endAddress}</td>
+      <td style="text-align:right;vertical-align:top">${t.startOdo.toLocaleString('sk')}</td>
+      <td style="text-align:right;vertical-align:top">${t.endOdo.toLocaleString('sk')}</td>
+      <td style="text-align:right;font-weight:600;vertical-align:top">${dist}</td>
+      <td style="font-size:0.78rem;vertical-align:top">${t.reason||''}</td>
     </tr>`;
   }).join('');
 
@@ -1591,42 +1574,37 @@ function renderReport() {
       <thead>
         <tr>
           <th>#</th>
-          <th>Dátum / Čas</th>
-          <th>Miesto odchodu</th>
-          <th>Miesto príchodu</th>
-          <th style="text-align:right">Tach. začiatok</th>
-          <th style="text-align:right">Tach. koniec</th>
+          <th>Dátum<br>odchodu</th>
+          <th>Dátum<br>príchodu</th>
+          <th>Adresa odchodu</th>
+          <th>Adresa príchodu</th>
+          <th style="text-align:right">Tach.<br>začiatok</th>
+          <th style="text-align:right">Tach.<br>koniec</th>
           <th style="text-align:right">km</th>
           <th>Účel jazdy</th>
-          <th>Pozn.</th>
         </tr>
       </thead>
       <tbody>${trips.length ? rows : emptyMsg}</tbody>
       ${trips.length ? `<tfoot>
         <tr>
-          <td colspan="4">Celkom jázd: ${trips.length}</td>
-          <td style="text-align:right">${trips.length?trips[0].startOdo.toLocaleString('sk'):'—'}</td>
-          <td style="text-align:right">${trips.length?trips[trips.length-1].endOdo.toLocaleString('sk'):'—'}</td>
+          <td colspan="5" style="font-size:0.8rem">Celkom jázd: <strong>${trips.length}</strong></td>
+          <td style="text-align:right">${trips[0].startOdo.toLocaleString('sk')}</td>
+          <td style="text-align:right">${trips[trips.length-1].endOdo.toLocaleString('sk')}</td>
           <td style="text-align:right">${totalKm.toLocaleString('sk')}</td>
-          <td colspan="2"></td>
+          <td></td>
         </tr>
       </tfoot>` : ''}
     </table>
 
-    <div class="rep-summary">
+    <div class="rep-summary" style="grid-template-columns:repeat(3,1fr)">
       <div class="rep-sum-cell"><div class="lbl">Celkové km</div><div class="val">${totalKm.toLocaleString('sk')}</div></div>
-      <div class="rep-sum-cell"><div class="lbl">Počiatočný stav</div><div class="val">${trips.length?trips[0].startOdo.toLocaleString('sk'):'—'}</div></div>
-      <div class="rep-sum-cell"><div class="lbl">Konečný stav</div><div class="val">${trips.length?trips[trips.length-1].endOdo.toLocaleString('sk'):'—'}</div></div>
-      <div class="rep-sum-cell"><div class="lbl">Náklady PHM + iné</div><div class="val">${(fuelCosts+otherCosts).toFixed(2)} €</div></div>
+      <div class="rep-sum-cell"><div class="lbl">Počiatočný stav tachometra</div><div class="val">${trips.length?trips[0].startOdo.toLocaleString('sk'):'—'}</div></div>
+      <div class="rep-sum-cell" style="border-right:none"><div class="lbl">Konečný stav tachometra</div><div class="val">${trips.length?trips[trips.length-1].endOdo.toLocaleString('sk'):'—'}</div></div>
     </div>
 
     <div class="rep-sig no-print">
-      <div>
-        <div class="rep-sig-line">Podpis vodiča / zodpovednej osoby</div>
-      </div>
-      <div>
-        <div class="rep-sig-line">Pečiatka a podpis zamestnávateľa</div>
-      </div>
+      <div><div class="rep-sig-line">Podpis vodiča / zodpovednej osoby</div></div>
+      <div><div class="rep-sig-line">Pečiatka a podpis zamestnávateľa</div></div>
     </div>
     <div style="display:none" class="rep-sig" id="repSigPrint">
       <div><div style="height:50px"></div><div class="rep-sig-line">Podpis vodiča / zodpovednej osoby</div></div>
