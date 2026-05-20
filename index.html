@@ -556,7 +556,7 @@ async function saveData() {
     }
     if (mode() === 'github') { await ghPut(rootData); setSyncStatus('ok','Uložené na GitHub'); return; }
     setSyncStatus('warn','Len localStorage');
-  } catch(e) { setSyncStatus('err','Chyba ukladania'); console.error(e); }
+  } catch(e) { setSyncStatus('err','Chyba: '+e.message.slice(0,60)); console.error('Save error:', e); }
 }
 
 const debouncedSave = () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveData, 600); };
@@ -570,7 +570,9 @@ const ghHdr  = () => ({ 'Authorization':'Bearer '+ghCfg.token, 'Accept':'applica
 async function ghGet() {
   const r = await fetch(ghBase()+'?ref='+ghCfg.branch, { headers:ghHdr() });
   if (r.status===404) return null;
-  if (!r.ok) throw new Error('GH GET '+r.status);
+  if (r.status===401) throw new Error('Token neplatny alebo expirovany (401)');
+  if (r.status===403) throw new Error('Pristup zamietnuty - skontrolujte opravnenia tokenu (403)');
+  if (!r.ok) throw new Error('GitHub GET zlyhal: HTTP '+r.status);
   const j = await r.json();
   const d = JSON.parse(atob(j.content.replace(/\n/g,'')));
   d._sha = j.sha; return d;
@@ -580,12 +582,21 @@ async function ghPut(data) {
   const sha = data._sha;
   const p = JSON.parse(JSON.stringify(data)); delete p._sha;
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(p,null,2))));
-  const body = { message:'Aktualizácia Knihy Jazd '+new Date().toISOString().slice(0,16).replace('T',' '), content, branch:ghCfg.branch };
+  const body = { message:'Aktualizacia Knihy Jazd '+new Date().toISOString().slice(0,16).replace('T',' '), content, branch:ghCfg.branch };
   if (sha) body.sha = sha;
   const r = await fetch(ghBase(), { method:'PUT', headers:ghHdr(), body:JSON.stringify(body) });
-  if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error('GH PUT: '+(e.message||r.status)); }
+  if (!r.ok) {
+    const e = await r.json().catch(()=>({}));
+    const hint = r.status===409 ? ' (SHA konflikt - znovu nacitajte stranku)'
+               : r.status===422 ? ' (neplatne data alebo chyba SHA)'
+               : r.status===403 ? ' (token nema pravo zapisu - nastavte Contents: Read and write)'
+               : r.status===401 ? ' (token neplatny alebo expirovany)'
+               : '';
+    throw new Error('GitHub PUT zlyhal: HTTP '+r.status+hint+' - '+(e.message||''));
+  }
   const j = await r.json();
   rootData._sha = j.content.sha;
+  localStorage.setItem(LS_KEY, JSON.stringify(rootData));
 }
 
 function openGithubSetup() {
@@ -611,11 +622,17 @@ function readGHForm() {
 }
 
 async function testGH() {
-  $('ghTest').textContent = 'Testujem…';
+  $('ghTest').innerHTML = '<span class="spinner" style="border-top-color:var(--accent);border-color:rgba(0,0,0,0.15)"></span> Testujem…';
   const c = readGHForm(); if (!c) { $('ghTest').textContent = '⚠️ Vyplňte polia'; return; }
   ghCfg = c;
-  try { await ghGet(); $('ghTest').textContent = '✅ OK'; }
-  catch(e) { $('ghTest').textContent = '❌ '+e.message; }
+  try {
+    const existing = await ghGet();
+    const testData = existing || {users:[],userData:{}};
+    await ghPut(JSON.parse(JSON.stringify(testData)));
+    $('ghTest').textContent = '✅ Čtanie aj zápis OK';
+  } catch(e) {
+    $('ghTest').textContent = '❌ '+e.message;
+  }
 }
 
 function saveGHConfig() {
