@@ -244,6 +244,176 @@
   .rep-sum-cell .val{font-size:1.3rem;font-weight:700}
   .rep-sig { display:grid; grid-template-columns:1fr 1fr; gap:40px; padding:30px 30px 20px; margin-top:10px; }
   .rep-sig-line { border-top:1px solid var(--text); padding-top:6px; font-size:0.78rem; color:var(--text2); text-align:center; margin-top:40px; }
+
+/* ════════════════════════════════════════════════
+   MOBILE RESPONSIVE  (≤680px)
+   Desktop layout is completely unchanged above.
+   ════════════════════════════════════════════════ */
+
+/* FAB and bottom nav hidden on desktop */
+.mob-fab        { display:none; }
+.mob-bottom-nav { display:none; }
+.mob-menu-btn   { display:none; }
+#mobOverlay     { display:none; }
+#mobDrawer      { display:none; }
+
+@media (max-width:680px) {
+
+  /* ── Sidebar: hidden on mobile ── */
+  .sidebar { display:none !important; }
+  .main    { margin-left:0 !important; }
+
+  /* ── Topbar ── */
+  .topbar { padding:10px 14px; }
+  .topbar h2 { font-size:0.95rem; }
+  .mob-menu-btn {
+    display:flex; align-items:center; justify-content:center;
+    background:none; border:none; font-size:1.3rem; cursor:pointer;
+    color:var(--text2); padding:2px 6px; border-radius:6px; margin-right:6px;
+    flex-shrink:0;
+  }
+  .mob-menu-btn:hover { background:var(--surface2); }
+
+  /* ── Mobile drawer ── */
+  #mobOverlay {
+    display:block; position:fixed; inset:0;
+    background:rgba(0,0,0,0.45); z-index:150;
+    opacity:0; pointer-events:none; transition:opacity 0.22s;
+  }
+  #mobOverlay.open { opacity:1; pointer-events:auto; }
+
+  #mobDrawer {
+    display:flex; flex-direction:column;
+    position:fixed; top:0; left:0; bottom:0; width:240px;
+    background:var(--accent); z-index:160;
+    transform:translateX(-100%); transition:transform 0.22s ease;
+    box-shadow:4px 0 20px rgba(0,0,0,0.25);
+  }
+  #mobDrawer.open { transform:translateX(0); }
+
+  .mob-nav-item {
+    display:flex; align-items:center; gap:10px;
+    padding:11px 18px; cursor:pointer; font-size:0.9rem;
+    color:rgba(255,255,255,0.78); border-left:3px solid transparent;
+    transition:all 0.12s;
+  }
+  .mob-nav-item:hover { background:rgba(255,255,255,0.1); color:#fff; }
+  .mob-nav-item.active { background:rgba(255,255,255,0.13); color:#fff; font-weight:600; border-left-color:var(--accent2); }
+
+  /* ── Content padding ── */
+  .content { padding:14px 14px 80px; } /* bottom padding for bottom nav */
+
+  /* ── Stats: 2×2 grid ── */
+  .stats-grid { grid-template-columns:1fr 1fr !important; gap:10px; }
+  .stat-value { font-size:1.3rem; }
+
+  /* ── Dashboard: stack cards ── */
+  #page-dashboard > div[style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns:1fr !important;
+  }
+  /* Calendar: full width */
+  #page-dashboard .card[style*="max-width:480px"] { max-width:100% !important; }
+
+  /* ── Generic 2-col grids inside pages → single column ── */
+  .page > div[style*="grid-template-columns:1fr 1fr"],
+  #stgpanel-calendar > div[style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns:1fr !important;
+  }
+
+  /* ── Form rows → single column ── */
+  .form-row, .form-row-3 { grid-template-columns:1fr !important; }
+
+  /* ── Modals: full width, max-height 95vh ── */
+  .modal-overlay { padding:0; align-items:flex-end; }
+  .modal {
+    max-width:100% !important;
+    max-height:95vh !important;
+    border-radius:18px 18px 0 0 !important;
+    animation:slideUp 0.2s ease !important;
+  }
+
+  /* Trip modal: start/end panels stack */
+  #tripModal .form-grid > div[style*="background:var(--surface2)"] {
+    margin-bottom:2px;
+  }
+
+  /* ── Tables: compact, horizontal scroll ── */
+  table { font-size:0.78rem; }
+  thead th, tbody td { padding:7px 8px; }
+
+  /* Hide less critical trip table columns on mobile */
+  #tripsTable table thead th:nth-child(3),  /* time */
+  #tripsTable table tbody td:nth-child(3),
+  #tripsTable table thead th:nth-child(6),  /* odometer */
+  #tripsTable table tbody td:nth-child(6) { display:none; }
+
+  /* ── Filter bar ── */
+  .filter-bar { gap:6px; }
+  .filter-bar input[type="month"],
+  .filter-bar input[type="date"] { max-width:140px; }
+  .filter-bar select { max-width:140px; }
+
+  /* ── Settings tabs: scroll horizontally ── */
+  .stg-tabs {
+    overflow-x:auto; flex-wrap:nowrap !important;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .stg-tabs::-webkit-scrollbar { display:none; }
+  .stg-tab { white-space:nowrap; flex-shrink:0; font-size:0.76rem; padding:8px 10px; }
+
+  /* ── Bottom navigation bar ── */
+  .mob-bottom-nav {
+    display:flex;
+    position:fixed; bottom:0; left:0; right:0;
+    background:var(--surface);
+    border-top:1px solid var(--border);
+    z-index:100;
+    box-shadow:0 -2px 12px rgba(0,0,0,0.08);
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+  }
+  .mob-bn-item {
+    flex:1; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:3px; padding:8px 4px;
+    cursor:pointer; font-size:0.65rem; color:var(--text3);
+    transition:color 0.13s; -webkit-tap-highlight-color:transparent;
+  }
+  .mob-bn-item span:first-child { font-size:1.25rem; line-height:1; }
+  .mob-bn-item:hover, .mob-bn-item.active { color:var(--accent); }
+  .mob-bn-item.active span:first-child { transform:scale(1.1); }
+
+  /* ── FAB (floating action button) ── */
+  .mob-fab {
+    display:flex; align-items:center; justify-content:center;
+    position:fixed; bottom:70px; right:18px;
+    width:52px; height:52px; border-radius:50%;
+    background:var(--accent); color:#fff; font-size:1.6rem; font-weight:300;
+    border:none; cursor:pointer; z-index:99;
+    box-shadow:0 4px 18px rgba(44,95,74,0.45);
+    transition:transform 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mob-fab:active { transform:scale(0.93); box-shadow:0 2px 8px rgba(44,95,74,0.3); }
+
+  /* Hide FAB on pages where it doesn't make sense */
+  body.page-report .mob-fab,
+  body.page-settings .mob-fab,
+  body.page-routes .mob-fab,
+  body.page-places .mob-fab { display:none !important; }
+
+  /* ── Report page: simplify on mobile ── */
+  .report-vehicle-row { grid-template-columns:1fr 1fr !important; }
+  .rep-summary { grid-template-columns:1fr 1fr !important; }
+  .rep-sig { grid-template-columns:1fr !important; gap:20px !important; }
+  .filter-bar .btn { font-size:0.75rem; padding:6px 8px; }
+
+  /* ── User screen ── */
+  .user-screen-box { padding:28px 20px; }
+  .user-grid { grid-template-columns:repeat(2,1fr); }
+
+  /* ── Card headers ── */
+  .card-header h3 { font-size:0.85rem; }
+} /* end @media 680px */
 </style>
 </head>
 <body>
@@ -282,7 +452,33 @@
     <div class="sidebar-footer"><div class="sync-dot" id="syncDot"></div><span id="syncLabel">—</span></div>
   </aside>
   <main class="main">
-    <div class="topbar"><h2 id="pageTitle">Prehľad</h2><div class="topbar-actions" id="topAct"></div></div>
+    <div class="topbar">
+      <button class="mob-menu-btn" id="mobMenuBtn" onclick="toggleMobMenu()" aria-label="Menu">☰</button>
+      <h2 id="pageTitle">Prehľad</h2>
+      <div class="topbar-actions" id="topAct"></div>
+    </div>
+    <!-- Mobile drawer overlay -->
+    <div id="mobOverlay" onclick="closeMobMenu()"></div>
+    <!-- Mobile side drawer (slides in from left) -->
+    <div id="mobDrawer">
+      <div style="padding:18px 16px 12px;border-bottom:1px solid rgba(255,255,255,0.15)">
+        <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:#fff;margin-bottom:2px">Kniha Jazd</div>
+        <div class="user-chip" onclick="switchUser();closeMobMenu()" style="margin:8px 0 0">
+          <div class="av" id="sbAv2">?</div>
+          <span class="uname" id="sbName2">—</span>
+          <span class="caret">⇄</span>
+        </div>
+      </div>
+      <nav style="padding:8px 0;flex:1;overflow-y:auto">
+        <div class="mob-nav-item" onclick="showPage('routes');closeMobMenu()" data-page="routes"><span>🗺️</span> Trasy</div>
+        <div class="mob-nav-item" onclick="showPage('places');closeMobMenu()" data-page="places"><span>📍</span> Miesta</div>
+        <div class="mob-nav-item" onclick="showPage('report');closeMobMenu()" data-page="report"><span>📄</span> Výkaz</div>
+        <div class="mob-nav-item" onclick="showPage('settings');closeMobMenu()" data-page="settings"><span>⚙️</span> Nastavenia</div>
+      </nav>
+      <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.12);font-size:0.71rem;color:rgba(255,255,255,0.42);display:flex;align-items:center;gap:5px">
+        <div class="sync-dot" id="syncDot2"></div><span id="syncLabel2">—</span>
+      </div>
+    </div>
     <div class="content">
       <div class="page active" id="page-dashboard">
         <div class="stats-grid" id="statsGrid"></div>
@@ -433,6 +629,16 @@
     </div>
   </main>
 </div>
+
+<!-- Mobile FAB + bottom nav (hidden on desktop via CSS) -->
+<button class="mob-fab" onclick="openTripModal()" title="Nová jazda">＋</button>
+<nav class="mob-bottom-nav" id="mobBottomNav">
+  <div class="mob-bn-item active" onclick="showPage('dashboard')" data-page="dashboard"><span>📊</span><span>Prehľad</span></div>
+  <div class="mob-bn-item" onclick="showPage('trips')"    data-page="trips"><span>🚗</span><span>Jazdy</span></div>
+  <div class="mob-bn-item" onclick="showPage('fuel')"     data-page="fuel"><span>⛽</span><span>PHM</span></div>
+  <div class="mob-bn-item" onclick="showPage('costs')"    data-page="costs"><span>💶</span><span>Náklady</span></div>
+  <div class="mob-bn-item" onclick="toggleMobMenu()"       id="mobBnMenu"><span>☰</span><span>Viac</span></div>
+</nav>
 
 <div id="toast"></div>
 
@@ -897,9 +1103,11 @@ function mode() {
 
 function setSyncStatus(state, label) {
   const dot = $('syncDot'), lbl = $('syncLabel');
-  if (!dot) return;
-  dot.className = 'sync-dot' + (state==='warn' ? ' warn' : state==='err' ? ' err' : '');
-  lbl.innerHTML = state==='saving' ? '<span class="spinner"></span>' : (label||'—');
+  if (dot) {
+    dot.className = 'sync-dot' + (state==='warn' ? ' warn' : state==='err' ? ' err' : '');
+    lbl.innerHTML = state==='saving' ? '<span class="spinner"></span>' : (label||'—');
+  }
+  syncMobileSyncStatus(state, label);
 }
 
 async function loadData() {
@@ -1241,6 +1449,7 @@ function selectUser(id) {
   $('userScreen').style.display = 'none'; $('appMain').classList.add('visible');
   const m = mode();
   setSyncStatus(m==='ls'?'warn':'ok', m==='local'?'Lokálny server':m==='gdrive'?'Google Drive':m==='github'?'GitHub':'localStorage');
+  syncMobileUser();
   showPage('dashboard');
 }
 
@@ -1281,6 +1490,7 @@ function showPage(page) {
   $('pageTitle').textContent = titles[page]||page;
   $('topAct').innerHTML = {trips:'<button class="btn btn-primary" onclick="openTripModal()">＋ Nová jazda</button>',fuel:'<button class="btn btn-primary" onclick="openFuelModal()">＋ Tankovanie</button>',costs:'<button class="btn btn-primary" onclick="openCostModal()">＋ Nový náklad</button>',routes:'<button class="btn btn-primary" onclick="openRouteModal()">＋ Nová trasa</button>',places:'<button class="btn btn-primary" onclick="openPlaceModal()">＋ Nové miesto</button>'}[page]||'';
   ({dashboard:renderDashboard,trips:renderTrips,fuel:renderFuel,costs:renderCosts,routes:renderRoutes,places:renderPlaces,report:initReport,settings:renderSettings})[page]?.();
+  updateMobileNav(page);
 }
 
 
@@ -2091,6 +2301,55 @@ function closeMinimap() {
 // ══════════════════════════════════════════════════
 function exportData(){const p={exportedAt:new Date().toISOString(),user:rootData.users.find(u=>u.id===uid),data:udb()};const b=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='knjazd_export_'+new Date().toISOString().split('T')[0]+'.json';a.click();}
 function importData(event){const f=event.target.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const imp=JSON.parse(e.target.result);const d=imp.data||imp;if(!d.trips){toast('Neplatný formát','err');return;}if(confirm('Nahradiť dáta tohto používateľa?')){rootData.userData[uid]=d;debouncedSave();renderDashboard();toast('Import úspešný','ok');}}catch(err){toast('Chyba importu: '+err.message,'err');}};r.readAsText(f);event.target.value='';}
+
+
+// ══════════════════════════════════════════════════
+// MOBILE UI
+// ══════════════════════════════════════════════════
+function toggleMobMenu() {
+  const drawer = $('mobDrawer'), overlay = $('mobOverlay');
+  const isOpen = drawer.classList.contains('open');
+  if (isOpen) { closeMobMenu(); } else {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeMobMenu() {
+  $('mobDrawer')?.classList.remove('open');
+  $('mobOverlay')?.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function updateMobileNav(page) {
+  // Bottom nav active state
+  document.querySelectorAll('.mob-bn-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === page);
+  });
+  // Drawer nav active state
+  document.querySelectorAll('.mob-nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === page);
+  });
+  // Body class for FAB visibility
+  document.body.className = 'page-' + page;
+}
+
+function syncMobileUser() {
+  // Mirror user chip into drawer
+  const av2 = $('sbAv2'), name2 = $('sbName2');
+  const av = $('sbAv'), name = $('sbName');
+  if (av2 && av) { av2.textContent = av.textContent; av2.style.background = av.style.background; }
+  if (name2 && name) name2.textContent = name.textContent;
+}
+
+function syncMobileSyncStatus(state, label) {
+  // Mirror sync status to drawer footer
+  const dot2 = $('syncDot2'), lbl2 = $('syncLabel2');
+  if (!dot2) return;
+  dot2.className = 'sync-dot' + (state==='warn'?' warn':state==='err'?' err':'');
+  lbl2.innerHTML = state==='saving' ? '<span class="spinner"></span>' : (label||'—');
+}
 
 // ══════════════════════════════════════════════════
 // INIT
