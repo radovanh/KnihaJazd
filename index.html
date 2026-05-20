@@ -650,38 +650,98 @@
     <div class="modal-header"><h3>⚙️ Nastavenia ukladania dát</h3><button class="close-btn" onclick="closeModal('githubModal')">✕</button></div>
     <div class="modal-body">
       <div id="ghModeBanner" style="margin-bottom:14px"></div>
-      <div style="background:var(--surface2);border-radius:9px;padding:13px;margin-bottom:13px">
-        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:9px">🐙 GitHub API (pre GitHub Pages hosting)</div>
-        <p class="tm mb2">Potrebujete Personal Access Token (PAT) s oprávnením <code>contents:write</code>.</p>
-        <div class="form-grid">
-          <div class="form-row">
-            <div class="form-group"><label>GitHub vlastník / org *</label><input type="text" id="gh_owner" placeholder="napr. radovan"></div>
-            <div class="form-group"><label>Repozitár *</label><input type="text" id="gh_repo" placeholder="napr. kniha-jazd"></div>
+
+      <!-- Storage tabs -->
+      <div style="display:flex;gap:2px;margin-bottom:14px;background:var(--surface2);border-radius:9px;padding:3px">
+        <button id="stab-gh"  class="stab active" onclick="switchStab('gh')"  style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;background:var(--surface);box-shadow:0 1px 4px rgba(0,0,0,0.08)">🐙 GitHub</button>
+        <button id="stab-gd"  class="stab"        onclick="switchStab('gd')"  style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;background:transparent">🔵 Google Drive</button>
+        <button id="stab-ls"  class="stab"        onclick="switchStab('ls')"  style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;background:transparent">💾 localStorage</button>
+      </div>
+
+      <!-- GitHub panel -->
+      <div id="spanel-gh">
+        <div style="background:var(--surface2);border-radius:9px;padding:13px;margin-bottom:13px">
+          <p class="tm mb2">Personal Access Token (PAT) s oprávnením <code>contents:write</code> na váš repozitár.</p>
+          <div class="form-grid">
+            <div class="form-row">
+              <div class="form-group"><label>GitHub vlastník / org *</label><input type="text" id="gh_owner" placeholder="napr. radovan"></div>
+              <div class="form-group"><label>Repozitár *</label><input type="text" id="gh_repo" placeholder="napr. kniha-jazd"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Branch</label><input type="text" id="gh_branch" value="main"></div>
+              <div class="form-group"><label>Cesta k data.json</label><input type="text" id="gh_path" value="data.json"></div>
+            </div>
+            <div class="form-group">
+              <label>Personal Access Token *</label>
+              <input type="password" id="gh_token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+              <span class="tm">Uloží sa len do localStorage tohto prehliadača.</span>
+            </div>
           </div>
-          <div class="form-row">
-            <div class="form-group"><label>Branch</label><input type="text" id="gh_branch" value="main"></div>
-            <div class="form-group"><label>Cesta k data.json</label><input type="text" id="gh_path" value="data.json"></div>
+          <div style="margin-top:11px;display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="testGH()">🔗 Otestovať</button>
+            <button class="btn btn-secondary btn-sm" onclick="saveGHConfig()">💾 Uložiť</button>
+            <button class="btn btn-danger btn-sm" onclick="clearGHConfig()">🗑 Odstrániť</button>
+            <span id="ghTest" style="font-size:0.79rem"></span>
           </div>
-          <div class="form-group">
-            <label>Personal Access Token *</label>
-            <input type="password" id="gh_token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-            <span class="tm">Uloží sa len do localStorage tohto prehliadača.</span>
-          </div>
-        </div>
-        <div style="margin-top:11px;display:flex;gap:7px;align-items:center;flex-wrap:wrap">
-          <button class="btn btn-primary btn-sm" onclick="testGH()">🔗 Otestovať</button>
-          <button class="btn btn-secondary btn-sm" onclick="saveGHConfig()">💾 Uložiť</button>
-          <button class="btn btn-danger btn-sm" onclick="clearGHConfig()">🗑 Odstrániť</button>
-          <span id="ghTest" style="font-size:0.79rem"></span>
         </div>
       </div>
-      <div style="background:var(--surface2);border-radius:9px;padding:13px">
-        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:7px">ℹ️ Ako to funguje</div>
-        <ul style="font-size:0.8rem;color:var(--text2);padding-left:16px;line-height:1.9">
-          <li><strong>localhost</strong> → Python server → ukladá do <code>data.json</code> na disku + localStorage záloha</li>
-          <li><strong>GitHub Pages + PAT</strong> → GitHub API → commit priamo do repozitára</li>
-          <li><strong>GitHub Pages bez PAT</strong> → len localStorage (len tento prehliadač)</li>
-          <li>Export JSON je vždy k dispozícii ako manuálna záloha</li>
+
+      <!-- Google Drive panel -->
+      <div id="spanel-gd" style="display:none">
+        <div style="background:var(--surface2);border-radius:9px;padding:13px;margin-bottom:13px">
+          <p class="tm mb2">Prihlásenie cez Google OAuth 2.0. Súbor <code>knjazd_data.json</code> sa uloží do vášho Google Drive.</p>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Google OAuth Client ID *</label>
+              <input type="text" id="gd_clientid" placeholder="xxxxxxxxxxx.apps.googleusercontent.com">
+              <span class="tm">Získate v Google Cloud Console → APIs &amp; Services → Credentials → OAuth 2.0 Client ID (Web app).</span>
+            </div>
+          </div>
+          <div style="margin-top:11px;display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="gdSignIn()">🔑 Prihlásiť sa cez Google</button>
+            <button class="btn btn-secondary btn-sm" onclick="saveGDConfig()">💾 Uložiť Client ID</button>
+            <button class="btn btn-danger btn-sm" onclick="gdSignOut()">🚪 Odhlásiť sa</button>
+            <span id="gdStatus" style="font-size:0.79rem"></span>
+          </div>
+          <div id="gdUserInfo" style="margin-top:10px;display:none;background:var(--surface);border-radius:7px;padding:9px 12px;font-size:0.82rem;display:flex;align-items:center;gap:10px">
+            <img id="gdAvatar" src="" width="28" height="28" style="border-radius:50%">
+            <div><div id="gdUserName" style="font-weight:600"></div><div id="gdUserEmail" class="tm"></div></div>
+          </div>
+        </div>
+        <div style="background:var(--surface2);border-radius:9px;padding:13px">
+          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:7px">🔧 Nastavenie Google Cloud</div>
+          <ol style="font-size:0.79rem;color:var(--text2);padding-left:16px;line-height:1.9">
+            <li>Otvorte <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent)">console.cloud.google.com</a></li>
+            <li>Vytvorte projekt → <strong>APIs &amp; Services → Enable APIs</strong> → zapnite <strong>Google Drive API</strong></li>
+            <li><strong>OAuth consent screen</strong> → External → zadajte názov app, email</li>
+            <li><strong>Credentials → Create → OAuth 2.0 Client ID → Web application</strong></li>
+            <li>Pridajte <strong>Authorized JavaScript origins</strong>: vašu GitHub Pages URL + <code>http://localhost:8765</code></li>
+            <li>Skopírujte <strong>Client ID</strong> a vložte ho sem</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- localStorage panel -->
+      <div id="spanel-ls" style="display:none">
+        <div style="background:var(--surface2);border-radius:9px;padding:13px">
+          <p style="font-size:0.85rem;margin-bottom:8px">Dáta sú uložené len v tomto prehliadači. Funguje offline, ale nie je synchronizácia medzi zariadeniami.</p>
+          <ul style="font-size:0.8rem;color:var(--text2);padding-left:16px;line-height:1.9">
+            <li>Vymazanie histórie prehliadača môže zmazať dáta</li>
+            <li>Pravidelne exportujte zálohu cez <strong>Nastavenia → Export JSON</strong></li>
+          </ul>
+          <div style="margin-top:11px">
+            <button class="btn btn-secondary btn-sm" onclick="forceUseLS()">✓ Použiť localStorage (bez synchronizácie)</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface2);border-radius:9px;padding:12px;margin-top:13px">
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:6px">ℹ️ Priorita ukladania</div>
+        <ul style="font-size:0.79rem;color:var(--text2);padding-left:16px;line-height:1.8">
+          <li><strong>localhost</strong> → Python server (data.json na disku)</li>
+          <li><strong>Google Drive</strong> → ak je používateľ prihlásený</li>
+          <li><strong>GitHub</strong> → ak je nakonfigurovaný PAT</li>
+          <li><strong>localStorage</strong> → vždy ako záloha/fallback</li>
         </ul>
       </div>
     </div>
@@ -706,10 +766,13 @@
 // CONSTANTS & STATE
 // ══════════════════════════════════════════════════
 const COLORS = ['#2c5f4a','#d4a847','#c0392b','#4a7fc0','#8e44ad','#16a085','#e67e22','#2980b9'];
-const LS_KEY = 'knjazd_v2', LS_GH = 'knjazd_gh', LS_USER = 'knjazd_uid';
+const LS_KEY = 'knjazd_v2', LS_GH = 'knjazd_gh', LS_GD = 'knjazd_gd', LS_USER = 'knjazd_uid';
+const GD_FILENAME = 'knjazd_data.json';
+const GD_SCOPES   = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
 const IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
-let ghCfg = null, rootData = null, uid = null, curPage = 'dashboard', eIds = {}, saveTimer = null;
+let ghCfg = null, gdCfg = null, gdToken = null, gdFileId = null, gdUser = null;
+let rootData = null, uid = null, curPage = 'dashboard', eIds = {}, saveTimer = null;
 
 // ── helpers
 const udb     = () => rootData.userData[uid];
@@ -744,8 +807,9 @@ function showConfirm(text, cb) {
 // STORAGE LAYER
 // ══════════════════════════════════════════════════
 function mode() {
-  if (IS_LOCAL) return 'local';
-  if (ghCfg?.token) return 'github';
+  if (IS_LOCAL)         return 'local';
+  if (gdToken)          return 'gdrive';
+  if (ghCfg?.token)     return 'github';
   return 'ls';
 }
 
@@ -758,10 +822,20 @@ function setSyncStatus(state, label) {
 
 async function loadData() {
   ghCfg = JSON.parse(localStorage.getItem(LS_GH)||'null');
+  gdCfg = JSON.parse(localStorage.getItem(LS_GD)||'null');
+  // Restore GD session if we have a token cached
+  const gdCache = JSON.parse(localStorage.getItem('knjazd_gd_token')||'null');
+  if (gdCache && gdCache.expires > Date.now()) {
+    gdToken = gdCache.token; gdFileId = gdCache.fileId || null; gdUser = gdCache.user || null;
+  }
   try {
     if (IS_LOCAL) {
       const r = await fetch('data.json?t='+Date.now());
       if (r.ok) { rootData = await r.json(); return; }
+    }
+    if (gdToken) {
+      const raw = await gdReadFile();
+      if (raw) { rootData = raw; return; }
     }
     if (ghCfg?.token) {
       const raw = await ghGet();
@@ -783,12 +857,197 @@ async function saveData() {
       if (r.ok) { setSyncStatus('ok','Uložené lokálne'); return; }
       throw new Error('Server '+r.status);
     }
+    if (mode() === 'gdrive') { await gdWriteFile(rootData); setSyncStatus('ok','Uložené na Google Drive'); return; }
     if (mode() === 'github') { await ghPut(rootData); setSyncStatus('ok','Uložené na GitHub'); return; }
     setSyncStatus('warn','Len localStorage');
   } catch(e) { setSyncStatus('err','Chyba: '+e.message.slice(0,60)); console.error('Save error:', e); }
 }
 
 const debouncedSave = () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveData, 600); };
+
+
+// ══════════════════════════════════════════════════
+// GOOGLE DRIVE API (OAuth 2.0)
+// ══════════════════════════════════════════════════
+const GD_AUTH_URL   = 'https://accounts.google.com/o/oauth2/v2/auth';
+const GD_TOKEN_URL  = 'https://oauth2.googleapis.com/token';
+const GD_FILES_URL  = 'https://www.googleapis.com/drive/v3/files';
+const GD_UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v3/files';
+
+function loadGDConfig() {
+  gdCfg = JSON.parse(localStorage.getItem(LS_GD)||'null');
+  return gdCfg;
+}
+
+function saveGDConfigToLS(cfg) {
+  localStorage.setItem(LS_GD, JSON.stringify(cfg));
+  gdCfg = cfg;
+}
+
+function gdCacheToken(token, fileId, user) {
+  gdToken = token; gdFileId = fileId; gdUser = user;
+  localStorage.setItem('knjazd_gd_token', JSON.stringify({
+    token, fileId, user, expires: Date.now() + 55*60*1000  // 55 min
+  }));
+}
+
+function gdClearToken() {
+  gdToken = null; gdFileId = null; gdUser = null;
+  localStorage.removeItem('knjazd_gd_token');
+}
+
+function saveGDConfig() {
+  const cid = $('gd_clientid').value.trim();
+  if (!cid) { toast('Zadajte Client ID','err'); return; }
+  saveGDConfigToLS({ clientId: cid });
+  toast('Client ID uložené','ok');
+}
+
+function gdSignIn() {
+  gdCfg = loadGDConfig();
+  if (!gdCfg?.clientId) { $('gdStatus').textContent = '⚠️ Najprv uložte Client ID'; return; }
+  const redirectUri = location.origin + location.pathname;
+  const state = btoa(JSON.stringify({ ts: Date.now() }));
+  localStorage.setItem('knjazd_gd_state', state);
+  const params = new URLSearchParams({
+    client_id:     gdCfg.clientId,
+    redirect_uri:  redirectUri,
+    response_type: 'token',
+    scope:         GD_SCOPES,
+    state,
+    prompt:        'consent'
+  });
+  window.location.href = GD_AUTH_URL + '?' + params;
+}
+
+function gdHandleRedirect() {
+  // Called on page load — parse OAuth implicit flow token from URL hash
+  const hash = new URLSearchParams(location.hash.slice(1));
+  const token = hash.get('access_token');
+  if (!token) return;
+  // Clean up URL
+  history.replaceState(null, '', location.pathname);
+  gdToken = token;
+  // Fetch user info
+  fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  }).then(r=>r.json()).then(u => {
+    const user = { name: u.name||u.email, email: u.email, picture: u.picture };
+    gdCacheToken(token, null, user);
+    gdUpdateUI();
+    toast('Prihlásený ako ' + user.name, 'ok');
+    // Find or create the data file
+    gdFindOrCreateFile().then(() => { loadData().then(() => showPage(curPage)); });
+  }).catch(e => {
+    console.error('GD userinfo error', e);
+    gdCacheToken(token, null, null);
+  });
+}
+
+async function gdFindOrCreateFile() {
+  // Search in appDataFolder first, then root
+  const q = `name='${GD_FILENAME}' and trashed=false`;
+  const r = await fetch(`${GD_FILES_URL}?q=${encodeURIComponent(q)}&spaces=drive&fields=files(id,name)`, {
+    headers: { 'Authorization': 'Bearer ' + gdToken }
+  });
+  const j = await r.json();
+  if (j.files && j.files.length > 0) {
+    gdFileId = j.files[0].id;
+    gdCacheToken(gdToken, gdFileId, gdUser);
+    return gdFileId;
+  }
+  // Create new file
+  const meta = { name: GD_FILENAME, mimeType: 'application/json' };
+  const blob = new Blob([JSON.stringify(emptyRoot(),null,2)], {type:'application/json'});
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(meta)], {type:'application/json'}));
+  form.append('file', blob);
+  const cr = await fetch(`${GD_UPLOAD_URL}?uploadType=multipart&fields=id`, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + gdToken },
+    body: form
+  });
+  const cj = await cr.json();
+  gdFileId = cj.id;
+  gdCacheToken(gdToken, gdFileId, gdUser);
+  return gdFileId;
+}
+
+async function gdReadFile() {
+  if (!gdToken) return null;
+  if (!gdFileId) await gdFindOrCreateFile();
+  if (!gdFileId) return null;
+  const r = await fetch(`${GD_FILES_URL}/${gdFileId}?alt=media`, {
+    headers: { 'Authorization': 'Bearer ' + gdToken }
+  });
+  if (r.status === 401) { gdClearToken(); throw new Error('GD token expiroval — prihláste sa znova'); }
+  if (!r.ok) throw new Error('GD read failed: ' + r.status);
+  return r.json();
+}
+
+async function gdWriteFile(data) {
+  if (!gdToken) throw new Error('Nie ste prihlásený do Google Drive');
+  if (!gdFileId) await gdFindOrCreateFile();
+  const body = JSON.stringify(data, null, 2);
+  const r = await fetch(`${GD_UPLOAD_URL}/${gdFileId}?uploadType=media`, {
+    method: 'PATCH',
+    headers: { 'Authorization': 'Bearer ' + gdToken, 'Content-Type': 'application/json' },
+    body
+  });
+  if (r.status === 401) { gdClearToken(); throw new Error('GD token expiroval — prihláste sa znova'); }
+  if (!r.ok) throw new Error('GD write failed: ' + r.status);
+  localStorage.setItem(LS_KEY, JSON.stringify(data));
+}
+
+function gdSignOut() {
+  gdClearToken();
+  gdUpdateUI();
+  toast('Odhlásený z Google Drive','ok');
+  setSyncStatus('warn','Len localStorage');
+}
+
+function gdUpdateUI() {
+  const statusEl = $('gdStatus');
+  const userEl   = $('gdUserInfo');
+  if (!statusEl) return;
+  if (gdToken && gdUser) {
+    statusEl.textContent = '✅ Prihlásený';
+    if (userEl) {
+      userEl.style.display = 'flex';
+      $('gdUserName').textContent  = gdUser.name  || '';
+      $('gdUserEmail').textContent = gdUser.email || '';
+      if ($('gdAvatar')) $('gdAvatar').src = gdUser.picture || '';
+    }
+  } else if (gdToken) {
+    statusEl.textContent = '✅ Prihlásený (bez profilu)';
+  } else {
+    statusEl.textContent = '';
+    if (userEl) userEl.style.display = 'none';
+  }
+  if ($('gd_clientid') && gdCfg?.clientId) $('gd_clientid').value = gdCfg.clientId;
+}
+
+// ── tab switcher for storage modal
+function switchStab(tab) {
+  ['gh','gd','ls'].forEach(t => {
+    const btn = $('stab-'+t), panel = $('spanel-'+t);
+    if (!btn || !panel) return;
+    const active = t === tab;
+    btn.style.background    = active ? 'var(--surface)' : 'transparent';
+    btn.style.boxShadow     = active ? '0 1px 4px rgba(0,0,0,0.08)' : 'none';
+    btn.style.fontWeight    = active ? '700' : '500';
+    panel.style.display     = active ? 'block' : 'none';
+  });
+  if (tab === 'gd') gdUpdateUI();
+}
+
+function forceUseLS() {
+  gdClearToken();
+  clearGHConfig();
+  toast('Nastavené na localStorage','ok');
+  closeModal('githubModal');
+  setSyncStatus('warn','Len localStorage');
+}
 
 // ══════════════════════════════════════════════════
 // GITHUB API
@@ -836,10 +1095,12 @@ function openGithubSetup() {
   $('gh_path').value   = c.path   || 'data.json';
   $('gh_token').value  = c.token  || '';
   const m = mode();
-  const labels = { local:'🖥️ Beží lokálne (Python server)', github:'🐙 GitHub API aktívny', ls:'💾 Len localStorage' };
-  const cls    = { local:'ai', github:'as', ls:'aw' };
+  const labels = { local:'🖥️ Beží lokálne (Python server)', gdrive:'🔵 Google Drive aktívny', github:'🐙 GitHub aktívny', ls:'💾 Len localStorage' };
+  const cls    = { local:'ai', gdrive:'as', github:'as', ls:'aw' };
   $('ghModeBanner').innerHTML = `<div class="alert ${cls[m]}">${labels[m]}</div>`;
   $('ghTest').textContent = '';
+  gdCfg = loadGDConfig();
+  gdUpdateUI();
   openModal('githubModal');
 }
 
@@ -897,7 +1158,7 @@ function selectUser(id) {
   $('sbName').textContent = u.name;
   $('userScreen').style.display = 'none'; $('appMain').classList.add('visible');
   const m = mode();
-  setSyncStatus(m==='ls'?'warn':'ok', m==='local'?'Lokálny server':m==='github'?'GitHub':'localStorage');
+  setSyncStatus(m==='ls'?'warn':'ok', m==='local'?'Lokálny server':m==='gdrive'?'Google Drive':m==='github'?'GitHub':'localStorage');
   showPage('dashboard');
 }
 
@@ -1307,7 +1568,9 @@ function renderSettings(){
   $('holidayList').innerHTML=[...db.holidays].sort((a,b)=>a.date>b.date?1:-1).map(h=>`<div class="li" style="font-size:0.8rem"><span>${fmtDate(h.date)} — ${h.name}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openHolidayModal('${h.date}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteHoliday('${h.date}')">🗑</button></div></div>`).join('');
   if(!db.vacations) db.vacations=[];
   $('vacationList').innerHTML=[...db.vacations].sort((a,b)=>a.start>b.start?1:-1).map((v,i)=>`<div class="li" style="font-size:0.8rem"><span>${fmtDate(v.start)} – ${fmtDate(v.end)}${v.name?' — '+v.name:''}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openVacationModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteVacation(${i})">🗑</button></div></div>`).join('')||'<div class="tm">Žiadne dovolenky</div>';
-  const m=mode(), ml={local:'🖥️ Lokálny server (data.json)',github:'🐙 GitHub repozitár',ls:'💾 Len localStorage'}, mc={local:'ai',github:'as',ls:'aw'};
+  const m=mode();
+  const ml={local:'🖥️ Lokálny server (data.json)',gdrive:'🔵 Google Drive'+(gdUser?' — '+gdUser.name:''),github:'🐙 GitHub repozitár',ls:'💾 Len localStorage'};
+  const mc={local:'ai',gdrive:'as',github:'as',ls:'aw'};
   $('storagePanel').innerHTML=`<div class="alert ${mc[m]}">${ml[m]}</div><p class="tm mb2">Aktuálny spôsob ukladania.</p><button class="btn btn-secondary btn-sm" onclick="openGithubSetup()">⚙️ Nastavenia ukladania</button>`;
 }
 
@@ -1742,6 +2005,7 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
 
 async function init() {
+  gdHandleRedirect(); // handle OAuth callback before anything else
   await loadData();
   // Migrate v1 flat format → v2 multi-user format
   if (rootData.vehicles && !rootData.users) {
