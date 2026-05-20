@@ -1202,7 +1202,20 @@ function deletePlace(i){showConfirm(`Zmazať "${udb().places[i].name}"?`,()=>{ud
 // ══════════════════════════════════════════════════
 function renderSettings(){
   const db=udb();
-  $('vehicleList').innerHTML=db.vehicles.map((v,i)=>`<div class="li" style="flex-direction:column;align-items:flex-start;gap:4px"><div style="display:flex;justify-content:space-between;width:100%;align-items:center"><span><strong>${v.name}</strong> <span class="badge bz">${v.ecv}</span>${v.make||v.model?' <span class="tm">${v.make||''} ${v.model||''}</span>':''}</span><div style="display:flex;gap:5px"><button class="btn btn-secondary btn-sm" onclick="openVehicleModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteVehicle(${i})">🗑</button></div></div><div style="font-size:0.74rem;color:var(--text3);display:flex;gap:10px;flex-wrap:wrap">${v.year?'<span>'+v.year+'</span>':''}${v.vin?'<span>VIN: '+v.vin+'</span>':''}${v.tank?'<span>Nádrž: '+v.tank+' l</span>':''}${v.fuel?'<span>'+v.fuel+'</span>':''}${v.color?'<span>'+v.color+'</span>':''}</div></div>`).join('')||'<div class="tm">Žiadne vozidlá</div>';
+  $('vehicleList').innerHTML=db.vehicles.map((v,i)=>{
+    const makeModel = [v.make,v.model].filter(Boolean).join(' ');
+    const details = [v.year?'Rok: '+v.year:null, v.vin?'VIN: '+v.vin:null, v.tank?'Nádrž: '+v.tank+' l':null, v.fuel||null, v.color||null].filter(Boolean).join(' · ');
+    return `<div class="li" style="flex-direction:column;align-items:flex-start;gap:3px">
+      <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+        <span><strong>${v.name}</strong> <span class="badge bz">${v.ecv}</span>${makeModel ? ` <span class="tm">${makeModel}</span>` : ''}</span>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-secondary btn-sm" onclick="openVehicleModal(${i})">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteVehicle(${i})">🗑</button>
+        </div>
+      </div>
+      ${details ? `<div style="font-size:0.74rem;color:var(--text3)">${details}</div>` : ''}
+    </div>`;
+  }).join('')||'<div class="tm">Žiadne vozidlá</div>';
   $('reasonList').innerHTML=db.tripReasons.map((r,i)=>`<div class="li"><span>${r}</span><button class="btn btn-danger btn-sm" onclick="deleteReason(${i})">🗑</button></div>`).join('')||'<div class="tm">Žiadne dôvody</div>';
   $('holidayList').innerHTML=[...db.holidays].sort((a,b)=>a.date>b.date?1:-1).map(h=>`<div class="li" style="font-size:0.8rem"><span>${fmtDate(h.date)} — ${h.name}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openHolidayModal('${h.date}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteHoliday('${h.date}')">🗑</button></div></div>`).join('');
   if(!db.vacations) db.vacations=[];
