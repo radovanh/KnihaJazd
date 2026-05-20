@@ -1137,7 +1137,7 @@ function openTripModal(id) {
     const last=[...db.trips].filter(t=>db.vehicles[0]&&t.ecv===db.vehicles[0].ecv).sort((a,b)=>a.id-b.id).pop();
     $('f_so').value=last?last.endOdo:''; $('f_eo').value='';
   }
-  onDateChange(); calcDist(); openModal('tripModal');
+  onDateChange(); calcDist(); closeMinimap(); openModal('tripModal');
 }
 
 function onRouteChange() {
