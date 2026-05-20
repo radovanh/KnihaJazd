@@ -397,7 +397,23 @@
           <div style="display:flex;align-items:flex-end;padding-bottom:2px"><div id="dateFlags" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
         </div>
         <div style="grid-column:1/-1;background:var(--accent);color:#fff;border-radius:7px;padding:9px 13px;font-size:0.84rem;display:flex;justify-content:space-between;align-items:center">
-          <span>Prejdená vzdialenosť:</span><strong id="calcDist">— km</strong>
+          <span>Prejdená vzdialenosť:</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <strong id="calcDist">— km</strong>
+            <button type="button" onclick="estimateDistance()" id="btnEstDist"
+              style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:#fff;border-radius:6px;padding:3px 9px;font-size:0.76rem;cursor:pointer;font-family:inherit"
+              title="Odhadnúť vzdialenosť cez OSRM (OpenStreetMap)">📍 Odhadnúť</button>
+            <button type="button" onclick="openMinimap()"
+              style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:#fff;border-radius:6px;padding:3px 9px;font-size:0.76rem;cursor:pointer;font-family:inherit"
+              title="Zobraziť trasu v Google Maps">🗺️ Mapa</button>
+          </div>
+        </div>
+        <div id="minimapContainer" style="grid-column:1/-1;display:none;border-radius:9px;overflow:hidden;border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--surface2);font-size:0.78rem;color:var(--text2)">
+            <span>Náhľad trasy (Google Maps)</span>
+            <button type="button" onclick="closeMinimap()" style="background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text2)">✕</button>
+          </div>
+          <iframe id="minimapFrame" src="" width="100%" height="300" style="border:none;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
       </div>
     </div>
@@ -424,10 +440,13 @@
           <div class="form-group"><label>Tachometer *</label><input type="number" id="ff_odo"></div>
         </div>
         <div class="form-group"><label>Miesto *</label><select id="ff_place"><option value="">— vybrať —</option></select></div>
-        <div class="form-row-3">
+        <div class="form-row">
           <div class="form-group"><label>€ / liter *</label><input type="number" step="0.001" id="ff_ppl" oninput="calcFuelT()"></div>
           <div class="form-group"><label>Litre *</label><input type="number" step="0.01" id="ff_l" oninput="calcFuelT()"></div>
-          <div class="form-group"><label>Suma €</label><input type="number" step="0.01" id="ff_total" oninput="calcFuelP()"></div>
+        </div>
+        <div class="form-group">
+          <label>Celková suma €</label>
+          <input type="number" step="0.01" id="ff_total" oninput="calcFuelP()" placeholder="automaticky z cena × litre">
         </div>
       </div>
     </div>
@@ -1515,34 +1534,51 @@ function renderReport() {
   const vehicle = db.vehicles.find(v=>v.ecv===ecv);
   const trips = [...db.trips]
     .filter(t=>t.ecv===ecv && t.startDate>=from && t.startDate<=to)
-    .sort((a,b)=>a.startDate<b.startDate?-1:a.startDate>b.startDate?1:
-      (a.startTime||'').localeCompare(b.startTime||''));
+    .sort((a,b)=>a.startDate<b.startDate?-1:1);
 
-  const totalKm = trips.reduce((s,t)=>s+(t.endOdo-t.startOdo),0);
+  const totalKm   = trips.reduce((s,t)=>s+(t.endOdo-t.startOdo),0);
+  const startOdo  = trips.length ? trips[0].startOdo : '—';
+  const endOdo    = trips.length ? trips[trips.length-1].endOdo : '—';
+  const fuelCosts = db.fuelLogs
+    .filter(f=>f.ecv===ecv && f.date>=from && f.date<=to)
+    .reduce((s,f)=>s+f.total,0);
+  const otherCosts = (db.costs||[])
+    .filter(co=>co.ecv===ecv && co.date>=from && co.date<=to)
+    .reduce((s,co)=>s+co.amount,0);
 
   const fromFmt = fmtDate(from), toFmt = fmtDate(to);
   const genDate = new Date().toLocaleDateString('sk-SK',{day:'2-digit',month:'2-digit',year:'numeric'});
+
   const makeModel = [vehicle?.make, vehicle?.model].filter(Boolean).join(' ');
 
+  // Row numbering counter (only business days / valid trips)
   let rowNum = 0;
+
   const rows = trips.map(t => {
     rowNum++;
     const dist = t.endOdo - t.startOdo;
-    // start: date + time in two lines
-    const startDT = `<div style="white-space:nowrap"><strong>${fmtDate(t.startDate)}</strong></div>`
-      + (t.startTime ? `<div style="color:var(--text2);font-size:0.78rem">${t.startTime}</div>` : '');
-    const endDT = `<div style="white-space:nowrap"><strong>${fmtDate(t.endDate||t.startDate)}</strong></div>`
-      + (t.endTime ? `<div style="color:var(--text2);font-size:0.78rem">${t.endTime}</div>` : '');
-    return `<tr>
-      <td style="color:var(--text3);text-align:right;padding-right:6px;vertical-align:top;padding-top:10px">${rowNum}.</td>
-      <td style="vertical-align:top">${startDT}</td>
-      <td style="vertical-align:top">${endDT}</td>
-      <td style="font-size:0.81rem;vertical-align:top">${t.startAddress}</td>
-      <td style="font-size:0.81rem;vertical-align:top">${t.endAddress}</td>
-      <td style="text-align:right;vertical-align:top">${t.startOdo.toLocaleString('sk')}</td>
-      <td style="text-align:right;vertical-align:top">${t.endOdo.toLocaleString('sk')}</td>
-      <td style="text-align:right;font-weight:600;vertical-align:top">${dist}</td>
-      <td style="font-size:0.78rem;vertical-align:top">${t.reason||''}</td>
+    const we   = isWE(t.startDate);
+    const hd   = isHD(t.startDate);
+    const vac  = isVac(t.startDate);
+    const rowCls = hd ? 'hd-row' : we ? 'we-row' : '';
+    const flags = [
+      we  ? '<span style="color:var(--warn);font-size:0.72rem">VÍK</span>' : '',
+      hd  ? `<span style="color:var(--accent3);font-size:0.72rem" title="${hdName(t.startDate)||''}">SVT</span>` : '',
+      vac ? '<span style="color:#8e44ad;font-size:0.72rem">DOV</span>' : '',
+    ].filter(Boolean).join(' ');
+    const timeRange = (t.startTime||t.endTime)
+      ? `<span style="color:var(--text3);font-size:0.76rem">${t.startTime||''}${t.startTime&&t.endTime?'–':''}${t.endTime||''}</span>`
+      : '';
+    return `<tr class="${rowCls}">
+      <td style="color:var(--text3);text-align:right;padding-right:8px">${rowNum}.</td>
+      <td style="white-space:nowrap"><strong>${fmtDate(t.startDate)}</strong> ${timeRange}</td>
+      <td>${t.startPlace||t.startAddress}</td>
+      <td>${t.endPlace||t.endAddress}</td>
+      <td style="text-align:right">${t.startOdo.toLocaleString('sk')}</td>
+      <td style="text-align:right">${t.endOdo.toLocaleString('sk')}</td>
+      <td style="text-align:right;font-weight:600">${dist}</td>
+      <td style="font-size:0.78rem">${t.reason||''}</td>
+      <td style="text-align:center">${flags}</td>
     </tr>`;
   }).join('');
 
@@ -1574,37 +1610,42 @@ function renderReport() {
       <thead>
         <tr>
           <th>#</th>
-          <th>Dátum<br>odchodu</th>
-          <th>Dátum<br>príchodu</th>
-          <th>Adresa odchodu</th>
-          <th>Adresa príchodu</th>
-          <th style="text-align:right">Tach.<br>začiatok</th>
-          <th style="text-align:right">Tach.<br>koniec</th>
+          <th>Dátum / Čas</th>
+          <th>Miesto odchodu</th>
+          <th>Miesto príchodu</th>
+          <th style="text-align:right">Tach. začiatok</th>
+          <th style="text-align:right">Tach. koniec</th>
           <th style="text-align:right">km</th>
           <th>Účel jazdy</th>
+          <th>Pozn.</th>
         </tr>
       </thead>
       <tbody>${trips.length ? rows : emptyMsg}</tbody>
       ${trips.length ? `<tfoot>
         <tr>
-          <td colspan="5" style="font-size:0.8rem">Celkom jázd: <strong>${trips.length}</strong></td>
-          <td style="text-align:right">${trips[0].startOdo.toLocaleString('sk')}</td>
-          <td style="text-align:right">${trips[trips.length-1].endOdo.toLocaleString('sk')}</td>
+          <td colspan="4">Celkom jázd: ${trips.length}</td>
+          <td style="text-align:right">${trips.length?trips[0].startOdo.toLocaleString('sk'):'—'}</td>
+          <td style="text-align:right">${trips.length?trips[trips.length-1].endOdo.toLocaleString('sk'):'—'}</td>
           <td style="text-align:right">${totalKm.toLocaleString('sk')}</td>
-          <td></td>
+          <td colspan="2"></td>
         </tr>
       </tfoot>` : ''}
     </table>
 
-    <div class="rep-summary" style="grid-template-columns:repeat(3,1fr)">
+    <div class="rep-summary">
       <div class="rep-sum-cell"><div class="lbl">Celkové km</div><div class="val">${totalKm.toLocaleString('sk')}</div></div>
-      <div class="rep-sum-cell"><div class="lbl">Počiatočný stav tachometra</div><div class="val">${trips.length?trips[0].startOdo.toLocaleString('sk'):'—'}</div></div>
-      <div class="rep-sum-cell" style="border-right:none"><div class="lbl">Konečný stav tachometra</div><div class="val">${trips.length?trips[trips.length-1].endOdo.toLocaleString('sk'):'—'}</div></div>
+      <div class="rep-sum-cell"><div class="lbl">Počiatočný stav</div><div class="val">${trips.length?trips[0].startOdo.toLocaleString('sk'):'—'}</div></div>
+      <div class="rep-sum-cell"><div class="lbl">Konečný stav</div><div class="val">${trips.length?trips[trips.length-1].endOdo.toLocaleString('sk'):'—'}</div></div>
+      <div class="rep-sum-cell"><div class="lbl">Náklady PHM + iné</div><div class="val">${(fuelCosts+otherCosts).toFixed(2)} €</div></div>
     </div>
 
     <div class="rep-sig no-print">
-      <div><div class="rep-sig-line">Podpis vodiča / zodpovednej osoby</div></div>
-      <div><div class="rep-sig-line">Pečiatka a podpis zamestnávateľa</div></div>
+      <div>
+        <div class="rep-sig-line">Podpis vodiča / zodpovednej osoby</div>
+      </div>
+      <div>
+        <div class="rep-sig-line">Pečiatka a podpis zamestnávateľa</div>
+      </div>
     </div>
     <div style="display:none" class="rep-sig" id="repSigPrint">
       <div><div style="height:50px"></div><div class="rep-sig-line">Podpis vodiča / zodpovednej osoby</div></div>
@@ -1621,6 +1662,71 @@ function printReport() {
   const ps=$('repSigPrint'); if(ps) ps.style.display='grid';
   window.print();
   if(ps) ps.style.display='none';
+}
+
+
+// ══════════════════════════════════════════════════
+// DISTANCE ESTIMATION (OSRM + Nominatim)
+// ══════════════════════════════════════════════════
+async function geocode(address) {
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(address);
+  const r = await fetch(url, { headers: { 'Accept-Language': 'sk', 'User-Agent': 'KnihaJazd/1.0' } });
+  if (!r.ok) throw new Error('Geocoding failed');
+  const j = await r.json();
+  if (!j.length) throw new Error('Adresa nenájdená: ' + address);
+  return { lat: parseFloat(j[0].lat), lon: parseFloat(j[0].lon) };
+}
+
+async function estimateDistance() {
+  const sa = $('f_sa').value.trim();
+  const ea = $('f_ea').value.trim();
+  if (!sa || !ea) { toast('Zadajte obidve adresy', 'err'); return; }
+
+  const btn = $('btnEstDist');
+  btn.textContent = '⏳';
+  btn.disabled = true;
+
+  try {
+    const [from, to] = await Promise.all([geocode(sa), geocode(ea)]);
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=false`;
+    const r = await fetch(osrmUrl);
+    if (!r.ok) throw new Error('OSRM routing failed');
+    const j = await r.json();
+    if (!j.routes || !j.routes.length) throw new Error('Trasa nenájdená');
+    const km = Math.round(j.routes[0].distance / 1000);
+    // Fill end odometer if start is known
+    const startOdo = parseInt($('f_so').value);
+    if (startOdo) {
+      $('f_eo').value = startOdo + km;
+      calcDist();
+    }
+    $('calcDist').textContent = km + ' km (odhad)';
+    toast('Vzdialenosť odhadnutá: ' + km + ' km', 'ok');
+  } catch(e) {
+    toast('Chyba odhadu: ' + e.message, 'err');
+  } finally {
+    btn.textContent = '📍 Odhadnúť';
+    btn.disabled = false;
+  }
+}
+
+function openMinimap() {
+  const sa = $('f_sa').value.trim();
+  const ea = $('f_ea').value.trim();
+  if (!sa || !ea) { toast('Zadajte obidve adresy', 'err'); return; }
+  const src = `https://www.google.com/maps/embed/v1/directions?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&origin=${encodeURIComponent(sa)}&destination=${encodeURIComponent(ea)}&mode=driving&language=sk`;
+  // Note: the above uses a demo/restricted key that only works for embed previews on localhost
+  // For production use, replace with your own Google Maps Embed API key
+  // Alternatively fall back to a plain directions link in an iframe
+  const fallback = `https://maps.google.com/maps?saddr=${encodeURIComponent(sa)}&daddr=${encodeURIComponent(ea)}&output=embed`;
+  $('minimapFrame').src = fallback;
+  $('minimapContainer').style.display = 'block';
+  $('minimapContainer').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeMinimap() {
+  $('minimapContainer').style.display = 'none';
+  $('minimapFrame').src = '';
 }
 
 // ══════════════════════════════════════════════════
