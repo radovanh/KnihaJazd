@@ -175,6 +175,7 @@
       <div class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard"><span class="icon">📊</span> Prehľad</div>
       <div class="nav-item" onclick="showPage('trips')" data-page="trips"><span class="icon">🚗</span> Jazdy</div>
       <div class="nav-item" onclick="showPage('fuel')" data-page="fuel"><span class="icon">⛽</span> PHM</div>
+      <div class="nav-item" onclick="showPage('costs')" data-page="costs"><span class="icon">💶</span> Náklady</div>
       <div class="nav-item" onclick="showPage('routes')" data-page="routes"><span class="icon">🗺️</span> Trasy</div>
       <div class="nav-item" onclick="showPage('places')" data-page="places"><span class="icon">📍</span> Miesta</div>
       <div class="nav-item" onclick="showPage('settings')" data-page="settings"><span class="icon">⚙️</span> Nastavenia</div>
@@ -204,6 +205,15 @@
       <div class="page" id="page-fuel">
         <div class="stats-grid" id="fuelStats"></div>
         <div class="card"><div class="card-header"><h3>Záznamy tankovania</h3></div><div class="table-wrap" id="fuelTable"></div></div>
+      </div>
+      <div class="page" id="page-costs">
+        <div class="stats-grid" id="costsStats"></div>
+        <div class="filter-bar">
+          <input type="month" id="costsMonth" onchange="renderCosts()">
+          <select id="costsVehicle" onchange="renderCosts()"><option value="">Všetky vozidlá</option></select>
+          <select id="costsType" onchange="renderCosts()"><option value="">Všetky typy</option></select>
+        </div>
+        <div class="card"><div class="card-header"><h3>Záznamy nákladov</h3></div><div class="table-wrap" id="costsTable"></div></div>
       </div>
       <div class="page" id="page-routes">
         <div class="card"><div class="card-header"><h3>Definované trasy</h3></div><div class="table-wrap" id="routesTable"></div></div>
@@ -363,17 +373,71 @@
 
 <!-- ══ VEHICLE MODAL ══ -->
 <div class="modal-overlay" id="vehicleModal">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-header"><h3>Vozidlo</h3><button class="close-btn" onclick="closeModal('vehicleModal')">✕</button></div>
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header"><h3 id="vehicleModalTitle">Nové vozidlo</h3><button class="close-btn" onclick="closeModal('vehicleModal')">✕</button></div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group"><label>Názov *</label><input type="text" id="fv_n"></div>
-        <div class="form-group"><label>EČV *</label><input type="text" id="fv_e" style="text-transform:uppercase"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Názov *</label><input type="text" id="fv_n" placeholder="napr. Santa Fe"></div>
+          <div class="form-group"><label>EČV *</label><input type="text" id="fv_e" style="text-transform:uppercase" placeholder="napr. BT180EV"></div>
+        </div>
+        <div class="form-group"><label>VIN číslo</label><input type="text" id="fv_vin" style="text-transform:uppercase;font-family:monospace" placeholder="17-znakový identifikátor vozidla" maxlength="17"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Rok výroby</label><input type="number" id="fv_year" placeholder="napr. 2020" min="1980" max="2099"></div>
+          <div class="form-group"><label>Farba</label><input type="text" id="fv_color" placeholder="napr. Čierna metalíza"></div>
+        </div>
+        <div class="form-group"><label>Poznámka</label><input type="text" id="fv_note" placeholder="voliteľná poznámka"></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('vehicleModal')">Zrušiť</button>
       <button class="btn btn-primary" onclick="saveVehicle()">Uložiť</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COST MODAL ══ -->
+<div class="modal-overlay" id="costModal">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-header"><h3 id="costModalTitle">Nový náklad</h3><button class="close-btn" onclick="closeModal('costModal')">✕</button></div>
+    <div class="modal-body">
+      <div id="costAlerts"></div>
+      <div class="form-grid">
+        <div class="form-row">
+          <div class="form-group"><label>Dátum *</label><input type="date" id="fc_date"></div>
+          <div class="form-group"><label>EČV vozidla *</label><select id="fc_ecv"></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Typ nákladu *</label>
+            <select id="fc_type_sel" onchange="onCostTypeChange()">
+              <option value="">— vybrať —</option>
+              <option>Poistenie</option>
+              <option>STK / Emisná kontrola</option>
+              <option>Servis / Oprava</option>
+              <option>Pneumatiky</option>
+              <option>Diaľničná známka</option>
+              <option>Parkovanie</option>
+              <option>Umývanie / Čistenie</option>
+              <option>Iné</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Vlastný typ</label><input type="text" id="fc_type" placeholder="alebo napísať…"></div>
+        </div>
+        <div class="form-group"><label>Popis / Poznámka</label><input type="text" id="fc_desc" placeholder="voliteľný popis"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Suma (€) *</label><input type="number" step="0.01" id="fc_amount"></div>
+          <div class="form-group"><label>Tachometer (km)</label><input type="number" id="fc_odo"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Dodávateľ / Miesto</label><input type="text" id="fc_supplier"></div>
+          <div class="form-group"><label>Číslo dokladu</label><input type="text" id="fc_invoice"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('costModal')">Zrušiť</button>
+      <button class="btn btn-primary" onclick="saveCost()">Uložiť</button>
     </div>
   </div>
 </div>
@@ -503,7 +567,7 @@ const popSel  = (id, items) => $(id).innerHTML = items.map(i=>`<option value="${
 const closeModal = id => $(id).classList.remove('open');
 const toast   = (msg, t='ok') => { const el=$('toast'); el.textContent=msg; el.className='show t'+t; setTimeout(()=>el.className='',2600); };
 const emptyRoot = () => ({ users:[], userData:{} });
-const emptyUser = () => ({ vehicles:[], places:[], routes:[], tripReasons:[], holidays:[], trips:[], fuelLogs:[] });
+const emptyUser = () => ({ vehicles:[], places:[], routes:[], tripReasons:[], holidays:[], trips:[], fuelLogs:[], costs:[] });
 
 function showConfirm(text, cb) {
   $('confirmText').textContent = text;
@@ -705,10 +769,10 @@ function showPage(page) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   $('page-'+page).classList.add('active');
   document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
-  const titles={dashboard:'Prehľad',trips:'Evidencia jázd',fuel:'Evidencia PHM',routes:'Trasy',places:'Miesta / Ciele',settings:'Nastavenia'};
+  const titles={dashboard:'Prehľad',trips:'Evidencia jázd',fuel:'Evidencia PHM',costs:'Náklady na vozidlá',routes:'Trasy',places:'Miesta / Ciele',settings:'Nastavenia'};
   $('pageTitle').textContent = titles[page]||page;
-  $('topAct').innerHTML = {trips:'<button class="btn btn-primary" onclick="openTripModal()">＋ Nová jazda</button>',fuel:'<button class="btn btn-primary" onclick="openFuelModal()">＋ Tankovanie</button>',routes:'<button class="btn btn-primary" onclick="openRouteModal()">＋ Nová trasa</button>',places:'<button class="btn btn-primary" onclick="openPlaceModal()">＋ Nové miesto</button>'}[page]||'';
-  ({dashboard:renderDashboard,trips:renderTrips,fuel:renderFuel,routes:renderRoutes,places:renderPlaces,settings:renderSettings})[page]?.();
+  $('topAct').innerHTML = {trips:'<button class="btn btn-primary" onclick="openTripModal()">＋ Nová jazda</button>',fuel:'<button class="btn btn-primary" onclick="openFuelModal()">＋ Tankovanie</button>',costs:'<button class="btn btn-primary" onclick="openCostModal()">＋ Nový náklad</button>',routes:'<button class="btn btn-primary" onclick="openRouteModal()">＋ Nová trasa</button>',places:'<button class="btn btn-primary" onclick="openPlaceModal()">＋ Nové miesto</button>'}[page]||'';
+  ({dashboard:renderDashboard,trips:renderTrips,fuel:renderFuel,costs:renderCosts,routes:renderRoutes,places:renderPlaces,settings:renderSettings})[page]?.();
 }
 
 // ══════════════════════════════════════════════════
@@ -975,22 +1039,164 @@ function deletePlace(i){showConfirm(`Zmazať "${udb().places[i].name}"?`,()=>{ud
 // ══════════════════════════════════════════════════
 function renderSettings(){
   const db=udb();
-  $('vehicleList').innerHTML=db.vehicles.map((v,i)=>`<div class="li"><span>${v.name} — <strong>${v.ecv}</strong></span><button class="btn btn-danger btn-sm" onclick="deleteVehicle(${i})">🗑</button></div>`).join('')||'<div class="tm">Žiadne vozidlá</div>';
+  $('vehicleList').innerHTML=db.vehicles.map((v,i)=>`<div class="li"><span>${v.name} — <strong>${v.ecv}</strong>${v.vin?' <span class="tm">VIN: '+v.vin+'</span>':''}</span><div style="display:flex;gap:5px"><button class="btn btn-secondary btn-sm" onclick="openVehicleModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteVehicle(${i})">🗑</button></div></div>`).join('')||'<div class="tm">Žiadne vozidlá</div>';
   $('reasonList').innerHTML=db.tripReasons.map((r,i)=>`<div class="li"><span>${r}</span><button class="btn btn-danger btn-sm" onclick="deleteReason(${i})">🗑</button></div>`).join('')||'<div class="tm">Žiadne dôvody</div>';
   $('holidayList').innerHTML=[...db.holidays].sort((a,b)=>a.date>b.date?1:-1).map(h=>`<div class="li" style="font-size:0.8rem"><span>${fmtDate(h.date)} — ${h.name}</span><button class="btn btn-danger btn-sm" onclick="deleteHoliday('${h.date}')">🗑</button></div>`).join('');
   const m=mode(), ml={local:'🖥️ Lokálny server (data.json)',github:'🐙 GitHub repozitár',ls:'💾 Len localStorage'}, mc={local:'ai',github:'as',ls:'aw'};
   $('storagePanel').innerHTML=`<div class="alert ${mc[m]}">${ml[m]}</div><p class="tm mb2">Aktuálny spôsob ukladania.</p><button class="btn btn-secondary btn-sm" onclick="openGithubSetup()">⚙️ Nastavenia ukladania</button>`;
 }
 
-function openVehicleModal(){$('vehicleModal').classList.add('open');}
+function openVehicleModal(idx){
+  eIds.vehicle = idx !== undefined ? idx : null;
+  $('vehicleModalTitle').textContent = idx !== undefined ? 'Upraviť vozidlo' : 'Nové vozidlo';
+  if (idx !== undefined) {
+    const v = udb().vehicles[idx];
+    $('fv_n').value     = v.name || '';
+    $('fv_e').value     = v.ecv  || '';
+    $('fv_vin').value   = v.vin  || '';
+    $('fv_year').value  = v.year || '';
+    $('fv_color').value = v.color|| '';
+    $('fv_note').value  = v.note || '';
+  } else {
+    ['fv_n','fv_e','fv_vin','fv_year','fv_color','fv_note'].forEach(i=>$(i).value='');
+  }
+  $('vehicleModal').classList.add('open');
+}
 function openReasonModal(){$('reasonModal').classList.add('open');}
 function openHolidayModal(){$('holidayModal').classList.add('open');}
-function saveVehicle(){const n=$('fv_n').value.trim(),e=$('fv_e').value.trim().toUpperCase();if(!n||!e){toast('Vyplňte polia','err');return;}udb().vehicles.push({name:n,ecv:e});debouncedSave();closeModal('vehicleModal');renderSettings();$('fv_n').value='';$('fv_e').value='';toast('Vozidlo uložené','ok');}
+function saveVehicle(){
+  const n=$('fv_n').value.trim(), e=$('fv_e').value.trim().toUpperCase();
+  const vin=$('fv_vin').value.trim().toUpperCase(), year=parseInt($('fv_year').value)||null;
+  const color=$('fv_color').value.trim(), note=$('fv_note').value.trim();
+  if(!n||!e){toast('Vyplňte povinné polia','err');return;}
+  const v={name:n,ecv:e,vin:vin||null,year,color:color||null,note:note||null};
+  if(eIds.vehicle!==null&&eIds.vehicle!==undefined) udb().vehicles[eIds.vehicle]=v;
+  else udb().vehicles.push(v);
+  debouncedSave();closeModal('vehicleModal');renderSettings();toast('Vozidlo uložené','ok');
+}
 function deleteVehicle(i){showConfirm(`Zmazať "${udb().vehicles[i].name}"?`,()=>{udb().vehicles.splice(i,1);debouncedSave();renderSettings();});}
 function saveReason(){const t=$('freason').value.trim();if(!t)return;udb().tripReasons.push(t);debouncedSave();closeModal('reasonModal');renderSettings();$('freason').value='';toast('Dôvod uložený','ok');}
 function deleteReason(i){udb().tripReasons.splice(i,1);debouncedSave();renderSettings();}
 function saveHoliday(){const d=$('fh_d').value,n=$('fh_n').value.trim();if(!d||!n){toast('Vyplňte polia','err');return;}udb().holidays.push({date:d,name:n});debouncedSave();closeModal('holidayModal');renderSettings();$('fh_d').value='';$('fh_n').value='';toast('Sviatok uložený','ok');}
 function deleteHoliday(d){udb().holidays=udb().holidays.filter(h=>h.date!==d);debouncedSave();renderSettings();}
+
+
+// ══════════════════════════════════════════════════
+// COSTS
+// ══════════════════════════════════════════════════
+const COST_TYPES = ['Poistenie','STK / Emisná kontrola','Servis / Oprava','Pneumatiky','Diaľničná známka','Parkovanie','Umývanie / Čistenie','Iné'];
+
+function getCosts() {
+  const db = udb();
+  if (!db.costs) db.costs = [];
+  return db.costs;
+}
+
+function renderCosts() {
+  const db = udb();
+  if (!db.costs) db.costs = [];
+  const month = $('costsMonth').value, ecvF = $('costsVehicle').value, typeF = $('costsType').value;
+
+  // populate vehicle filter
+  const vf=$('costsVehicle'); while(vf.options.length>1) vf.remove(1);
+  db.vehicles.forEach(v=>{const o=document.createElement('option');o.value=v.ecv;o.textContent=`${v.name} (${v.ecv})`;vf.appendChild(o);}); if(ecvF) vf.value=ecvF;
+
+  // populate type filter
+  const tf=$('costsType'); while(tf.options.length>1) tf.remove(1);
+  const usedTypes=[...new Set(db.costs.map(c=>c.type))].sort();
+  usedTypes.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;tf.appendChild(o);}); if(typeF) tf.value=typeF;
+
+  let costs=[...db.costs].sort((a,b)=>a.date>b.date?1:-1);
+  if(month) costs=costs.filter(c=>c.date.startsWith(month));
+  if(ecvF)  costs=costs.filter(c=>c.ecv===ecvF);
+  if(typeF) costs=costs.filter(c=>c.type===typeF);
+
+  const total=costs.reduce((s,c)=>s+c.amount,0);
+  const byType={};
+  costs.forEach(c=>{byType[c.type]=(byType[c.type]||0)+c.amount;});
+  const topType=Object.entries(byType).sort((a,b)=>b[1]-a[1])[0];
+
+  $('costsStats').innerHTML=`
+    <div class="stat-card au"><div class="stat-label">Celkové náklady</div><div class="stat-value">${total.toFixed(2)} €</div><div class="stat-sub">${costs.length} záznamov</div></div>
+    <div class="stat-card ag"><div class="stat-label">Priemerný náklad</div><div class="stat-value">${costs.length?(total/costs.length).toFixed(2):0} €</div><div class="stat-sub">na záznam</div></div>
+    <div class="stat-card ab"><div class="stat-label">Najvyššia položka</div><div class="stat-value">${costs.length?Math.max(...costs.map(c=>c.amount)).toFixed(2):0} €</div><div class="stat-sub">jednorazový náklad</div></div>
+    <div class="stat-card ar"><div class="stat-label">Najčastejší typ</div><div class="stat-value" style="font-size:1rem;padding-top:4px">${topType?topType[0]:'—'}</div><div class="stat-sub">${topType?topType[1].toFixed(2)+' €':''}</div></div>`;
+
+  if(!costs.length){$('costsTable').innerHTML=`<div style="padding:28px;text-align:center;color:var(--text3)">Žiadne náklady</div>`;return;}
+
+  $('costsTable').innerHTML=`<table>
+    <thead><tr><th>#</th><th>Dátum</th><th>EČV</th><th>Typ</th><th>Popis</th><th>Tachometer</th><th>Dodávateľ</th><th>Doklad</th><th>Suma</th><th></th></tr></thead>
+    <tbody>${costs.map(c=>`<tr>
+      <td style="color:var(--text3);font-size:0.73rem">${c.id}</td>
+      <td style="white-space:nowrap">${fmtDate(c.date)}</td>
+      <td><span class="badge bz">${c.ecv}</span></td>
+      <td><span class="badge bb">${c.type}</span></td>
+      <td style="font-size:0.8rem;color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.desc||''}">${c.desc||'—'}</td>
+      <td class="odo">${c.odo?c.odo.toLocaleString('sk')+' km':'—'}</td>
+      <td style="font-size:0.8rem">${c.supplier||'—'}</td>
+      <td style="font-size:0.79rem;color:var(--text2)">${c.invoice||'—'}</td>
+      <td><strong>${c.amount.toFixed(2)} €</strong></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-secondary btn-sm" onclick="openCostModal(${c.id})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCost(${c.id})">🗑</button>
+      </td>
+    </tr>`).join('')}</tbody>
+    <tfoot><tr style="background:var(--surface2);font-weight:600">
+      <td colspan="8" style="padding:9px 11px;font-size:0.79rem">CELKOM</td>
+      <td style="padding:9px 11px">${total.toFixed(2)} €</td>
+      <td></td>
+    </tr></tfoot>
+  </table>`;
+}
+
+function onCostTypeChange() {
+  const v=$('fc_type_sel').value;
+  if(v) $('fc_type').value=v;
+}
+
+function openCostModal(id) {
+  eIds.cost = id||null;
+  $('costModalTitle').textContent = id ? `Upraviť náklad #${id}` : 'Nový náklad';
+  $('costAlerts').innerHTML='';
+  const db=udb();
+  popSel('fc_ecv', db.vehicles.map(v=>({v:v.ecv,l:`${v.name} (${v.ecv})`})));
+  if(id){
+    const co=db.costs.find(x=>x.id===id);
+    if(co){
+      $('fc_date').value=co.date; $('fc_ecv').value=co.ecv;
+      $('fc_type').value=co.type; $('fc_type_sel').value=COST_TYPES.includes(co.type)?co.type:'';
+      $('fc_desc').value=co.desc||''; $('fc_amount').value=co.amount;
+      $('fc_odo').value=co.odo||''; $('fc_supplier').value=co.supplier||'';
+      $('fc_invoice').value=co.invoice||'';
+    }
+  } else {
+    $('fc_date').value=new Date().toISOString().split('T')[0];
+    ['fc_type','fc_desc','fc_amount','fc_odo','fc_supplier','fc_invoice'].forEach(i=>$(i).value='');
+    $('fc_type_sel').value='';
+    if(db.vehicles.length) $('fc_ecv').value=db.vehicles[0].ecv;
+  }
+  $('costModal').classList.add('open');
+}
+
+function saveCost(){
+  const date=$('fc_date').value, ecv=$('fc_ecv').value;
+  const type=($('fc_type').value||$('fc_type_sel').value).trim();
+  const desc=$('fc_desc').value.trim(), amount=parseFloat($('fc_amount').value);
+  const odo=parseInt($('fc_odo').value)||null, supplier=$('fc_supplier').value.trim(), invoice=$('fc_invoice').value.trim();
+  const ae=$('costAlerts'); ae.innerHTML='';
+  const errs=[];
+  if(!date) errs.push('Dátum je povinný'); if(!ecv) errs.push('Vozidlo je povinné');
+  if(!type) errs.push('Typ nákladu je povinný'); if(!amount||isNaN(amount)||amount<=0) errs.push('Suma musí byť kladné číslo');
+  if(errs.length){ae.innerHTML=errs.map(e=>`<div class="alert ad">⛔ ${e}</div>`).join('');return;}
+  const db=udb(); if(!db.costs) db.costs=[];
+  const cost={id:eIds.cost||nextId(db.costs),date,ecv,type,desc:desc||null,amount,odo,supplier:supplier||null,invoice:invoice||null};
+  if(eIds.cost){const i=db.costs.findIndex(c=>c.id===eIds.cost);db.costs[i]=cost;}
+  else db.costs.push(cost);
+  db.costs.sort((a,b)=>a.date>b.date?1:-1);
+  debouncedSave();closeModal('costModal');renderCosts();toast('Náklad uložený','ok');
+}
+
+function deleteCost(id){showConfirm(`Naozaj zmazať náklad #${id}?`,()=>{udb().costs=udb().costs.filter(c=>c.id!==id);debouncedSave();renderCosts();toast('Zmazané');});}
 
 // ══════════════════════════════════════════════════
 // EXPORT / IMPORT
@@ -1017,6 +1223,7 @@ async function init() {
   if(!rootData.userData) rootData.userData={};
 
   $('filterMonth').value = new Date().toISOString().substring(0,7);
+  $('costsMonth').value = new Date().toISOString().substring(0,7);
 
   // Auto-login last user
   const lastUid=localStorage.getItem(LS_USER), lastUser=lastUid&&rootData.users.find(u=>u.id===lastUid);
