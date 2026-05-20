@@ -1781,10 +1781,40 @@ function renderFuel() {
   const db=udb(), tf=db.fuelLogs.reduce((s,f)=>s+f.total,0), tl=db.fuelLogs.reduce((s,f)=>s+f.liters,0);
   $('fuelStats').innerHTML=`<div class="stat-card au"><div class="stat-label">Celkové náklady</div><div class="stat-value">${tf.toFixed(2)} €</div><div class="stat-sub">${db.fuelLogs.length} tankovania</div></div><div class="stat-card ag"><div class="stat-label">Celkové litre</div><div class="stat-value">${tl.toFixed(2)} l</div><div class="stat-sub">priem. ${tl>0?(tf/tl).toFixed(3):0} €/l</div></div>`;
   const sorted=[...db.fuelLogs].sort((a,b)=>a.date>b.date?1:-1);
-  $('fuelTable').innerHTML=`<table><thead><tr><th>#</th><th>Dátum</th><th>Čas</th><th>EČV</th><th>Miesto</th><th>Tachometer</th><th>€/l</th><th>Litre</th><th>Suma</th><th>Jazda v deň</th><th></th></tr></thead><tbody>${sorted.map(f=>{
-    const ht=db.trips.some(t=>t.ecv===f.ecv&&t.startDate===f.date);
-    return `<tr><td style="color:var(--text3);font-size:0.73rem">${f.id}</td><td>${fmtDate(f.date)}</td><td style="color:var(--text2)">${f.time}</td><td><span class="badge bz">${f.ecv}</span></td><td>${f.place}</td><td class="odo">${f.odometer.toLocaleString('sk')}</td><td>${f.pricePerLiter.toFixed(3)}</td><td>${f.liters.toFixed(2)} l</td><td><strong>${f.total.toFixed(2)} €</strong></td><td>${ht?'<span class="badge bg">✓</span>':'<span class="badge br">✗ Chýba</span>'}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openFuelModal(${f.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteFuel(${f.id})">🗑</button></td></tr>`;
-  }).join('')}</tbody><tfoot><tr style="background:var(--surface2);font-weight:600"><td colspan="7" style="padding:9px 11px;font-size:0.79rem">CELKOM</td><td style="padding:9px 11px">${tl.toFixed(2)} l</td><td style="padding:9px 11px">${tf.toFixed(2)} €</td><td colspan="2"></td></tr></tfoot></table>`;
+  const isMob = window.innerWidth <= 680;
+  if (isMob) {
+    // Card-style list for mobile
+    if (!sorted.length) { $('fuelTable').innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">Žiadne záznamy</div>'; return; }
+    $('fuelTable').innerHTML = sorted.map(f => {
+      const ht = db.trips.some(t=>t.ecv===f.ecv&&t.startDate===f.date);
+      return `<div class="fuel-card">
+        <div class="fuel-card-top">
+          <div>
+            <div class="fuel-card-date">${fmtDate(f.date)}${f.time?' <span class="fuel-card-time">'+f.time+'</span>':''}</div>
+            <div class="fuel-card-place">⛽ ${f.place}</div>
+          </div>
+          <div class="fuel-card-amount">${f.total.toFixed(2)} €</div>
+        </div>
+        <div class="fuel-card-details">
+          <span><span class="badge bz">${f.ecv}</span></span>
+          <span>${f.liters.toFixed(2)} l</span>
+          <span>${f.pricePerLiter.toFixed(3)} €/l</span>
+          <span class="odo">${f.odometer.toLocaleString('sk')} km</span>
+          <span>${ht?'<span class="badge bg">✓ jazda</span>':'<span class="badge br">✗ jazda</span>'}</span>
+        </div>
+        <div class="fuel-card-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openFuelModal(${f.id})">✏️ Upraviť</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteFuel(${f.id})">🗑 Zmazať</button>
+        </div>
+      </div>`;
+    }).join('') + `<div class="fuel-card-footer">Celkom: <strong>${tl.toFixed(2)} l</strong> · <strong>${tf.toFixed(2)} €</strong></div>`;
+  } else {
+    // Full table for desktop
+    $('fuelTable').innerHTML=`<table><thead><tr><th>#</th><th>Dátum</th><th>Čas</th><th>EČV</th><th>Miesto</th><th>Tachometer</th><th>€/l</th><th>Litre</th><th>Suma</th><th>Jazda v deň</th><th></th></tr></thead><tbody>${sorted.map(f=>{
+      const ht=db.trips.some(t=>t.ecv===f.ecv&&t.startDate===f.date);
+      return `<tr><td style="color:var(--text3);font-size:0.73rem">${f.id}</td><td>${fmtDate(f.date)}</td><td style="color:var(--text2)">${f.time}</td><td><span class="badge bz">${f.ecv}</span></td><td>${f.place}</td><td class="odo">${f.odometer.toLocaleString('sk')}</td><td>${f.pricePerLiter.toFixed(3)}</td><td>${f.liters.toFixed(2)} l</td><td><strong>${f.total.toFixed(2)} €</strong></td><td>${ht?'<span class="badge bg">✓</span>':'<span class="badge br">✗ Chýba</span>'}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openFuelModal(${f.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteFuel(${f.id})">🗑</button></td></tr>`;
+    }).join('')}</tbody><tfoot><tr style="background:var(--surface2);font-weight:600"><td colspan="7" style="padding:9px 11px;font-size:0.79rem">CELKOM</td><td style="padding:9px 11px">${tl.toFixed(2)} l</td><td style="padding:9px 11px">${tf.toFixed(2)} €</td><td colspan="2"></td></tr></tfoot></table>`;
+  }
 }
 
 function openFuelModal(id) {
