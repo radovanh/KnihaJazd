@@ -1763,9 +1763,12 @@ function saveTrip() {
   if(!ea) errs.push('Adresa konca je povinná'); if(!eo||isNaN(eo)) errs.push('Tachometer koniec je povinný');
   if(!ecv) errs.push('Vozidlo je povinné'); if(eo&&so&&eo<so) errs.push('Koniec tachom. < začiatok');
   if(errs.length){ae.innerHTML=errs.map(e=>`<div class="alert ad">⛔ ${e}</div>`).join('');return;}
+  // Warnings are informational only — show them but never block saving
   const warns=[];
-  if(isWE(sd)) warns.push('Jazda cez víkend'); const hn=hdName(sd); if(hn) warns.push('Jazda cez sviatok: '+hn);
-  if(warns.length&&!$('_wack')){ae.innerHTML=warns.map(w=>`<div class="alert aw">⚠️ ${w}</div>`).join('')+`<div class="tm mb2">Kliknite znova na Uložiť pre potvrdenie.</div>`;const a=document.createElement('input');a.type='hidden';a.id='_wack';ae.appendChild(a);return;}
+  if(isWE(sd)) warns.push('Jazda cez víkend');
+  const hn=hdName(sd); if(hn) warns.push('Jazda cez sviatok: '+hn);
+  const vn=vacName(sd); if(vn) warns.push('Jazda počas dovolenky: '+vn);
+  if(warns.length) ae.innerHTML=warns.map(w=>`<div class="alert aw">⚠️ ${w}</div>`).join('');
   const db=udb(), trip={id:eIds.trip||nextId(db.trips),startDate:sd,startTime:st,startAddress:sa,startOdo:so,endDate:ed,endTime:et,endAddress:ea,endOdo:eo,ecv,reason,route,startPlace:sp,endPlace:ep,fuelPlace:fp||null,hasFuel:!!fp};
   if(eIds.trip){const i=db.trips.findIndex(t=>t.id===eIds.trip);db.trips[i]=trip;}else db.trips.push(trip);
   db.trips.sort((a,b)=>(a.startDate+(a.startTime||'')<b.startDate+(b.startTime||''))?-1:1);
