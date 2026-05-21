@@ -778,6 +778,10 @@
       <div class="form-grid">
         <div class="form-group"><label>Názov *</label><input type="text" id="fp_n"></div>
         <div class="form-group"><label>Adresa *</label><input type="text" id="fp_a"></div>
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:10px;padding:9px 12px;background:var(--surface2);border-radius:7px;border:1.5px solid var(--border)">
+          <input type="checkbox" id="fp_fuel" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;border:none;padding:0;flex-shrink:0">
+          <label for="fp_fuel" style="cursor:pointer;font-size:0.855rem;font-weight:600;color:var(--text);margin:0">⛽ Miesto tankovania</label>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1686,7 +1690,7 @@ function openTripModal(id) {
   popSel('f_sp', pOpts); popSel('f_ep', pOpts);
   popSel('f_route', [{v:'',l:'— vlastná —'},...db.routes.map(r=>({v:r.name,l:`${r.name} (${r.distance} km)`}))]);
   popSel('f_rs', [{v:'',l:'— vybrať —'},...db.tripReasons.map(r=>({v:r,l:r}))]);
-  popSel('f_fp', [{v:'',l:'— žiadne —'},...db.places.map(p=>({v:p.name,l:p.name}))]);
+  popSel('f_fp', [{v:'',l:'— žiadne —'},...db.places.filter(p=>p.isFuel).map(p=>({v:p.name,l:p.name}))]);
   if (id) {
     const t=db.trips.find(x=>x.id===id);
     if(t){$('f_sd').value=t.startDate;$('f_st').value=t.startTime||'';$('f_sa').value=t.startAddress;$('f_so').value=t.startOdo;$('f_sp').value=t.startPlace||'';
@@ -1824,7 +1828,8 @@ function openFuelModal(id) {
   eIds.fuel=id||null; $('fuelModalTitle').textContent=id?`Upraviť tankovanie #${id}`:'Nové tankovanie'; $('fuelAlerts').innerHTML='';
   const db=udb();
   popSel('ff_ecv', db.vehicles.map(v=>({v:v.ecv,l:`${v.name} (${v.ecv})`})));
-  popSel('ff_place', [{v:'',l:'— vybrať —'},...db.places.map(p=>({v:p.name,l:p.name}))]);
+  const fuelPlaces=db.places.filter(p=>p.isFuel);
+  popSel('ff_place', [{v:'',l:'— vybrať —'},...fuelPlaces.map(p=>({v:p.name,l:p.name}))]);
   if(id){const f=db.fuelLogs.find(x=>x.id===id);if(f){$('ff_date').value=f.date;$('ff_time').value=f.time;$('ff_ecv').value=f.ecv;$('ff_odo').value=f.odometer;$('ff_place').value=f.place;$('ff_ppl').value=f.pricePerLiter;$('ff_l').value=f.liters;$('ff_total').value=f.total.toFixed(2);}}
   else{$('ff_date').value=new Date().toISOString().split('T')[0];['ff_time','ff_odo','ff_ppl','ff_l','ff_total'].forEach(i=>$(i).value='');$('ff_place').value='';}
   openModal('fuelModal');
@@ -1872,11 +1877,11 @@ function deleteRoute(i){showConfirm(`Zmazať trasu "${udb().routes[i].name}"?`,(
 // ══════════════════════════════════════════════════
 // PLACES
 // ══════════════════════════════════════════════════
-function renderPlaces(){$('placesTable').innerHTML=`<table><thead><tr><th>Názov</th><th>Adresa</th><th></th></tr></thead><tbody>${udb().places.map((p,i)=>`<tr><td><strong>${p.name}</strong></td><td style="color:var(--text2)">${p.address}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openPlaceModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deletePlace(${i})">🗑</button></td></tr>`).join('')}</tbody></table>`;}
+function renderPlaces(){$('placesTable').innerHTML=`<table><thead><tr><th>Názov</th><th>Adresa</th><th>Tankovanie</th><th></th></tr></thead><tbody>${udb().places.map((p,i)=>`<tr><td><strong>${p.name}</strong></td><td style="color:var(--text2)">${p.address}</td><td style="text-align:center">${p.isFuel?'<span class="badge bb">⛽ Áno</span>':'<span style="color:var(--text3);font-size:0.8rem">—</span>'}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openPlaceModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deletePlace(${i})">🗑</button></td></tr>`).join('')}</tbody></table>`;}
 
-function openPlaceModal(idx){eIds.place=idx!==undefined?idx:null;$('placeModalTitle').textContent=idx!==undefined?'Upraviť miesto':'Nové miesto';if(idx!==undefined){$('fp_n').value=udb().places[idx].name;$('fp_a').value=udb().places[idx].address;}else{$('fp_n').value='';$('fp_a').value='';}openModal('placeModal');}
+function openPlaceModal(idx){eIds.place=idx!==undefined?idx:null;$('placeModalTitle').textContent=idx!==undefined?'Upraviť miesto':'Nové miesto';if(idx!==undefined){const p=udb().places[idx];$('fp_n').value=p.name;$('fp_a').value=p.address;$('fp_fuel').checked=!!p.isFuel;}else{$('fp_n').value='';$('fp_a').value='';$('fp_fuel').checked=false;}openModal('placeModal');}
 
-function savePlace(){const n=$('fp_n').value.trim(),a=$('fp_a').value.trim();if(!n||!a){toast('Vyplňte polia','err');return;}if(eIds.place!==null)udb().places[eIds.place]={name:n,address:a};else udb().places.push({name:n,address:a});debouncedSave();closeModal('placeModal');renderPlaces();toast('Miesto uložené','ok');}
+function savePlace(){const n=$('fp_n').value.trim(),a=$('fp_a').value.trim(),f=$('fp_fuel').checked;if(!n||!a){toast('Vyplňte polia','err');return;}const place={name:n,address:a,isFuel:f};if(eIds.place!==null)udb().places[eIds.place]=place;else udb().places.push(place);debouncedSave();closeModal('placeModal');renderPlaces();toast('Miesto uložené','ok');}
 function deletePlace(i){showConfirm(`Zmazať "${udb().places[i].name}"?`,()=>{udb().places.splice(i,1);debouncedSave();renderPlaces();});}
 
 // ══════════════════════════════════════════════════
