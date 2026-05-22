@@ -364,10 +364,19 @@
     animation:slideUp 0.2s ease !important;
   }
 
-  /* Trip modal: start/end panels stack */
+  /* Trip modal: fit entirely within screen width */
+  #tripModal .modal-body { padding:12px; }
+  #tripModal .form-grid { gap:9px; }
   #tripModal .form-grid > div[style*="background:var(--surface2)"] {
-    margin-bottom:2px;
+    margin-bottom:2px; padding:10px; min-width:0;
   }
+  #tripModal .form-grid > div[style*="background:var(--surface2)"] .form-group input,
+  #tripModal .form-grid > div[style*="background:var(--surface2)"] .form-group select { font-size:0.82rem; }
+  /* Distance bar + estimate buttons — wrap on narrow screens */
+  #tripModal div[style*="background:var(--accent)"] { flex-wrap:wrap; gap:6px; }
+  #tripModal div[style*="background:var(--accent)"] div { flex-wrap:wrap; gap:5px; }
+  /* Minimap iframe — full width */
+  #minimapFrame { height:220px; }
 
   /* ── Tables: compact, horizontal scroll ── */
   table { font-size:0.78rem; }
@@ -465,6 +474,16 @@
   /* Hide FAB group on pages where it doesn't make sense */
   body.page-report .mob-fab-group,
   body.page-settings .mob-fab-group { display:none !important; }
+
+  /* ══ UNIFIED MOB CARDS (fuel + route + future) ══ */
+  .mob-card { border:1px solid var(--border); border-radius:9px; margin:0 0 10px; background:var(--surface); overflow:hidden; }
+  .mob-card-top { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 13px 6px; gap:8px; }
+  .mob-card-title { font-size:0.9rem; font-weight:700; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .mob-card-title small { font-weight:400; color:var(--text2); font-size:0.78rem; margin-left:5px; }
+  .mob-card-meta { font-size:0.83rem; color:var(--text2); padding:0 13px 6px; display:flex; align-items:center; flex-wrap:wrap; gap:4px; }
+  .mob-card-sub { font-size:0.76rem; color:var(--text3); font-style:italic; padding:0 13px 8px; }
+  .mob-card-actions { display:flex; gap:8px; padding:8px 13px; border-top:1px solid var(--border); }
+  .mob-card-footer { text-align:center; padding:10px; font-size:0.82rem; color:var(--text2); border-top:2px solid var(--accent); background:var(--surface2); border-radius:0 0 9px 9px; }
 
   /* ── Route cards (mobile) ── */
   .route-card { border:1px solid var(--border); border-radius:9px; margin:0 0 10px; background:var(--surface); overflow:hidden; }
@@ -2163,27 +2182,29 @@ function renderFuel() {
     if (!sorted.length) { $('fuelTable').innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">Žiadne záznamy</div>'; return; }
     $('fuelTable').innerHTML = sorted.map(f => {
       const ht = db.trips.some(t=>t.ecv===f.ecv&&t.startDate===f.date);
-      return `<div class="fuel-card">
-        <div class="fuel-card-top">
-          <div>
-            <div class="fuel-card-date">${fmtDate(f.date)}${f.time?' <span class="fuel-card-time">'+f.time+'</span>':''}</div>
-            <div class="fuel-card-place">⛽ ${f.place}</div>
-          </div>
-          <div class="fuel-card-amount">${f.total.toFixed(2)} €</div>
+      return `<div class="mob-card">
+        <div class="mob-card-top">
+          <span class="mob-card-title">${fmtDate(f.date)}<small>${f.time||''}</small></span>
+          <span class="badge au" style="font-size:0.85rem;padding:3px 9px;font-weight:700">${f.total.toFixed(2)} €</span>
         </div>
-        <div class="fuel-card-details">
-          <span><span class="badge bz">${f.ecv}</span></span>
-          <span>${f.liters.toFixed(2)} l</span>
-          <span>${f.pricePerLiter.toFixed(3)} €/l</span>
-          <span class="odo">${f.odometer.toLocaleString('sk')} km</span>
+        <div class="mob-card-meta">
+          <span>⛽ ${f.place}</span>
+          <span style="color:var(--border)">·</span>
+          <span class="badge bz">${f.ecv}</span>
+          <span style="color:var(--border)">·</span>
+          <span>${f.liters.toFixed(2)} l · ${f.pricePerLiter.toFixed(3)} €/l</span>
+        </div>
+        <div class="mob-card-meta" style="padding-top:0">
+          <span class="odo" style="font-size:0.76rem;color:var(--text3)">${f.odometer.toLocaleString('sk')} km</span>
+          <span style="color:var(--border)">·</span>
           <span>${ht?'<span class="badge bg">✓ jazda</span>':'<span class="badge br">✗ jazda</span>'}</span>
         </div>
-        <div class="fuel-card-actions">
-          <button class="btn btn-secondary btn-sm" onclick="openFuelModal(${f.id})">✏️ Upraviť</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteFuel(${f.id})">🗑 Zmazať</button>
+        <div class="mob-card-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openFuelModal(${f.id})" style="flex:1;justify-content:center">✏️ Upraviť</button>
+          <button class="btn btn-danger btn-sm"    onclick="deleteFuel(${f.id})"    style="flex:1;justify-content:center">🗑 Zmazať</button>
         </div>
       </div>`;
-    }).join('') + `<div class="fuel-card-footer">Celkom: <strong>${tl.toFixed(2)} l</strong> · <strong>${tf.toFixed(2)} €</strong></div>`;
+    }).join('') + `<div class="mob-card-footer">Celkom: <strong>${tl.toFixed(2)} l</strong> · <strong>${tf.toFixed(2)} €</strong></div>`;
   } else {
     // Full table for desktop
     $('fuelTable').innerHTML=`<table><thead><tr><th>#</th><th>Dátum</th><th>Čas</th><th>EČV</th><th>Miesto</th><th>Tachometer</th><th>€/l</th><th>Litre</th><th>Suma</th><th>Jazda v deň</th><th></th></tr></thead><tbody>${sorted.map(f=>{
@@ -2233,18 +2254,18 @@ function renderRoutes() {
   if (isMob) {
     if (!routes.length) { $('routesTable').innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">Žiadne trasy</div>'; return; }
     $('routesTable').innerHTML = routes.map((r,i) => `
-      <div class="route-card">
-        <div class="route-card-top">
-          <strong>${r.name}</strong>
-          <span class="badge bb">${r.distance} km${r.duration?' · '+r.duration+' min':''}</span>
+      <div class="mob-card">
+        <div class="mob-card-top">
+          <span class="mob-card-title">${r.name}</span>
+          <span class="badge bb" style="flex-shrink:0">${r.distance} km${r.duration?' · '+r.duration+' min':''}</span>
         </div>
-        <div class="route-card-route">
+        <div class="mob-card-meta">
           <span>${r.start}</span>
-          <span style="color:var(--text3);margin:0 4px">→</span>
+          <span style="color:var(--text3)">→</span>
           <span>${r.end}</span>
         </div>
-        ${r.reason ? `<div class="route-card-reason">${r.reason}</div>` : ''}
-        <div class="route-card-actions">
+        ${r.reason ? `<div class="mob-card-sub">${r.reason}</div>` : ''}
+        <div class="mob-card-actions">
           <button class="btn btn-secondary btn-sm" onclick="openRouteModal(${i})" style="flex:1;justify-content:center">✏️ Upraviť</button>
           <button class="btn btn-danger btn-sm"    onclick="deleteRoute(${i})"    style="flex:1;justify-content:center">🗑 Zmazať</button>
         </div>
