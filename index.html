@@ -1852,8 +1852,11 @@ function openTripModal(id) {
       $('f_ed').value=t.endDate;$('f_et').value=t.endTime||'';$('f_ea').value=t.endAddress;$('f_eo').value=t.endOdo;$('f_ep').value=t.endPlace||'';
       $('f_ecv').value=t.ecv;$('f_reason').value=t.reason||'';$('f_route').value=t.route||'';$('f_fp').value=t.fuelPlace||'';}
   } else {
-    const today=new Date().toISOString().split('T')[0];
-    ['f_st','f_et','f_sa','f_ea','f_reason'].forEach(i=>$(i).value='');
+    const now=new Date();
+    const today=now.toISOString().split('T')[0];
+    const nowTime=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+    ['f_sa','f_ea','f_reason'].forEach(i=>$(i).value='');
+    $('f_st').value=nowTime; $('f_et').value='';
     $('f_sd').value=$('f_ed').value=today; $('f_sp').value=$('f_ep').value=$('f_route').value=$('f_fp').value='';
     const last=[...db.trips].filter(t=>db.vehicles[0]&&t.ecv===db.vehicles[0].ecv).sort((a,b)=>a.id-b.id).pop();
     $('f_so').value=last?last.endOdo:''; $('f_eo').value='';
@@ -1986,7 +1989,7 @@ function openFuelModal(id) {
   const fuelPlaces=db.places.filter(p=>p.isFuel);
   popSel('ff_place', [{v:'',l:'— vybrať —'},...fuelPlaces.map(p=>({v:p.name,l:p.name}))]);
   if(id){const f=db.fuelLogs.find(x=>x.id===id);if(f){$('ff_date').value=f.date;$('ff_time').value=f.time;$('ff_ecv').value=f.ecv;$('ff_odo').value=f.odometer;$('ff_place').value=f.place;$('ff_ppl').value=f.pricePerLiter;$('ff_l').value=f.liters;$('ff_total').value=f.total.toFixed(2);}}
-  else{$('ff_date').value=new Date().toISOString().split('T')[0];['ff_time','ff_odo','ff_ppl','ff_l','ff_total'].forEach(i=>$(i).value='');$('ff_place').value='';}
+  else{const _n=new Date();$('ff_date').value=_n.toISOString().split('T')[0];$('ff_time').value=_n.getHours().toString().padStart(2,'0')+':'+_n.getMinutes().toString().padStart(2,'0');['ff_odo','ff_ppl','ff_l','ff_total'].forEach(i=>$(i).value='');$('ff_place').value='';}
   openModal('fuelModal');
 }
 
