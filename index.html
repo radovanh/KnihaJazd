@@ -466,11 +466,13 @@
   body.page-report .mob-fab-group,
   body.page-settings .mob-fab-group { display:none !important; }
 
-  /* ── Routes table mobile: hide duration + reason ── */
-  #routesTable table thead th:nth-child(5),
-  #routesTable table tbody td:nth-child(5),
-  #routesTable table thead th:nth-child(6),
-  #routesTable table tbody td:nth-child(6) { display:none; }
+  /* ── Route cards (mobile) ── */
+  .route-card { border:1px solid var(--border); border-radius:9px; margin:0 0 10px; background:var(--surface); overflow:hidden; }
+  .route-card-top { display:flex; justify-content:space-between; align-items:center; padding:10px 13px 6px; gap:8px; }
+  .route-card-top strong { font-size:0.9rem; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .route-card-route { padding:4px 13px 6px; font-size:0.83rem; color:var(--text2); display:flex; align-items:center; flex-wrap:wrap; gap:2px; }
+  .route-card-reason { padding:2px 13px 8px; font-size:0.76rem; color:var(--text3); font-style:italic; }
+  .route-card-actions { display:flex; gap:8px; padding:8px 13px; border-top:1px solid var(--border); }
   /* ── Places table mobile: wrap address ── */
   #placesTable table { font-size:0.78rem; }
   #placesTable table td:nth-child(2) { word-break:break-word; max-width:160px; }
@@ -1784,7 +1786,24 @@ function showSettingsTab(tab) {
 // ══════════════════════════════════════════════════
 // Generate a stable key for a validation issue (for ignore list)
 function warnKey(e) {
-  return e.tid ? `t${e.tid}:${e.msg.replace(/\s+/g,'_').substring(0,60)}` : `g:${e.msg.replace(/\s+/g,'_').substring(0,60)}`;
+  // Stable key: based on trip id + warning category, NOT message text
+  // so key never changes if message wording is updated
+  if (e.tid) {
+    // Extract category from message prefix for stability
+    const cat = e.msg.includes('víkend')   ? 'weekend'
+              : e.msg.includes('sviatok')   ? 'holiday'
+              : e.msg.includes('dovolenk')  ? 'vacation'
+              : e.msg.includes('tankovanie')? 'fuel'
+              : e.msg.includes('Tachometer')? 'odo'
+              : e.msg.includes('Koniec tach')? 'odo_inv'
+              : e.msg.includes('0 km')      ? 'zero'
+              : e.msg.includes('prekrýva')  ? 'overlap'
+              : 'other';
+    return `t${e.tid}:${cat}`;
+  }
+  // Global warnings (PHM without trip etc.) — use short hash of message
+  const h = e.msg.split('').reduce((a,c)=>(Math.imul(31,a)+c.charCodeAt(0))|0, 0);
+  return `g:${Math.abs(h).toString(36)}`;
 }
 function isIgnored(e) {
   const db = udb();
@@ -1797,7 +1816,8 @@ function toggleIgnoreWarning(key) {
   const idx = db.ignoredWarnings.indexOf(key);
   if (idx >= 0) db.ignoredWarnings.splice(idx, 1);
   else db.ignoredWarnings.push(key);
-  debouncedSave();
+  // Save immediately (not debounced) — ignore state must persist reliably
+  saveData();
   renderDashboard();
   if (curPage === 'trips') renderTrips();
 }
@@ -2208,7 +2228,30 @@ function deleteFuel(id) { showConfirm(`Zmazať tankovanie #${id}?`,()=>{udb().fu
 // ROUTES
 // ══════════════════════════════════════════════════
 function renderRoutes() {
-  $('routesTable').innerHTML=`<table><thead><tr><th>Názov</th><th>Odkiaľ</th><th>Kam</th><th>km</th><th>min</th><th>Dôvod</th><th></th></tr></thead><tbody>${udb().routes.map((r,i)=>`<tr><td><strong>${r.name}</strong></td><td>${r.start}</td><td>${r.end}</td><td>${r.distance}</td><td>${r.duration||'—'}</td><td style="font-size:0.79rem;color:var(--text2)">${r.reason||'—'}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openRouteModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteRoute(${i})">🗑</button></td></tr>`).join('')}</tbody></table>`;
+  const routes = udb().routes;
+  const isMob  = window.innerWidth <= 680;
+  if (isMob) {
+    if (!routes.length) { $('routesTable').innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">Žiadne trasy</div>'; return; }
+    $('routesTable').innerHTML = routes.map((r,i) => `
+      <div class="route-card">
+        <div class="route-card-top">
+          <strong>${r.name}</strong>
+          <span class="badge bb">${r.distance} km${r.duration?' · '+r.duration+' min':''}</span>
+        </div>
+        <div class="route-card-route">
+          <span>${r.start}</span>
+          <span style="color:var(--text3);margin:0 4px">→</span>
+          <span>${r.end}</span>
+        </div>
+        ${r.reason ? `<div class="route-card-reason">${r.reason}</div>` : ''}
+        <div class="route-card-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openRouteModal(${i})" style="flex:1;justify-content:center">✏️ Upraviť</button>
+          <button class="btn btn-danger btn-sm"    onclick="deleteRoute(${i})"    style="flex:1;justify-content:center">🗑 Zmazať</button>
+        </div>
+      </div>`).join('');
+  } else {
+    $('routesTable').innerHTML=`<table><thead><tr><th>Názov</th><th>Odkiaľ</th><th>Kam</th><th>km</th><th>min</th><th>Dôvod</th><th></th></tr></thead><tbody>${routes.map((r,i)=>`<tr><td><strong>${r.name}</strong></td><td>${r.start}</td><td>${r.end}</td><td>${r.distance}</td><td>${r.duration||'—'}</td><td style="font-size:0.79rem;color:var(--text2)">${r.reason||'—'}</td><td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openRouteModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteRoute(${i})">🗑</button></td></tr>`).join('')}</tbody></table>`;
+  }
 }
 
 function openRouteModal(idx) {
