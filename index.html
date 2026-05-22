@@ -447,9 +447,16 @@
 
   /* Hide FAB group on pages where it doesn't make sense */
   body.page-report .mob-fab-group,
-  body.page-settings .mob-fab-group,
-  body.page-routes .mob-fab-group,
-  body.page-places .mob-fab-group { display:none !important; }
+  body.page-settings .mob-fab-group { display:none !important; }
+
+  /* ── Routes table mobile: hide duration + reason ── */
+  #routesTable table thead th:nth-child(5),
+  #routesTable table tbody td:nth-child(5),
+  #routesTable table thead th:nth-child(6),
+  #routesTable table tbody td:nth-child(6) { display:none; }
+  /* ── Places table mobile: wrap address ── */
+  #placesTable table { font-size:0.78rem; }
+  #placesTable table td:nth-child(2) { word-break:break-word; max-width:160px; }
 
   /* ── Report page: simplify on mobile ── */
   .report-vehicle-row { grid-template-columns:1fr 1fr !important; }
@@ -704,15 +711,7 @@
 <!-- Mobile FAB + bottom nav (hidden on desktop via CSS) -->
 <div class="mob-fab-group" id="mobFabGroup">
   <div class="mob-fab-menu" id="mobFabMenu">
-    <button class="mob-fab-action" onclick="openTripModal();closeMobFab()" title="Nová jazda">
-      <span>🚗</span><span class="mob-fab-label">Nová jazda</span>
-    </button>
-    <button class="mob-fab-action" onclick="openQuickModal();closeMobFab()" title="Rýchla jazda">
-      <span>⚡</span><span class="mob-fab-label">Rýchla jazda</span>
-    </button>
-    <button class="mob-fab-action" onclick="openFuelModal();closeMobFab()" title="Tankovanie">
-      <span>⛽</span><span class="mob-fab-label">Tankovanie</span>
-    </button>
+    <!-- filled dynamically by updateMobFabActions() -->
   </div>
   <button class="mob-fab" id="mobFabMain" onclick="toggleMobFab()" title="Akcie">＋</button>
 </div>
@@ -2929,16 +2928,29 @@ function closeMobMenu() {
 }
 
 function updateMobileNav(page) {
-  // Bottom nav active state
-  document.querySelectorAll('.mob-bn-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.page === page);
-  });
-  // Drawer nav active state
-  document.querySelectorAll('.mob-nav-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.page === page);
-  });
-  // Body class for FAB visibility
+  document.querySelectorAll('.mob-bn-item').forEach(el=>el.classList.toggle('active',el.dataset.page===page));
+  document.querySelectorAll('.mob-nav-item').forEach(el=>el.classList.toggle('active',el.dataset.page===page));
   document.body.className = 'page-' + page;
+  updateMobFabActions(page);
+}
+
+function updateMobFabActions(page) {
+  const menu = $('mobFabMenu');
+  if (!menu) return;
+  const map = {
+    routes: [{ icon:'🗺️', label:'Nová trasa',   fn:"openRouteModal();closeMobFab()" }],
+    places: [{ icon:'📍', label:'Nové miesto',  fn:"openPlaceModal();closeMobFab()" }],
+    fuel:   [{ icon:'⛽', label:'Tankovanie',   fn:"openFuelModal();closeMobFab()" }],
+    costs:  [{ icon:'💶', label:'Nový náklad',  fn:"openCostModal();closeMobFab()" }],
+  };
+  const actions = map[page] || [
+    { icon:'🚗', label:'Nová jazda',   fn:"openTripModal();closeMobFab()" },
+    { icon:'⚡', label:'Rýchla jazda', fn:"openQuickModal();closeMobFab()" },
+    { icon:'⛽', label:'Tankovanie',   fn:"openFuelModal();closeMobFab()" },
+  ];
+  menu.innerHTML = actions.map(a =>
+    `<button class="mob-fab-action" onclick="${a.fn}"><span>${a.icon}</span><span class="mob-fab-label">${a.label}</span></button>`
+  ).join('');
 }
 
 function syncMobileUser() {
