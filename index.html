@@ -639,6 +639,12 @@
 
         <!-- Calendar tab: Sviatky + Dovolenky side by side -->
         <div class="stg-panel" id="stgpanel-calendar">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <span style="font-size:0.82rem;font-weight:600;color:var(--text2)">Rok:</span>
+            <select id="calFilterYear" onchange="renderSettings()" style="font-size:0.82rem;padding:5px 10px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface)">
+              <option value="">Všetky roky</option>
+            </select>
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:17px;align-items:start">
             <div class="card">
               <div class="card-header">
@@ -1274,8 +1280,8 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('importHolidaysModal')">Zrušiť</button>
-      <button class="btn btn-secondary" id="ih_fetch_btn" onclick="fetchHolidayPreview()">🔍 Načítať náhľad</button>
-      <button class="btn btn-primary" id="ih_import_btn" onclick="importHolidays()" disabled style="opacity:0.5">📥 Importovať</button>
+      <button class="btn btn-primary" id="ih_fetch_btn" onclick="fetchHolidayPreview()">🔍 Načítať náhľad</button>
+      <button class="btn btn-secondary" id="ih_import_btn" onclick="importHolidays()" disabled style="opacity:0.45;cursor:not-allowed" title="Najprv kliknite Načítať náhľad">📥 Importovať</button>
     </div>
   </div>
 </div>
@@ -2157,18 +2163,36 @@ function renderSettings(){
     </div>`;
   }).join('')||'<div class="tm">Žiadne vozidlá</div>';
   $('reasonList').innerHTML=db.tripReasons.map((r,i)=>`<div class="li"><span>${r}</span><button class="btn btn-danger btn-sm" onclick="deleteReason(${i})">🗑</button></div>`).join('')||'<div class="tm">Žiadne dôvody</div>';
+  // Populate year filter dropdown
+  const _yearSel=$('calFilterYear');
+  if(_yearSel){
+    const _savedYear=_yearSel.value;
+    const _allYears=[...new Set([
+      ...db.holidays.map(h=>h.date?.substring(0,4)),
+      ...db.vacations.map(v=>v.start?.substring(0,4))
+    ].filter(Boolean))].sort((a,b)=>b-a);
+    _yearSel.innerHTML='<option value="">Všetky roky</option>'+_allYears.map(y=>`<option value="${y}">${y}</option>`).join('');
+    if(_savedYear) _yearSel.value=_savedYear;
+  }
+  const _calYear=$('calFilterYear')?.value||'';
   const _hCountryF=$('holidayFilterCountry')?.value||'';
   const _flags={'SK':'🇸🇰','AT':'🇦🇹','CZ':'🇨🇿','HU':'🇭🇺','OTHER':'🌍'};
-  $('holidayList').innerHTML=[...db.holidays].filter(h=>!_hCountryF||(h.country||'SK')===_hCountryF).sort((a,b)=>a.date>b.date?1:-1).map(h=>{
+  $('holidayList').innerHTML=[...db.holidays].filter(h=>(!_hCountryF||(h.country||'SK')===_hCountryF)&&(!_calYear||h.date?.startsWith(_calYear))).sort((a,b)=>a.date>b.date?1:-1).map(h=>{
     const flag=_flags[h.country||'SK']||'🌍';
     return `<div class="li" style="font-size:0.8rem"><span title="${h.country||'SK'}">${flag}</span><span style="flex:1;margin:0 8px">${fmtDate(h.date)} — ${h.name}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openHolidayModal('${h.date}','${h.country||'SK'}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteHoliday('${h.date}','${h.country||'SK'}')">🗑</button></div></div>`;
   }).join('');
   if(!db.vacations) db.vacations=[];
   const _vtypes={'full':'','morning':'🌅 dopoludnie','afternoon':'🌇 popoludnie'};
-  $('vacationList').innerHTML=[...db.vacations].sort((a,b)=>a.start>b.start?1:-1).map((v,i)=>{
+  const _vacYear=$('calFilterYear')?.value||'';
+  const _vacFiltered=[...db.vacations]
+    .filter(v=>!_vacYear||(v.start&&v.start.startsWith(_vacYear))||(v.end&&v.end.startsWith(_vacYear)))
+    .sort((a,b)=>a.start>b.start?1:-1);
+  $('vacationList').innerHTML=_vacFiltered.map(v=>{
+    // ensure id exists (migration for old records without id)
+    if(!v.id) v.id=db.vacations.indexOf(v)+1;
     const typeLabel=v.type&&v.type!=='full'?` <span class="badge bo">${_vtypes[v.type]||v.type}</span>`:'';
-    return `<div class="li" style="font-size:0.8rem"><span style="flex:1">${fmtDate(v.start)} – ${fmtDate(v.end)}${v.name?' — '+v.name:''}${typeLabel}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openVacationModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteVacation(${i})">🗑</button></div></div>`;
-  }).join('')||'<div class="tm">Žiadne dovolenky</div>';
+    return `<div class="li" style="font-size:0.8rem"><span style="flex:1">${fmtDate(v.start)} – ${fmtDate(v.end)}${v.name?' — '+v.name:''}${typeLabel}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openVacationModal(${v.id})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteVacation(${v.id})">🗑</button></div></div>`;
+  }).join('')||'<div class="tm">Žiadne dovolenky pre zvolený rok</div>';
   const m=mode();
   const ml={local:'🖥️ Lokálny server (data.json)',gdrive:'🔵 Google Drive'+(gdUser?' — '+gdUser.name:''),github:'🐙 GitHub repozitár',ls:'💾 Len localStorage'};
   const mc={local:'ai',gdrive:'as',github:'as',ls:'aw'};
@@ -2230,15 +2254,17 @@ function saveHoliday(){
   debouncedSave();closeModal('holidayModal');renderSettings();toast('Sviatok uložený','ok');
 }
 function deleteHoliday(d,country){showConfirm(`Zmazať sviatok ${fmtDate(d)}?`,()=>{udb().holidays=udb().holidays.filter(h=>!(h.date===d&&(h.country||'SK')===(country||'SK')));debouncedSave();renderSettings();});}
-function openVacationModal(idx){
-  eIds.vacation = idx !== undefined ? idx : null;
-  $('vacModalTitle').textContent = idx !== undefined ? 'Upraviť dovolenku' : 'Nová dovolenka';
-  if (idx !== undefined) {
-    const v = udb().vacations[idx];
-    $('fvac_name').value  = v.name  || '';
-    $('fvac_start').value = v.start || '';
-    $('fvac_end').value   = v.end   || '';
-    $('fvac_type').value  = v.type  || 'full';
+function openVacationModal(vacId){
+  eIds.vacation = vacId !== undefined && vacId !== null ? vacId : null;
+  $('vacModalTitle').textContent = eIds.vacation !== null ? 'Upraviť dovolenku' : 'Nová dovolenka';
+  if (eIds.vacation !== null) {
+    const v = udb().vacations.find(x => x.id === eIds.vacation);
+    if (v) {
+      $('fvac_name').value  = v.name  || '';
+      $('fvac_start').value = v.start || '';
+      $('fvac_end').value   = v.end   || '';
+      $('fvac_type').value  = v.type  || 'full';
+    }
   } else {
     $('fvac_name').value  = '';
     $('fvac_start').value = '';
@@ -2253,12 +2279,15 @@ function saveVacation(){
   if(!start||!end){toast('Vyplňte dátumy','err');return;}
   if(end<start){toast('Koniec musí byť po začiatku','err');return;}
   const db=udb(); if(!db.vacations) db.vacations=[];
-  const vac={start,end,name:name||null,type};
-  if(eIds.vacation!==null&&eIds.vacation!==undefined) db.vacations[eIds.vacation]=vac;
-  else db.vacations.push(vac);
+  const vacId = eIds.vacation !== null ? eIds.vacation : (db.vacations.length ? Math.max(...db.vacations.map(v=>v.id||0))+1 : 1);
+  const vac={id:vacId, start,end,name:name||null,type};
+  if(eIds.vacation!==null&&eIds.vacation!==undefined){
+    const idx=db.vacations.findIndex(v=>v.id===eIds.vacation);
+    if(idx>=0) db.vacations[idx]=vac; else db.vacations.push(vac);
+  } else db.vacations.push(vac);
   debouncedSave();closeModal('vacationModal');renderSettings();toast('Dovolenka uložená','ok');
 }
-function deleteVacation(i){showConfirm('Zmazať dovolenku?',()=>{udb().vacations.splice(i,1);debouncedSave();renderSettings();});}
+function deleteVacation(vacId){showConfirm('Zmazať dovolenku?',()=>{udb().vacations=udb().vacations.filter(v=>v.id!==vacId);debouncedSave();renderSettings();});}
 
 
 // ══════════════════════════════════════════════════
@@ -2864,7 +2893,7 @@ let _ihFetched = [];
 function openImportHolidaysModal() {
   _ihFetched = [];
   $('ih_year').value = new Date().getFullYear();
-  $('ih_status').textContent = '';
+  $('ih_status').innerHTML = '<div class="alert ai" style="margin:0">👆 Vyberte krajinu a rok, potom kliknite <strong>🔍 Načítať náhľad</strong> — tlačidlo Importovať sa aktivuje po úspešnom načítaní.</div>';
   $('ih_preview').style.display = 'none';
   $('ih_import_btn').disabled = true;
   $('ih_import_btn').style.opacity = '0.5';
@@ -3002,6 +3031,9 @@ async function fetchHolidayPreview() {
   $('ih_status').textContent = `✅ ${_ihFetched.length} sviatkov načítaných (${source})`;
   $('ih_import_btn').disabled = false;
   $('ih_import_btn').style.opacity = '1';
+  $('ih_import_btn').style.cursor = 'pointer';
+  $('ih_import_btn').className = 'btn btn-primary';
+  $('ih_fetch_btn').className = 'btn btn-secondary';
   $('ih_fetch_btn').disabled = false;
 }
 
