@@ -502,7 +502,7 @@
       <div style="display:flex;align-items:center;gap:5px;width:100%">
         <div class="sync-dot" id="syncDot"></div><span id="syncLabel">—</span>
       </div>
-      <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);letter-spacing:0.03em">v0.8.5</div>
+      <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);letter-spacing:0.03em">v0.8.6</div>
     </div>
   </aside>
   <main class="main">
@@ -1227,19 +1227,19 @@
     </div>
     <div class="modal-body">
       <p style="font-size:0.84rem;color:var(--text2);margin-bottom:16px">
-        Import štátnych sviatkov z Google Calendar (verejné kalendáre, nevyžaduje prihlásenie).
+        Import štátnych sviatkov cez Nager.Date API (bezplatné, bez kľúča). Pre SK a AT sú k dispozícii vstavané dáta pre roky 2025–2027.
       </p>
       <div class="form-grid">
         <div class="form-row">
           <div class="form-group">
             <label>Krajina *</label>
             <select id="ih_country">
-              <option value="sk.slovak#holiday@group.v.calendar.google.com" data-code="SK">🇸🇰 Slovensko</option>
-              <option value="at.austrian#holiday@group.v.calendar.google.com" data-code="AT">🇦🇹 Rakúsko</option>
-              <option value="cz.czech#holiday@group.v.calendar.google.com" data-code="CZ">🇨🇿 Česká republika</option>
-              <option value="hu.hungarian#holiday@group.v.calendar.google.com" data-code="HU">🇭🇺 Maďarsko</option>
-              <option value="de.german#holiday@group.v.calendar.google.com" data-code="DE">🇩🇪 Nemecko</option>
-              <option value="pl.polish#holiday@group.v.calendar.google.com" data-code="PL">🇵🇱 Poľsko</option>
+              <option value="SK" data-code="SK">🇸🇰 Slovensko</option>
+              <option value="AT" data-code="AT">🇦🇹 Rakúsko</option>
+              <option value="CZ" data-code="CZ">🇨🇿 Česká republika</option>
+              <option value="HU" data-code="HU">🇭🇺 Maďarsko</option>
+              <option value="DE" data-code="DE">🇩🇪 Nemecko</option>
+              <option value="PL" data-code="PL">🇵🇱 Poľsko</option>
             </select>
           </div>
           <div class="form-group">
@@ -2830,8 +2830,72 @@ function openImportHolidaysModal() {
   openModal('importHolidaysModal');
 }
 
+// Static fallback holiday data (SK + AT, 2025-2027)
+const STATIC_HOLIDAYS = {
+  SK: {
+    2025: [
+      {date:'2025-01-01',name:'Deň vzniku Slovenskej republiky'},{date:'2025-01-06',name:'Zjavenie Pána (Traja králi)'},
+      {date:'2025-04-18',name:'Veľký piatok'},{date:'2025-04-21',name:'Veľkonočný pondelok'},
+      {date:'2025-05-01',name:'Sviatok práce'},{date:'2025-05-08',name:'Deň víťazstva nad fašizmom'},
+      {date:'2025-07-05',name:'Sviatok sv. Cyrila a Metoda'},{date:'2025-08-29',name:'Výročie SNP'},
+      {date:'2025-09-01',name:'Deň Ústavy SR'},{date:'2025-09-15',name:'Sedembolestná Panna Mária'},
+      {date:'2025-11-01',name:'Sviatok všetkých svätých'},{date:'2025-11-17',name:'Deň boja za slobodu a demokraciu'},
+      {date:'2025-12-24',name:'Štedrý deň'},{date:'2025-12-25',name:'Prvý sviatok vianočný'},
+      {date:'2025-12-26',name:'Druhý sviatok vianočný'}
+    ],
+    2026: [
+      {date:'2026-01-01',name:'Deň vzniku Slovenskej republiky'},{date:'2026-01-06',name:'Zjavenie Pána (Traja králi)'},
+      {date:'2026-04-03',name:'Veľký piatok'},{date:'2026-04-06',name:'Veľkonočný pondelok'},
+      {date:'2026-05-01',name:'Sviatok práce'},{date:'2026-05-08',name:'Deň víťazstva nad fašizmom'},
+      {date:'2026-07-05',name:'Sviatok sv. Cyrila a Metoda'},{date:'2026-08-29',name:'Výročie SNP'},
+      {date:'2026-09-01',name:'Deň Ústavy SR'},{date:'2026-09-15',name:'Sedembolestná Panna Mária'},
+      {date:'2026-11-01',name:'Sviatok všetkých svätých'},{date:'2026-11-17',name:'Deň boja za slobodu a demokraciu'},
+      {date:'2026-12-24',name:'Štedrý deň'},{date:'2026-12-25',name:'Prvý sviatok vianočný'},
+      {date:'2026-12-26',name:'Druhý sviatok vianočný'}
+    ],
+    2027: [
+      {date:'2027-01-01',name:'Deň vzniku Slovenskej republiky'},{date:'2027-01-06',name:'Zjavenie Pána (Traja králi)'},
+      {date:'2027-03-26',name:'Veľký piatok'},{date:'2027-03-29',name:'Veľkonočný pondelok'},
+      {date:'2027-05-01',name:'Sviatok práce'},{date:'2027-05-08',name:'Deň víťazstva nad fašizmom'},
+      {date:'2027-07-05',name:'Sviatok sv. Cyrila a Metoda'},{date:'2027-08-29',name:'Výročie SNP'},
+      {date:'2027-09-01',name:'Deň Ústavy SR'},{date:'2027-09-15',name:'Sedembolestná Panna Mária'},
+      {date:'2027-11-01',name:'Sviatok všetkých svätých'},{date:'2027-11-17',name:'Deň boja za slobodu a demokraciu'},
+      {date:'2027-12-24',name:'Štedrý deň'},{date:'2027-12-25',name:'Prvý sviatok vianočný'},
+      {date:'2027-12-26',name:'Druhý sviatok vianočný'}
+    ]
+  },
+  AT: {
+    2025: [
+      {date:'2025-01-01',name:'Neujahr'},{date:'2025-01-06',name:'Heilige Drei Könige'},
+      {date:'2025-04-21',name:'Ostermontag'},{date:'2025-05-01',name:'Staatsfeiertag'},
+      {date:'2025-05-29',name:'Christi Himmelfahrt'},{date:'2025-06-09',name:'Pfingstmontag'},
+      {date:'2025-06-19',name:'Fronleichnam'},{date:'2025-08-15',name:'Mariä Himmelfahrt'},
+      {date:'2025-10-26',name:'Nationalfeiertag'},{date:'2025-11-01',name:'Allerheiligen'},
+      {date:'2025-12-08',name:'Mariä Empfängnis'},{date:'2025-12-25',name:'Christtag'},
+      {date:'2025-12-26',name:'Stefanitag'}
+    ],
+    2026: [
+      {date:'2026-01-01',name:'Neujahr'},{date:'2026-01-06',name:'Heilige Drei Könige'},
+      {date:'2026-04-06',name:'Ostermontag'},{date:'2026-05-01',name:'Staatsfeiertag'},
+      {date:'2026-05-14',name:'Christi Himmelfahrt'},{date:'2026-05-25',name:'Pfingstmontag'},
+      {date:'2026-06-04',name:'Fronleichnam'},{date:'2026-08-15',name:'Mariä Himmelfahrt'},
+      {date:'2026-10-26',name:'Nationalfeiertag'},{date:'2026-11-01',name:'Allerheiligen'},
+      {date:'2026-12-08',name:'Mariä Empfängnis'},{date:'2026-12-25',name:'Christtag'},
+      {date:'2026-12-26',name:'Stefanitag'}
+    ],
+    2027: [
+      {date:'2027-01-01',name:'Neujahr'},{date:'2027-01-06',name:'Heilige Drei Könige'},
+      {date:'2027-03-29',name:'Ostermontag'},{date:'2027-05-01',name:'Staatsfeiertag'},
+      {date:'2027-05-06',name:'Christi Himmelfahrt'},{date:'2027-05-17',name:'Pfingstmontag'},
+      {date:'2027-05-27',name:'Fronleichnam'},{date:'2027-08-15',name:'Mariä Himmelfahrt'},
+      {date:'2027-10-26',name:'Nationalfeiertag'},{date:'2027-11-01',name:'Allerheiligen'},
+      {date:'2027-12-08',name:'Mariä Empfängnis'},{date:'2027-12-25',name:'Christtag'},
+      {date:'2027-12-26',name:'Stefanitag'}
+    ]
+  }
+};
+
 async function fetchHolidayPreview() {
-  const calId  = $('ih_country').value;
   const year   = parseInt($('ih_year').value);
   const codeEl = $('ih_country').selectedOptions[0];
   const code   = codeEl ? codeEl.dataset.code : 'SK';
@@ -2841,84 +2905,63 @@ async function fetchHolidayPreview() {
     return;
   }
 
-  $('ih_status').innerHTML = '<span class="spinner" style="border-top-color:var(--accent);border-color:var(--border)"></span> Načítavam z Google Calendar…';
+  $('ih_status').innerHTML = '<span class="spinner" style="border-top-color:var(--accent);border-color:var(--border)"></span> Načítavam…';
   $('ih_fetch_btn').disabled = true;
+  _ihFetched = [];
 
+  // Try Nager.Date API first (free, no key, purpose-built for public holidays)
+  let source = '';
   try {
-    const timeMin = encodeURIComponent(`${year}-01-01T00:00:00Z`);
-    const timeMax = encodeURIComponent(`${year}-12-31T23:59:59Z`);
-    // Google Calendar public ICS feed (no API key needed)
-    const icsUrl = `https://calendar.google.com/calendar/ical/${encodeURIComponent(calId)}/public/basic.ics`;
-    // Use a CORS proxy since Google Calendar ICS doesn't allow direct fetch from browser
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(icsUrl)}`;
-
-    const r = await fetch(proxyUrl);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const j = await r.json();
-    const ics = j.contents;
-
-    if (!ics || !ics.includes('BEGIN:VCALENDAR')) {
-      throw new Error('Neplatná odpoveď z Google Calendar. Skúste neskôr.');
+    const r = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${code}`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (r.ok) {
+      const data = await r.json();
+      _ihFetched = data.map(h => ({
+        date: h.date,
+        name: h.localName || h.name,
+        country: code
+      }));
+      source = 'Nager.Date API';
+    } else {
+      throw new Error('HTTP ' + r.status);
     }
-
-    // Parse ICS
-    _ihFetched = parseICS(ics, year, code);
-
-    if (!_ihFetched.length) {
-      $('ih_status').textContent = `⚠️ Žiadne sviatky pre rok ${year}`;
-      $('ih_preview').style.display = 'none';
+  } catch(e) {
+    // Fallback to embedded static data
+    console.log('Nager.Date failed, using static data:', e.message);
+    const staticData = STATIC_HOLIDAYS[code]?.[year];
+    if (staticData) {
+      _ihFetched = staticData.map(h => ({...h, country: code}));
+      source = 'vstavané dáta';
+    } else {
+      $('ih_status').textContent = `❌ Dáta pre ${code} ${year} nie sú dostupné. Skúste iný rok alebo pridajte sviatky ručne.`;
+      $('ih_fetch_btn').disabled = false;
       return;
     }
-
-    // Show preview
-    $('ih_count').textContent = _ihFetched.length;
-    const flags = {'SK':'🇸🇰','AT':'🇦🇹','CZ':'🇨🇿','HU':'🇭🇺','DE':'🇩🇪','PL':'🇵🇱'};
-    const flag  = flags[code] || '🌍';
-    $('ih_preview_list').innerHTML = _ihFetched.map(h =>
-      `<div style="padding:6px 10px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center">
-        <span style="color:var(--text3);font-size:0.75rem;width:72px;flex-shrink:0">${fmtDate(h.date)}</span>
-        <span>${flag} ${h.name}</span>
-      </div>`
-    ).join('');
-    $('ih_preview').style.display = 'block';
-    $('ih_status').textContent = `✅ Načítaných ${_ihFetched.length} sviatkov`;
-    $('ih_import_btn').disabled = false;
-    $('ih_import_btn').style.opacity = '1';
-
-  } catch(e) {
-    $('ih_status').textContent = '❌ Chyba: ' + e.message;
-    console.error('ICS fetch error:', e);
-  } finally {
-    $('ih_fetch_btn').disabled = false;
   }
-}
 
-function parseICS(ics, year, country) {
-  const holidays = [];
-  // Split into VEVENT blocks
-  const events = ics.split('BEGIN:VEVENT').slice(1);
-  events.forEach(ev => {
-    // Date-only events (VALUE=DATE) — these are the holiday entries
-    const dtMatch = ev.match(/DTSTART(?:;VALUE=DATE)?:(\d{4})(\d{2})(\d{2})/);
-    if (!dtMatch) return;
+  if (!_ihFetched.length) {
+    $('ih_status').textContent = `⚠️ Žiadne sviatky pre ${code} ${year}`;
+    $('ih_preview').style.display = 'none';
+    $('ih_fetch_btn').disabled = false;
+    return;
+  }
 
-    const evYear = parseInt(dtMatch[1]);
-    if (evYear !== year) return;
-
-    const date = `${dtMatch[1]}-${dtMatch[2]}-${dtMatch[3]}`;
-
-    // Get summary (name) — handle line folding (lines starting with space/tab are continuations)
-    const summaryMatch = ev.replace(/\r?\n[ \t]/g, '').match(/SUMMARY:([^\r\n]+)/);
-    if (!summaryMatch) return;
-
-    let name = summaryMatch[1]
-      .replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\n/g, ' ')
-      .replace(/\\N/g, ' ').replace(/\\\\/g, '\\').trim();
-
-    holidays.push({ date, name, country });
-  });
-
-  return holidays.sort((a, b) => a.date > b.date ? 1 : -1);
+  // Show preview
+  const flags = {'SK':'🇸🇰','AT':'🇦🇹','CZ':'🇨🇿','HU':'🇭🇺','DE':'🇩🇪','PL':'🇵🇱'};
+  const flag  = flags[code] || '🌍';
+  $('ih_count').textContent = _ihFetched.length;
+  $('ih_preview_list').innerHTML = _ihFetched.map(h =>
+    `<div style="padding:6px 10px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center">
+      <span style="color:var(--text3);font-size:0.75rem;width:72px;flex-shrink:0">${fmtDate(h.date)}</span>
+      <span>${flag} ${h.name}</span>
+    </div>`
+  ).join('');
+  $('ih_preview').style.display = 'block';
+  $('ih_status').textContent = `✅ ${_ihFetched.length} sviatkov načítaných (${source})`;
+  $('ih_import_btn').disabled = false;
+  $('ih_import_btn').style.opacity = '1';
+  $('ih_fetch_btn').disabled = false;
 }
 
 function importHolidays() {
