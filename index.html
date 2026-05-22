@@ -146,6 +146,19 @@
   #toast.show { transform:translateY(0); opacity:1; }
   #toast.tok { background:var(--accent); } #toast.terr { background:var(--accent3); }
 
+
+  /* ── Address Picker ── */
+  .ap-suggestion {
+    padding:9px 12px; border-radius:7px; cursor:pointer;
+    font-size:0.845rem; border:1px solid transparent;
+    transition:background 0.1s; margin-bottom:4px;
+    background:var(--surface2);
+  }
+  .ap-suggestion:hover, .ap-suggestion.selected {
+    background:rgba(44,95,74,0.1); border-color:var(--accent);
+  }
+  .ap-suggestion .ap-name { font-weight:600; }
+  .ap-suggestion .ap-detail { font-size:0.76rem; color:var(--text2); margin-top:2px; }
   /* ── CALENDAR ── */
   .cal-nav { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
   .cal-nav button { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:4px 10px; cursor:pointer; font-size:0.85rem; }
@@ -489,7 +502,7 @@
       <div style="display:flex;align-items:center;gap:5px;width:100%">
         <div class="sync-dot" id="syncDot"></div><span id="syncLabel">—</span>
       </div>
-      <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);letter-spacing:0.03em">v0.8.3</div>
+      <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);letter-spacing:0.03em">v0.8.4</div>
     </div>
   </aside>
   <main class="main">
@@ -711,7 +724,7 @@
             <div class="form-group"><label>Čas</label><input type="time" id="f_st" onchange="if($('f_route').value) onRouteChange()"></div>
           </div>
           <div class="form-group mt2"><label>Miesto</label><select id="f_sp" onchange="onSPChange()"><option value="">— vlastná adresa —</option></select></div>
-          <div class="form-group mt2"><label>Adresa *</label><input type="text" id="f_sa"></div>
+          <div class="form-group mt2"><label>Adresa *</label><div style="display:flex;gap:6px"><input type="text" id="f_sa" style="flex:1"><button type="button" class="btn btn-secondary btn-sm" onclick="openAddrPicker('f_sa')" title="Vybrať z mapy">📍</button></div></div>
           <div class="form-group mt2"><label>Tachometer (km) *</label><input type="number" id="f_so" oninput="onStartOdoChange()"><span class="ferr" id="odoErr"></span></div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:13px">
@@ -721,7 +734,7 @@
             <div class="form-group"><label>Čas</label><input type="time" id="f_et"></div>
           </div>
           <div class="form-group mt2"><label>Miesto</label><select id="f_ep" onchange="onEPChange()"><option value="">— vlastná adresa —</option></select></div>
-          <div class="form-group mt2"><label>Adresa *</label><input type="text" id="f_ea"></div>
+          <div class="form-group mt2"><label>Adresa *</label><div style="display:flex;gap:6px"><input type="text" id="f_ea" style="flex:1"><button type="button" class="btn btn-secondary btn-sm" onclick="openAddrPicker('f_ea')" title="Vybrať z mapy">📍</button></div></div>
           <div class="form-group mt2"><label>Tachometer (km) *</label><input type="number" id="f_eo" oninput="calcDist()"></div>
         </div>
         <div class="form-row" style="grid-column:1/-1">
@@ -832,7 +845,7 @@
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-group"><label>Názov *</label><input type="text" id="fp_n"></div>
-        <div class="form-group"><label>Adresa *</label><input type="text" id="fp_a"></div>
+        <div class="form-group"><label>Adresa *</label><div style="display:flex;gap:6px"><input type="text" id="fp_a" style="flex:1"><button type="button" class="btn btn-secondary btn-sm" onclick="openAddrPicker('fp_a')" title="Vybrať z mapy">📍</button></div></div>
         <div class="form-group" style="flex-direction:row;align-items:center;gap:10px;padding:9px 12px;background:var(--surface2);border-radius:7px;border:1.5px solid var(--border)">
           <input type="checkbox" id="fp_fuel" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;border:none;padding:0;flex-shrink:0">
           <label for="fp_fuel" style="cursor:pointer;font-size:0.855rem;font-weight:600;color:var(--text);margin:0">⛽ Miesto tankovania</label>
@@ -1093,6 +1106,54 @@
       </div>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('githubModal')">Zavrieť</button></div>
+  </div>
+</div>
+
+<!-- ══ ADDRESS PICKER MODAL ══ -->
+<div class="modal-overlay" id="addrPickerModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3 id="addrPickerTitle">📍 Vybrať adresu</h3>
+      <button class="close-btn" onclick="closeAddrPicker()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Search bar -->
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div style="flex:1;position:relative">
+          <input type="text" id="ap_search" placeholder="Hľadať adresu..." autocomplete="off"
+            oninput="onAPSearch()" onkeydown="onAPKey(event)"
+            style="width:100%;padding-right:36px">
+          <span id="ap_spin" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%)">
+            <span class="spinner" style="border-top-color:var(--accent);border-color:var(--border)"></span>
+          </span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="apUseGPS()" title="Použiť aktuálnu polohu" style="white-space:nowrap;flex-shrink:0">
+          📡 Moja poloha
+        </button>
+      </div>
+
+      <!-- Suggestions list -->
+      <div id="ap_suggestions" style="margin-bottom:12px"></div>
+
+      <!-- Selected result -->
+      <div id="ap_result" style="display:none;background:var(--surface2);border-radius:9px;padding:13px;margin-bottom:12px">
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:6px">Vybraná adresa</div>
+        <div id="ap_result_addr" style="font-weight:600;font-size:0.9rem;margin-bottom:4px"></div>
+        <div id="ap_result_detail" style="font-size:0.78rem;color:var(--text2)"></div>
+        <a id="ap_gmaps_link" href="#" target="_blank" rel="noopener"
+          style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:0.78rem;color:var(--accent);text-decoration:none">
+          🗺️ Otvoriť v Google Maps
+        </a>
+      </div>
+
+      <div id="ap_status" style="font-size:0.78rem;color:var(--text3);min-height:20px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeAddrPicker()">Zrušiť</button>
+      <button class="btn btn-primary" id="ap_confirm_btn" onclick="confirmAddr()" disabled style="opacity:0.5">
+        ✓ Použiť adresu
+      </button>
+    </div>
   </div>
 </div>
 
@@ -2363,6 +2424,172 @@ function printReport() {
   if(ps) ps.style.display='none';
 }
 
+
+
+// ══════════════════════════════════════════════════
+// ADDRESS PICKER (Nominatim + GPS)
+// ══════════════════════════════════════════════════
+let apTargetField = null;   // which input field to fill
+let apSelected    = null;   // { display_name, lat, lon }
+let apSearchTimer = null;
+
+function openAddrPicker(fieldId) {
+  apTargetField = fieldId;
+  apSelected    = null;
+
+  // Pre-fill search with current field value
+  const current = $(fieldId)?.value?.trim() || '';
+  $('ap_search').value = current;
+  $('ap_suggestions').innerHTML = '';
+  $('ap_result').style.display = 'none';
+  $('ap_status').textContent = '';
+  $('ap_confirm_btn').disabled = true;
+  $('ap_confirm_btn').style.opacity = '0.5';
+
+  // If field has a value, search for it or show on map immediately
+  if (current) {
+    $('ap_status').textContent = 'Hľadám…';
+    apDoSearch(current);
+  } else {
+    $('ap_status').textContent = 'Zadajte adresu alebo použite aktuálnu polohu.';
+  }
+
+  openModal('addrPickerModal');
+  setTimeout(() => $('ap_search').focus(), 180);
+}
+
+function closeAddrPicker() {
+  closeModal('addrPickerModal');
+  clearTimeout(apSearchTimer);
+}
+
+function onAPSearch() {
+  clearTimeout(apSearchTimer);
+  const q = $('ap_search').value.trim();
+  if (q.length < 3) { $('ap_suggestions').innerHTML = ''; return; }
+  apSearchTimer = setTimeout(() => apDoSearch(q), 420);
+}
+
+function onAPKey(e) {
+  if (e.key === 'Enter') { clearTimeout(apSearchTimer); apDoSearch($('ap_search').value.trim()); }
+}
+
+async function apDoSearch(query) {
+  if (!query) return;
+  $('ap_spin').style.display = 'inline';
+  $('ap_status').textContent = '';
+  try {
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=1&q='
+              + encodeURIComponent(query);
+    const r = await fetch(url, { headers:{ 'Accept-Language':'sk,cs,en', 'User-Agent':'KnihaJazd/0.8' } });
+    const results = await r.json();
+    if (!results.length) {
+      $('ap_suggestions').innerHTML = '<div style="padding:10px;font-size:0.82rem;color:var(--text3)">Žiadne výsledky. Skúste upresnit adresu.</div>';
+    } else {
+      $('ap_suggestions').innerHTML = results.map((res, i) => {
+        const name   = res.namedetails?.name || res.display_name.split(',')[0];
+        const detail = res.display_name;
+        return `<div class="ap-suggestion" onclick="apSelectResult(${i})" data-idx="${i}">
+          <div class="ap-name">${name}</div>
+          <div class="ap-detail">${detail}</div>
+        </div>`;
+      }).join('');
+      // Store results for selection
+      window._apResults = results;
+    }
+  } catch(e) {
+    $('ap_status').textContent = '⚠️ Chyba hľadania: ' + e.message;
+  } finally {
+    $('ap_spin').style.display = 'none';
+  }
+}
+
+function apSelectResult(idx) {
+  const res = window._apResults?.[idx];
+  if (!res) return;
+
+  // Build a clean address from address components
+  const a = res.address || {};
+  const parts = [
+    a.road || a.pedestrian || a.footway,
+    a.house_number,
+    a.city || a.town || a.village || a.municipality,
+    a.country
+  ].filter(Boolean);
+  const cleanAddr = parts.length >= 2 ? parts.join(', ') : res.display_name;
+
+  apSelected = { display_name: cleanAddr, full: res.display_name, lat: res.lat, lon: res.lon };
+
+  // Highlight selected
+  document.querySelectorAll('.ap-suggestion').forEach(el => el.classList.remove('selected'));
+  document.querySelector(`.ap-suggestion[data-idx="${idx}"]`)?.classList.add('selected');
+
+  // Show result panel
+  $('ap_result_addr').textContent = cleanAddr;
+  $('ap_result_detail').textContent = res.display_name;
+  $('ap_gmaps_link').href = `https://www.google.com/maps/search/?api=1&query=${res.lat},${res.lon}`;
+  $('ap_result').style.display = 'block';
+  $('ap_status').textContent = '';
+
+  $('ap_confirm_btn').disabled = false;
+  $('ap_confirm_btn').style.opacity = '1';
+}
+
+async function apUseGPS() {
+  if (!navigator.geolocation) { $('ap_status').textContent = '⚠️ GPS nie je dostupná v tomto prehliadači.'; return; }
+  $('ap_status').textContent = '📡 Získavam polohu…';
+  $('ap_spin').style.display = 'inline';
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
+        const r   = await fetch(url, { headers:{ 'Accept-Language':'sk,cs,en', 'User-Agent':'KnihaJazd/0.8' } });
+        const res = await r.json();
+        const a   = res.address || {};
+        const parts = [
+          a.road || a.pedestrian || a.footway,
+          a.house_number,
+          a.city || a.town || a.village || a.municipality,
+          a.country
+        ].filter(Boolean);
+        const cleanAddr = parts.length >= 2 ? parts.join(', ') : res.display_name;
+
+        apSelected = { display_name: cleanAddr, full: res.display_name, lat, lon };
+        $('ap_search').value = cleanAddr;
+        $('ap_suggestions').innerHTML = '';
+        $('ap_result_addr').textContent  = cleanAddr;
+        $('ap_result_detail').textContent = res.display_name;
+        $('ap_gmaps_link').href = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+        $('ap_result').style.display = 'block';
+        $('ap_status').textContent   = '';
+        $('ap_confirm_btn').disabled = false;
+        $('ap_confirm_btn').style.opacity = '1';
+      } catch(e) {
+        $('ap_status').textContent = '⚠️ Chyba reverzného geokódovania: ' + e.message;
+      } finally {
+        $('ap_spin').style.display = 'none';
+      }
+    },
+    err => {
+      $('ap_spin').style.display = 'none';
+      const msgs = { 1:'Prístup k polohe zamietnutý.', 2:'Poloha nedostupná.', 3:'Časový limit.' };
+      $('ap_status').textContent = '⚠️ ' + (msgs[err.code] || err.message);
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function confirmAddr() {
+  if (!apSelected || !apTargetField) return;
+  $(apTargetField).value = apSelected.display_name;
+  // Trigger any dependent logic
+  if (apTargetField === 'f_sa' || apTargetField === 'f_ea') {
+    if ($('f_route').value) onRouteChange();
+  }
+  closeAddrPicker();
+  toast('Adresa nastavená', 'ok');
+}
 
 // ══════════════════════════════════════════════════
 // DISTANCE ESTIMATION (OSRM + Nominatim)
