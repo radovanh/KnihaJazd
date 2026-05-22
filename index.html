@@ -631,7 +631,7 @@
 </div>
 
 <!-- Mobile FAB + bottom nav (hidden on desktop via CSS) -->
-<button class="mob-fab" onclick="openTripModal()" title="Nová jazda">＋</button>
+<button class="mob-fab" onclick="openQuickModal()" title="Rýchla jazda">⚡</button>
 <nav class="mob-bottom-nav" id="mobBottomNav">
   <div class="mob-bn-item active" onclick="showPage('dashboard')" data-page="dashboard"><span>📊</span><span>Prehľad</span></div>
   <div class="mob-bn-item" onclick="showPage('trips')"    data-page="trips"><span>🚗</span><span>Jazdy</span></div>
@@ -1038,6 +1038,45 @@
       </div>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('githubModal')">Zavrieť</button></div>
+  </div>
+</div>
+
+<!-- ══ QUICK ADD MODAL ══ -->
+<div class="modal-overlay" id="quickModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3>⚡ Rýchla jazda</h3>
+      <button class="close-btn" onclick="closeModal('quickModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="quickAlerts"></div>
+      <p style="font-size:0.84rem;color:var(--text2);margin-bottom:14px">
+        Vyberte predvolenú trasu. Všetky polia sa vyplnia automaticky z aktuálneho času a posledného tachometra.
+      </p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Trasa *</label>
+          <select id="qa_route" onchange="onQARouteChange()" style="font-size:0.9rem">
+            <option value="">— vybrať trasu —</option>
+          </select>
+        </div>
+        <div id="qa_preview" style="display:none;background:var(--surface2);border-radius:9px;padding:13px;font-size:0.82rem">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div><div style="color:var(--text3);font-size:0.71rem;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:2px">Dátum</div><div id="qa_p_date" style="font-weight:600"></div></div>
+            <div><div style="color:var(--text3);font-size:0.71rem;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:2px">Čas</div><div id="qa_p_time" style="font-weight:600"></div></div>
+            <div><div style="color:var(--text3);font-size:0.71rem;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:2px">Odkiaľ</div><div id="qa_p_from" style="font-weight:600"></div></div>
+            <div><div style="color:var(--text3);font-size:0.71rem;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:2px">Kam</div><div id="qa_p_to" style="font-weight:600"></div></div>
+            <div><div style="color:var(--text3);font-size:0.71rem;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:2px">Tachometer</div><div id="qa_p_odo" style="font-weight:600"></div></div>
+            <div><div style="color:var(--text3);font-size:0.71rem;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:2px">Vzdialenosť</div><div id="qa_p_dist" style="font-weight:600"></div></div>
+          </div>
+          <div id="qa_p_warn" style="margin-top:9px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('quickModal')">Zrušiť</button>
+      <button class="btn btn-primary" id="qa_save_btn" onclick="saveQuickTrip()" disabled style="opacity:0.5">⚡ Uložiť jazdu</button>
+    </div>
   </div>
 </div>
 
@@ -1492,7 +1531,7 @@ function showPage(page) {
   document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
   const titles={dashboard:'Prehľad',trips:'Evidencia jázd',fuel:'Evidencia PHM',costs:'Náklady na vozidlá',routes:'Trasy',places:'Miesta / Ciele',report:'Výkaz jázd',settings:'Nastavenia'};
   $('pageTitle').textContent = titles[page]||page;
-  $('topAct').innerHTML = {trips:'<button class="btn btn-primary" onclick="openTripModal()">＋ Nová jazda</button>',fuel:'<button class="btn btn-primary" onclick="openFuelModal()">＋ Tankovanie</button>',costs:'<button class="btn btn-primary" onclick="openCostModal()">＋ Nový náklad</button>',routes:'<button class="btn btn-primary" onclick="openRouteModal()">＋ Nová trasa</button>',places:'<button class="btn btn-primary" onclick="openPlaceModal()">＋ Nové miesto</button>'}[page]||'';
+  $('topAct').innerHTML = {trips:'<button class="btn btn-secondary" onclick="openQuickModal()" style="margin-right:4px">⚡ Rýchla jazda</button><button class="btn btn-primary" onclick="openTripModal()">＋ Nová jazda</button>',fuel:'<button class="btn btn-primary" onclick="openFuelModal()">＋ Tankovanie</button>',costs:'<button class="btn btn-primary" onclick="openCostModal()">＋ Nový náklad</button>',routes:'<button class="btn btn-primary" onclick="openRouteModal()">＋ Nová trasa</button>',places:'<button class="btn btn-primary" onclick="openPlaceModal()">＋ Nové miesto</button>'}[page]||'';
   ({dashboard:renderDashboard,trips:renderTrips,fuel:renderFuel,costs:renderCosts,routes:renderRoutes,places:renderPlaces,report:initReport,settings:renderSettings})[page]?.();
   updateMobileNav(page);
 }
@@ -2387,6 +2426,145 @@ function syncMobileSyncStatus(state, label) {
   if (!dot2) return;
   dot2.className = 'sync-dot' + (state==='warn'?' warn':state==='err'?' err':'');
   lbl2.innerHTML = state==='saving' ? '<span class="spinner"></span>' : (label||'—');
+}
+
+
+// ══════════════════════════════════════════════════
+// QUICK ADD TRIP
+// ══════════════════════════════════════════════════
+function openQuickModal() {
+  const db = udb();
+  if (!db.routes.length) { toast('Najprv definujte aspoň jednu trasu v sekcii Trasy', 'err'); return; }
+  if (!db.vehicles.length) { toast('Najprv pridajte vozidlo v Nastaveniach', 'err'); return; }
+
+  $('quickAlerts').innerHTML = '';
+  $('qa_preview').style.display = 'none';
+  $('qa_save_btn').disabled = true;
+  $('qa_save_btn').style.opacity = '0.5';
+
+  // Populate route dropdown — show all routes
+  $('qa_route').innerHTML = '<option value="">— vybrať trasu —</option>' +
+    db.routes.map(r => {
+      const label = `${r.name}  (${r.distance} km, ${r.start} → ${r.end})`;
+      return `<option value="${r.name}">${label}</option>`;
+    }).join('');
+  $('qa_route').value = '';
+
+  openModal('quickModal');
+}
+
+function onQARouteChange() {
+  const routeName = $('qa_route').value;
+  const db = udb();
+  const route = db.routes.find(r => r.name === routeName);
+  const preview = $('qa_preview');
+
+  if (!route) { preview.style.display = 'none'; $('qa_save_btn').disabled = true; $('qa_save_btn').style.opacity = '0.5'; return; }
+
+  // Current date + time
+  const now = new Date();
+  const dateStr  = now.toISOString().split('T')[0];
+  const timeStr  = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+  // Last odometer for first vehicle (or any vehicle)
+  const vehicle = db.vehicles[0];
+  const lastTrip = vehicle
+    ? [...db.trips].filter(t => t.ecv === vehicle.ecv).sort((a,b) => a.id - b.id).pop()
+    : null;
+  const startOdo = lastTrip ? lastTrip.endOdo : null;
+
+  // End time = start + duration
+  let endTimeStr = '';
+  if (route.duration) {
+    const endDt = new Date(now.getTime() + route.duration * 60000);
+    endTimeStr = endDt.getHours().toString().padStart(2,'0') + ':' + endDt.getMinutes().toString().padStart(2,'0');
+  }
+
+  // Preview
+  const startPlace = db.places.find(p => p.name === route.start);
+  const endPlace   = db.places.find(p => p.name === route.end);
+
+  $('qa_p_date').textContent = fmtDate(dateStr);
+  $('qa_p_time').textContent = timeStr + (endTimeStr ? ' – ' + endTimeStr : '');
+  $('qa_p_from').textContent = startPlace ? startPlace.address : route.start;
+  $('qa_p_to').textContent   = endPlace   ? endPlace.address   : route.end;
+  $('qa_p_odo').textContent  = startOdo   ? startOdo.toLocaleString('sk') + ' km → ' + (startOdo + Math.round(route.distance)).toLocaleString('sk') + ' km' : '— (zadajte ručne)';
+  $('qa_p_dist').textContent = route.distance + ' km' + (route.duration ? ', ~' + route.duration + ' min' : '');
+
+  // Warn for weekend/holiday/vacation
+  const warns = [];
+  if (isWE(dateStr)) warns.push('Víkend');
+  const hn = hdName(dateStr); if (hn) warns.push('Sviatok: ' + hn);
+  const vn = vacName(dateStr); if (vn) warns.push('Dovolenka: ' + vn);
+  $('qa_p_warn').innerHTML = warns.map(w => `<span class="badge bo" style="margin-right:5px">⚠️ ${w}</span>`).join('');
+
+  preview.style.display = 'block';
+  $('qa_save_btn').disabled = false;
+  $('qa_save_btn').style.opacity = '1';
+}
+
+function saveQuickTrip() {
+  const routeName = $('qa_route').value;
+  const db = udb();
+  const route = db.routes.find(r => r.name === routeName);
+  if (!route) { toast('Vyberte trasu', 'err'); return; }
+
+  const now      = new Date();
+  const dateStr  = now.toISOString().split('T')[0];
+  const timeStr  = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+  const vehicle  = db.vehicles[0];
+  if (!vehicle)  { toast('Žiadne vozidlo', 'err'); return; }
+
+  const lastTrip = [...db.trips].filter(t => t.ecv === vehicle.ecv).sort((a,b) => a.id - b.id).pop();
+  const startOdo = lastTrip ? lastTrip.endOdo : null;
+  if (!startOdo) {
+    toast('Neznámy tachometer — otvorte plný formulár', 'err');
+    closeModal('quickModal');
+    openTripModal();
+    return;
+  }
+
+  const endOdo = startOdo + Math.round(route.distance);
+
+  // End time
+  let endDate = dateStr, endTime = '';
+  if (route.duration) {
+    const endDt = new Date(now.getTime() + route.duration * 60000);
+    endDate = endDt.toISOString().split('T')[0];
+    endTime = endDt.getHours().toString().padStart(2,'0') + ':' + endDt.getMinutes().toString().padStart(2,'0');
+  }
+
+  // Resolve addresses from places
+  const startPlace = db.places.find(p => p.name === route.start);
+  const endPlace   = db.places.find(p => p.name === route.end);
+
+  const trip = {
+    id:           nextId(db.trips),
+    startDate:    dateStr,
+    startTime:    timeStr,
+    startAddress: startPlace ? startPlace.address : route.start,
+    startOdo,
+    startPlace:   route.start,
+    endDate,
+    endTime,
+    endAddress:   endPlace ? endPlace.address : route.end,
+    endOdo,
+    endPlace:     route.end,
+    ecv:          vehicle.ecv,
+    reason:       route.reason || '',
+    route:        route.name,
+    fuelPlace:    null,
+    hasFuel:      false
+  };
+
+  db.trips.push(trip);
+  db.trips.sort((a,b) => (a.startDate+(a.startTime||'') < b.startDate+(b.startTime||'')) ? -1 : 1);
+  debouncedSave();
+  closeModal('quickModal');
+  toast(`Jazda uložená: ${route.name} (${route.distance} km)`, 'ok');
+  if (curPage === 'trips')     renderTrips();
+  if (curPage === 'dashboard') renderDashboard();
 }
 
 // ══════════════════════════════════════════════════
