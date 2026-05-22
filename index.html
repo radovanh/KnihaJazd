@@ -126,7 +126,8 @@
   .vp { background:#fff8f0; border:1px solid #fdc76b; border-radius:var(--radius); margin-bottom:16px; overflow:hidden; }
   .vp-hd { background:#ffeeba; padding:9px 14px; font-size:0.81rem; font-weight:600; color:#856404; display:flex; align-items:center; gap:5px; cursor:pointer; }
   .vp-bd { padding:9px 14px; }
-  .vi { padding:5px 0; font-size:0.79rem; border-bottom:1px solid #fde8b4; display:flex; align-items:flex-start; gap:6px; }
+  .vi { padding:5px 0; font-size:0.79rem; border-bottom:1px solid #fde8b4; display:flex; align-items:center; gap:6px; }
+  .vi span[onclick]:hover { text-decoration:underline; color:var(--accent); }
   .vi:last-child { border-bottom:none; }
 
   /* ── SETTINGS LIST ── */
@@ -1317,7 +1318,7 @@ const udb = () => {
   if (!d) return d;
   // Auto-initialise fields missing in older records (migration guard)
   const defaults = { vacations:[], costs:[], holidays:[], vehicles:[], places:[],
-                     routes:[], tripReasons:[], trips:[], fuelLogs:[] };
+                     routes:[], tripReasons:[], trips:[], fuelLogs:[], ignoredWarnings:[] };
   Object.keys(defaults).forEach(k => { if (!d[k]) d[k] = defaults[k]; });
   return d;
 };
@@ -1340,7 +1341,7 @@ function openModal(id) {
 }
 const toast   = (msg, t='ok') => { const el=$('toast'); el.textContent=msg; el.className='show t'+t; setTimeout(()=>el.className='',2600); };
 const emptyRoot = () => ({ users:[], userData:{} });
-const emptyUser = () => ({ vehicles:[], places:[], routes:[], tripReasons:[], holidays:[], trips:[], fuelLogs:[], costs:[], vacations:[] });
+const emptyUser = () => ({ vehicles:[], places:[], routes:[], tripReasons:[], holidays:[], trips:[], fuelLogs:[], costs:[], vacations:[], ignoredWarnings:[] });
 
 function showConfirm(text, cb) {
   $('confirmText').textContent = text;
@@ -1765,6 +1766,25 @@ function showSettingsTab(tab) {
 // ══════════════════════════════════════════════════
 // VALIDATION
 // ══════════════════════════════════════════════════
+// Generate a stable key for a validation issue (for ignore list)
+function warnKey(e) {
+  return e.tid ? `t${e.tid}:${e.msg.replace(/\s+/g,'_').substring(0,60)}` : `g:${e.msg.replace(/\s+/g,'_').substring(0,60)}`;
+}
+function isIgnored(e) {
+  const db = udb();
+  if (!db.ignoredWarnings) db.ignoredWarnings = [];
+  return db.ignoredWarnings.includes(warnKey(e));
+}
+function toggleIgnoreWarning(key) {
+  const db = udb();
+  if (!db.ignoredWarnings) db.ignoredWarnings = [];
+  const idx = db.ignoredWarnings.indexOf(key);
+  if (idx >= 0) db.ignoredWarnings.splice(idx, 1);
+  else db.ignoredWarnings.push(key);
+  debouncedSave();
+  renderDashboard();
+  if (curPage === 'trips') renderTrips();
+}
 function validate() {
   const db = udb(); const errs = [];
   const sorted = [...db.trips].sort((a,b)=>(a.startDate+(a.startTime||'')<b.startDate+(b.startTime||''))?-1:1);
@@ -1885,11 +1905,49 @@ function renderDashboard() {
     <div class="stat-card ag"><div class="stat-label">Celkové km</div><div class="stat-value">${km.toLocaleString('sk')}</div><div class="stat-sub">${db.trips.length} jázd</div></div>
     <div class="stat-card au"><div class="stat-label">Náklady PHM</div><div class="stat-value">${fuel.toFixed(2)} €</div><div class="stat-sub">${liters.toFixed(2)} l</div></div>
     <div class="stat-card ab"><div class="stat-label">Tachometer</div><div class="stat-value">${lastOdo.toLocaleString('sk')}</div><div class="stat-sub">posledný záznam</div></div>
-    <div class="stat-card ar"><div class="stat-label">Upozornenia</div><div class="stat-value">${issues.length}</div><div class="stat-sub">${issues.filter(e=>e.type==='error').length} chýb · ${issues.filter(e=>e.type==='warning').length} varovaní</div></div>`;
-  $('valSummary').innerHTML = issues.length ? `<div class="vp" style="margin-bottom:17px">
-    <div class="vp-hd" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">⚠️ Validačné upozornenia (${issues.length}) — kliknite pre rozbalenie</div>
-    <div class="vp-bd">${issues.map(e=>`<div class="vi"><span>${e.type==='error'?'🔴':'🟡'}</span><span>${e.msg}</span></div>`).join('')}</div>
-  </div>` : '';
+    <div class="stat-card ar"><div class="stat-label">Upozornenia</div><div class="stat-value">${active.length}</div><div class="stat-sub">${active.filter(e=>e.type==='error').length} chýb · ${active.filter(e=>e.type==='warning').length} varovaní${ignored.length?' · '+ignored.length+' ign.':''}</div></div>`;
+  const active  = issues.filter(e => !isIgnored(e));
+  const ignored = issues.filter(e =>  isIgnored(e));
+
+  let valHtml = '';
+  if (active.length) {
+    valHtml += `<div class="vp" style="margin-bottom:${ignored.length?'8px':'17px'}">
+      <div class="vp-hd" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        ⚠️ Validačné upozornenia (${active.length}) — kliknite pre rozbalenie
+      </div>
+      <div class="vp-bd">
+        ${active.map(e => {
+          const key = warnKey(e);
+          const clickable = e.tid ? `style="cursor:pointer;flex:1" onclick="openTripModal(${e.tid})" title="Otvoriť jazdu na opravu"` : `style="flex:1"`;
+          const editHint = e.tid ? `<span style="font-size:0.68rem;color:var(--accent);margin-left:4px;opacity:0.7">✏️</span>` : '';
+          return `<div class="vi" style="align-items:center">
+            <span>${e.type==='error'?'🔴':'🟡'}</span>
+            <span ${clickable}>${e.msg}${editHint}</span>
+            <button onclick="toggleIgnoreWarning('${key}')" title="Ignorovať toto upozornenie"
+              style="flex-shrink:0;margin-left:6px;background:none;border:1px solid #fdc76b;border-radius:5px;padding:1px 6px;font-size:0.68rem;cursor:pointer;color:#856404;white-space:nowrap">
+              Ignorovať
+            </button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+  if (ignored.length) {
+    valHtml += `<div style="margin-bottom:17px;font-size:0.78rem;color:var(--text3);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span>🔕 ${ignored.length} upozornení ignorovaných</span>
+      ${ignored.map(e => {
+        const key = warnKey(e);
+        return `<span style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-size:0.72rem;color:var(--text2);display:inline-flex;align-items:center;gap:4px">
+          <span style="opacity:0.5">${e.type==='error'?'🔴':'🟡'}</span>
+          <span style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.msg}">${e.msg}</span>
+          <button onclick="toggleIgnoreWarning('${key}')" title="Obnoviť upozornenie"
+            style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:0.75rem;padding:0 2px;line-height:1">↩</button>
+        </span>`;
+      }).join('')}
+    </div>`;
+  }
+  if (!active.length && !ignored.length) valHtml = '';
+  $('valSummary').innerHTML = valHtml;
   $('dashTrips').innerHTML=`<table><thead><tr><th>Dátum</th><th>Trasa</th><th>km</th></tr></thead><tbody>${[...db.trips].sort((a,b)=>b.id-a.id).slice(0,7).map(t=>`<tr><td>${fmtDate(t.startDate)}</td><td style="font-size:0.79rem">${(t.startPlace||t.startAddress.split(',')[0])} → ${(t.endPlace||t.endAddress.split(',')[0])}</td><td>${t.endOdo-t.startOdo}</td></tr>`).join('')}</tbody></table>`;
   $('dashFuel').innerHTML=`<table><thead><tr><th>Dátum</th><th>Miesto</th><th>Suma</th></tr></thead><tbody>${[...db.fuelLogs].sort((a,b)=>b.id-a.id).slice(0,5).map(f=>`<tr><td>${fmtDate(f.date)}</td><td>${f.place}</td><td>${f.total.toFixed(2)} €</td></tr>`).join('')}</tbody></table>`;
   renderCalendar();
@@ -1907,7 +1965,7 @@ function renderTrips() {
   if(ecvF)  trips=trips.filter(t=>t.ecv===ecvF);
   if(srch)  trips=trips.filter(t=>(t.startAddress+t.endAddress+(t.reason||'')+(t.route||'')).toLowerCase().includes(srch));
   const imap={};
-  validate().forEach(e=>{if(e.tid){if(!imap[e.tid])imap[e.tid]=[];imap[e.tid].push(e);}});
+  validate().filter(e=>!isIgnored(e)).forEach(e=>{if(e.tid){if(!imap[e.tid])imap[e.tid]=[];imap[e.tid].push(e);}});
   $('tripsPager').textContent=`${trips.length} jázd · ${trips.reduce((s,t)=>s+(t.endOdo-t.startOdo),0).toLocaleString('sk')} km`;
   if(!trips.length){$('tripsTable').innerHTML=`<div style="padding:28px;text-align:center;color:var(--text3)">Žiadne jazdy</div>`;return;}
   $('tripsTable').innerHTML=`<table><thead><tr><th>#</th><th>Dátum</th><th>Čas</th><th>Odkiaľ</th><th>Kam</th><th>Tachometer</th><th>km</th><th>Dôvod</th><th>EČV</th><th>Príznaky</th><th></th></tr></thead><tbody>${trips.map(t=>{
