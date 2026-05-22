@@ -1306,7 +1306,15 @@ let ghCfg = null, gdCfg = null, gdToken = null, gdFileId = null, gdUser = null;
 let rootData = null, uid = null, curPage = 'dashboard', eIds = {}, saveTimer = null;
 
 // ── helpers
-const udb     = () => rootData.userData[uid];
+const udb = () => {
+  const d = rootData.userData[uid];
+  if (!d) return d;
+  // Auto-initialise fields missing in older records (migration guard)
+  const defaults = { vacations:[], costs:[], holidays:[], vehicles:[], places:[],
+                     routes:[], tripReasons:[], trips:[], fuelLogs:[] };
+  Object.keys(defaults).forEach(k => { if (!d[k]) d[k] = defaults[k]; });
+  return d;
+};
 const fmtDate = d  => d ? d.split('-').reverse().join('.') : '—';
 const isWE    = d  => { const w = new Date(d+'T12:00:00').getDay(); return w===0||w===6; };
 const isHD    = d  => udb().holidays.some(h => h.date === d);
@@ -1686,6 +1694,9 @@ function renderUserScreen() {
 function selectUser(id) {
   uid = id; localStorage.setItem(LS_USER, id);
   if (!rootData.userData[id]) rootData.userData[id] = emptyUser();
+  // Migrate missing keys into existing record (handles older data without vacations/costs etc.)
+  const _eu = emptyUser();
+  Object.keys(_eu).forEach(k => { if (rootData.userData[id][k] === undefined) rootData.userData[id][k] = _eu[k]; });
   const u = rootData.users.find(x => x.id === id);
   $('sbAv').textContent = u.name.charAt(0).toUpperCase(); $('sbAv').style.background = u.color;
   $('sbName').textContent = u.name;
