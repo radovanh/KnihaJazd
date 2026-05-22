@@ -2084,7 +2084,23 @@ function saveTrip() {
   if(!ea) errs.push('Adresa konca je povinná'); if(!eo||isNaN(eo)) errs.push('Tachometer koniec je povinný');
   if(!ecv) errs.push('Vozidlo je povinné'); if(eo&&so&&eo<so) errs.push('Koniec tachom. < začiatok');
   if(errs.length){ae.innerHTML=errs.map(e=>`<div class="alert ad">⛔ ${e}</div>`).join('');return;}
-  // Warnings are informational only — show them but never block saving
+
+  // ── Odometer overlap check — hard error
+  const otherTrips = udb().trips.filter(t => t.ecv === ecv && t.id !== (eIds.trip||null));
+  const overlap = otherTrips.find(t => {
+    // New/edited trip range [so, eo] overlaps existing trip range [t.startOdo, t.endOdo]
+    // Overlap condition: ranges share any km (strict — endpoints touching is allowed)
+    return so < t.endOdo && eo > t.startOdo && t.endOdo > t.startOdo;
+  });
+  if (overlap) {
+    const dir = `${overlap.startPlace||overlap.startAddress.split(',')[0]} → ${overlap.endPlace||overlap.endAddress.split(',')[0]}`;
+    ae.innerHTML = `<div class="alert ad">⛔ Tachometer sa prekrýva s existujúcou jazdou #${overlap.id}
+      (${fmtDate(overlap.startDate)}, ${dir}, ${overlap.startOdo}–${overlap.endOdo} km).
+      Skontrolujte hodnoty tachometra.</div>`;
+    return;
+  }
+
+  // ── Warnings — informational only, never block saving
   const warns=[];
   if(isWE(sd)) warns.push('Jazda cez víkend');
   const hn=hdName(sd); if(hn) warns.push('Jazda cez sviatok: '+hn);
