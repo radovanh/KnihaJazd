@@ -251,6 +251,7 @@
    ════════════════════════════════════════════════ */
 
 /* FAB and bottom nav hidden on desktop */
+.mob-fab-group  { display:none; }
 .mob-fab        { display:none; }
 .mob-bottom-nav { display:none; }
 .mob-menu-btn   { display:none; }
@@ -382,24 +383,59 @@
   .mob-bn-item:hover, .mob-bn-item.active { color:var(--accent); }
   .mob-bn-item.active span:first-child { transform:scale(1.1); }
 
-  /* ── FAB (floating action button) ── */
+  /* ── FAB group ── */
+  .mob-fab-group {
+    display:block;
+    position:fixed; bottom:70px; right:18px; z-index:99;
+  }
   .mob-fab {
     display:flex; align-items:center; justify-content:center;
-    position:fixed; bottom:70px; right:18px;
     width:52px; height:52px; border-radius:50%;
     background:var(--accent); color:#fff; font-size:1.6rem; font-weight:300;
-    border:none; cursor:pointer; z-index:99;
+    border:none; cursor:pointer;
     box-shadow:0 4px 18px rgba(44,95,74,0.45);
     transition:transform 0.15s, box-shadow 0.15s;
     -webkit-tap-highlight-color:transparent;
+    position:relative; z-index:1;
   }
-  .mob-fab:active { transform:scale(0.93); box-shadow:0 2px 8px rgba(44,95,74,0.3); }
+  .mob-fab.open { transform:rotate(45deg); background:#235040; }
+  .mob-fab:active { transform:scale(0.93); }
 
-  /* Hide FAB on pages where it doesn't make sense */
-  body.page-report .mob-fab,
-  body.page-settings .mob-fab,
-  body.page-routes .mob-fab,
-  body.page-places .mob-fab { display:none !important; }
+  .mob-fab-menu {
+    position:absolute; bottom:62px; right:0;
+    display:flex; flex-direction:column; gap:10px; align-items:flex-end;
+    opacity:0; pointer-events:none;
+    transform:translateY(10px);
+    transition:opacity 0.18s ease, transform 0.18s ease;
+  }
+  .mob-fab-menu.open { opacity:1; pointer-events:auto; transform:translateY(0); }
+
+  .mob-fab-action {
+    display:flex; align-items:center; gap:10px;
+    background:var(--surface); color:var(--text);
+    border:1px solid var(--border); border-radius:25px;
+    padding:9px 16px 9px 13px;
+    font-size:0.9rem; font-family:inherit; font-weight:500;
+    cursor:pointer; white-space:nowrap;
+    box-shadow:0 2px 10px rgba(0,0,0,0.12);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mob-fab-action span:first-child { font-size:1.2rem; }
+  .mob-fab-action:active { background:var(--surface2); }
+  .mob-fab-label { font-size:0.85rem; }
+
+  /* Backdrop to close FAB menu */
+  .mob-fab-backdrop {
+    display:none; position:fixed; inset:0; z-index:98;
+    background:rgba(0,0,0,0.18);
+  }
+  .mob-fab-backdrop.open { display:block; }
+
+  /* Hide FAB group on pages where it doesn't make sense */
+  body.page-report .mob-fab-group,
+  body.page-settings .mob-fab-group,
+  body.page-routes .mob-fab-group,
+  body.page-places .mob-fab-group { display:none !important; }
 
   /* ── Report page: simplify on mobile ── */
   .report-vehicle-row { grid-template-columns:1fr 1fr !important; }
@@ -631,7 +667,21 @@
 </div>
 
 <!-- Mobile FAB + bottom nav (hidden on desktop via CSS) -->
-<button class="mob-fab" onclick="openQuickModal()" title="Rýchla jazda">⚡</button>
+<div class="mob-fab-group" id="mobFabGroup">
+  <div class="mob-fab-menu" id="mobFabMenu">
+    <button class="mob-fab-action" onclick="openTripModal();closeMobFab()" title="Nová jazda">
+      <span>🚗</span><span class="mob-fab-label">Nová jazda</span>
+    </button>
+    <button class="mob-fab-action" onclick="openQuickModal();closeMobFab()" title="Rýchla jazda">
+      <span>⚡</span><span class="mob-fab-label">Rýchla jazda</span>
+    </button>
+    <button class="mob-fab-action" onclick="openFuelModal();closeMobFab()" title="Tankovanie">
+      <span>⛽</span><span class="mob-fab-label">Tankovanie</span>
+    </button>
+  </div>
+  <button class="mob-fab" id="mobFabMain" onclick="toggleMobFab()" title="Akcie">＋</button>
+</div>
+<div class="mob-fab-backdrop" id="mobFabBackdrop" onclick="closeMobFab()"></div>
 <nav class="mob-bottom-nav" id="mobBottomNav">
   <div class="mob-bn-item active" onclick="showPage('dashboard')" data-page="dashboard"><span>📊</span><span>Prehľad</span></div>
   <div class="mob-bn-item" onclick="showPage('trips')"    data-page="trips"><span>🚗</span><span>Jazdy</span></div>
@@ -1043,7 +1093,7 @@
 
 <!-- ══ QUICK ADD MODAL ══ -->
 <div class="modal-overlay" id="quickModal">
-  <div class="modal" style="max-width:420px">
+  <div class="modal" style="max-width:460px;min-width:0;width:100%">
     <div class="modal-header">
       <h3>⚡ Rýchla jazda</h3>
       <button class="close-btn" onclick="closeModal('quickModal')">✕</button>
@@ -2383,6 +2433,25 @@ function importData(event){const f=event.target.files[0];if(!f)return;const r=ne
 // ══════════════════════════════════════════════════
 // MOBILE UI
 // ══════════════════════════════════════════════════
+
+function toggleMobFab() {
+  const menu = $('mobFabMenu'), btn = $('mobFabMain'), bd = $('mobFabBackdrop');
+  const isOpen = menu?.classList.contains('open');
+  if (isOpen) { closeMobFab(); }
+  else {
+    menu?.classList.add('open');
+    btn?.classList.add('open');
+    bd?.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeMobFab() {
+  $('mobFabMenu')?.classList.remove('open');
+  $('mobFabMain')?.classList.remove('open');
+  $('mobFabBackdrop')?.classList.remove('open');
+  document.body.style.overflow = '';
+}
 function toggleMobMenu() {
   const drawer = $('mobDrawer'), overlay = $('mobOverlay');
   const isOpen = drawer.classList.contains('open');
