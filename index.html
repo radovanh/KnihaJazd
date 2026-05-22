@@ -1900,14 +1900,14 @@ function renderDashboard() {
   const db = udb();
   const km=db.trips.reduce((s,t)=>s+(t.endOdo-t.startOdo),0), fuel=db.fuelLogs.reduce((s,f)=>s+f.total,0);
   const liters=db.fuelLogs.reduce((s,f)=>s+f.liters,0), lastOdo=db.trips.length?Math.max(...db.trips.map(t=>t.endOdo)):0;
-  const issues=validate();
+  const issues  = validate();
+  const active  = issues.filter(e => !isIgnored(e));
+  const ignored = issues.filter(e =>  isIgnored(e));
   $('statsGrid').innerHTML=`
     <div class="stat-card ag"><div class="stat-label">Celkové km</div><div class="stat-value">${km.toLocaleString('sk')}</div><div class="stat-sub">${db.trips.length} jázd</div></div>
     <div class="stat-card au"><div class="stat-label">Náklady PHM</div><div class="stat-value">${fuel.toFixed(2)} €</div><div class="stat-sub">${liters.toFixed(2)} l</div></div>
     <div class="stat-card ab"><div class="stat-label">Tachometer</div><div class="stat-value">${lastOdo.toLocaleString('sk')}</div><div class="stat-sub">posledný záznam</div></div>
     <div class="stat-card ar"><div class="stat-label">Upozornenia</div><div class="stat-value">${active.length}</div><div class="stat-sub">${active.filter(e=>e.type==='error').length} chýb · ${active.filter(e=>e.type==='warning').length} varovaní${ignored.length?' · '+ignored.length+' ign.':''}</div></div>`;
-  const active  = issues.filter(e => !isIgnored(e));
-  const ignored = issues.filter(e =>  isIgnored(e));
 
   let valHtml = '';
   if (active.length) {
