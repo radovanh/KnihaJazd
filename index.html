@@ -1000,6 +1000,14 @@
           <div class="form-group"><label>Od *</label><input type="date" id="fvac_start"></div>
           <div class="form-group"><label>Do *</label><input type="date" id="fvac_end"></div>
         </div>
+        <div class="form-group">
+          <label>Typ</label>
+          <select id="fvac_type">
+            <option value="full">Celý deň / viac dní</option>
+            <option value="morning">Poldeň — dopoludnie</option>
+            <option value="afternoon">Poldeň — popoludnie</option>
+          </select>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -2145,7 +2153,11 @@ function renderSettings(){
     return `<div class="li" style="font-size:0.8rem"><span title="${h.country||'SK'}">${flag}</span><span style="flex:1;margin:0 8px">${fmtDate(h.date)} — ${h.name}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openHolidayModal('${h.date}','${h.country||'SK'}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteHoliday('${h.date}','${h.country||'SK'}')">🗑</button></div></div>`;
   }).join('');
   if(!db.vacations) db.vacations=[];
-  $('vacationList').innerHTML=[...db.vacations].sort((a,b)=>a.start>b.start?1:-1).map((v,i)=>`<div class="li" style="font-size:0.8rem"><span>${fmtDate(v.start)} – ${fmtDate(v.end)}${v.name?' — '+v.name:''}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openVacationModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteVacation(${i})">🗑</button></div></div>`).join('')||'<div class="tm">Žiadne dovolenky</div>';
+  const _vtypes={'full':'','morning':'🌅 dopoludnie','afternoon':'🌇 popoludnie'};
+  $('vacationList').innerHTML=[...db.vacations].sort((a,b)=>a.start>b.start?1:-1).map((v,i)=>{
+    const typeLabel=v.type&&v.type!=='full'?` <span class="badge bo">${_vtypes[v.type]||v.type}</span>`:'';
+    return `<div class="li" style="font-size:0.8rem"><span style="flex:1">${fmtDate(v.start)} – ${fmtDate(v.end)}${v.name?' — '+v.name:''}${typeLabel}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openVacationModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteVacation(${i})">🗑</button></div></div>`;
+  }).join('')||'<div class="tm">Žiadne dovolenky</div>';
   const m=mode();
   const ml={local:'🖥️ Lokálny server (data.json)',gdrive:'🔵 Google Drive'+(gdUser?' — '+gdUser.name:''),github:'🐙 GitHub repozitár',ls:'💾 Len localStorage'};
   const mc={local:'ai',gdrive:'as',github:'as',ls:'aw'};
@@ -2207,12 +2219,30 @@ function saveHoliday(){
   debouncedSave();closeModal('holidayModal');renderSettings();toast('Sviatok uložený','ok');
 }
 function deleteHoliday(d,country){showConfirm(`Zmazať sviatok ${fmtDate(d)}?`,()=>{udb().holidays=udb().holidays.filter(h=>!(h.date===d&&(h.country||'SK')===(country||'SK')));debouncedSave();renderSettings();});}
+function openVacationModal(idx){
+  eIds.vacation = idx !== undefined ? idx : null;
+  $('vacModalTitle').textContent = idx !== undefined ? 'Upraviť dovolenku' : 'Nová dovolenka';
+  if (idx !== undefined) {
+    const v = udb().vacations[idx];
+    $('fvac_name').value  = v.name  || '';
+    $('fvac_start').value = v.start || '';
+    $('fvac_end').value   = v.end   || '';
+    $('fvac_type').value  = v.type  || 'full';
+  } else {
+    $('fvac_name').value  = '';
+    $('fvac_start').value = '';
+    $('fvac_end').value   = '';
+    $('fvac_type').value  = 'full';
+  }
+  openModal('vacationModal');
+}
 function saveVacation(){
   const start=$('fvac_start').value, end=$('fvac_end').value, name=$('fvac_name').value.trim();
+  const type=$('fvac_type').value||'full';
   if(!start||!end){toast('Vyplňte dátumy','err');return;}
   if(end<start){toast('Koniec musí byť po začiatku','err');return;}
   const db=udb(); if(!db.vacations) db.vacations=[];
-  const vac={start,end,name:name||null};
+  const vac={start,end,name:name||null,type};
   if(eIds.vacation!==null&&eIds.vacation!==undefined) db.vacations[eIds.vacation]=vac;
   else db.vacations.push(vac);
   debouncedSave();closeModal('vacationModal');renderSettings();toast('Dovolenka uložená','ok');
