@@ -502,7 +502,7 @@
       <div style="display:flex;align-items:center;gap:5px;width:100%">
         <div class="sync-dot" id="syncDot"></div><span id="syncLabel">—</span>
       </div>
-      <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);letter-spacing:0.03em">v0.8.4</div>
+      <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);letter-spacing:0.03em">v0.8.5</div>
     </div>
   </aside>
   <main class="main">
@@ -643,7 +643,17 @@
             <div class="card">
               <div class="card-header">
                 <h3>Sviatky</h3>
-                <button class="btn btn-primary btn-sm" onclick="openHolidayModal()">+ Pridať</button>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <select id="holidayFilterCountry" onchange="renderSettings()" style="font-size:0.78rem;padding:4px 8px;height:auto">
+                    <option value="">Všetky</option>
+                    <option value="SK">🇸🇰 SK</option>
+                    <option value="AT">🇦🇹 AT</option>
+                    <option value="CZ">🇨🇿 CZ</option>
+                    <option value="HU">🇭🇺 HU</option>
+                  </select>
+                  <button class="btn btn-secondary btn-sm" onclick="openImportHolidaysModal()" title="Importovať z Google Calendar">📥 Import</button>
+                  <button class="btn btn-primary btn-sm" onclick="openHolidayModal()">+ Pridať</button>
+                </div>
               </div>
               <div class="stg-scroll" id="holidayList"></div>
             </div>
@@ -956,7 +966,19 @@
     <div class="modal-header"><h3>Sviatok</h3><button class="close-btn" onclick="closeModal('holidayModal')">✕</button></div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group"><label>Dátum *</label><input type="date" id="fh_d"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Dátum *</label><input type="date" id="fh_d"></div>
+          <div class="form-group">
+            <label>Krajina *</label>
+            <select id="fh_country">
+              <option value="SK">🇸🇰 Slovensko (SK)</option>
+              <option value="AT">🇦🇹 Rakúsko (AT)</option>
+              <option value="CZ">🇨🇿 Česká republika (CZ)</option>
+              <option value="HU">🇭🇺 Maďarsko (HU)</option>
+              <option value="OTHER">🌍 Iné</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group"><label>Názov *</label><input type="text" id="fh_n"></div>
       </div>
     </div>
@@ -1192,6 +1214,60 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('quickModal')">Zrušiť</button>
       <button class="btn btn-primary" id="qa_save_btn" onclick="saveQuickTrip()" disabled style="opacity:0.5">⚡ Uložiť jazdu</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ IMPORT HOLIDAYS MODAL ══ -->
+<div class="modal-overlay" id="importHolidaysModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3>📥 Importovať sviatky</h3>
+      <button class="close-btn" onclick="closeModal('importHolidaysModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.84rem;color:var(--text2);margin-bottom:16px">
+        Import štátnych sviatkov z Google Calendar (verejné kalendáre, nevyžaduje prihlásenie).
+      </p>
+      <div class="form-grid">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Krajina *</label>
+            <select id="ih_country">
+              <option value="sk.slovak#holiday@group.v.calendar.google.com" data-code="SK">🇸🇰 Slovensko</option>
+              <option value="at.austrian#holiday@group.v.calendar.google.com" data-code="AT">🇦🇹 Rakúsko</option>
+              <option value="cz.czech#holiday@group.v.calendar.google.com" data-code="CZ">🇨🇿 Česká republika</option>
+              <option value="hu.hungarian#holiday@group.v.calendar.google.com" data-code="HU">🇭🇺 Maďarsko</option>
+              <option value="de.german#holiday@group.v.calendar.google.com" data-code="DE">🇩🇪 Nemecko</option>
+              <option value="pl.polish#holiday@group.v.calendar.google.com" data-code="PL">🇵🇱 Poľsko</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Rok *</label>
+            <input type="number" id="ih_year" min="2020" max="2035" value="">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Duplicity</label>
+          <select id="ih_dupes">
+            <option value="skip">Preskočiť existujúce</option>
+            <option value="replace">Nahradiť existujúce</option>
+            <option value="add">Pridať všetky (môžu byť duplicity)</option>
+          </select>
+        </div>
+      </div>
+      <div id="ih_status" style="margin-top:14px;font-size:0.82rem;min-height:20px"></div>
+      <div id="ih_preview" style="display:none;margin-top:12px">
+        <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin-bottom:8px">
+          Náhľad (<span id="ih_count">0</span> sviatkov)
+        </div>
+        <div id="ih_preview_list" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:7px;font-size:0.79rem"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('importHolidaysModal')">Zrušiť</button>
+      <button class="btn btn-secondary" id="ih_fetch_btn" onclick="fetchHolidayPreview()">🔍 Načítať náhľad</button>
+      <button class="btn btn-primary" id="ih_import_btn" onclick="importHolidays()" disabled style="opacity:0.5">📥 Importovať</button>
     </div>
   </div>
 </div>
@@ -2062,7 +2138,12 @@ function renderSettings(){
     </div>`;
   }).join('')||'<div class="tm">Žiadne vozidlá</div>';
   $('reasonList').innerHTML=db.tripReasons.map((r,i)=>`<div class="li"><span>${r}</span><button class="btn btn-danger btn-sm" onclick="deleteReason(${i})">🗑</button></div>`).join('')||'<div class="tm">Žiadne dôvody</div>';
-  $('holidayList').innerHTML=[...db.holidays].sort((a,b)=>a.date>b.date?1:-1).map(h=>`<div class="li" style="font-size:0.8rem"><span>${fmtDate(h.date)} — ${h.name}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openHolidayModal('${h.date}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteHoliday('${h.date}')">🗑</button></div></div>`).join('');
+  const _hCountryF=$('holidayFilterCountry')?.value||'';
+  const _flags={'SK':'🇸🇰','AT':'🇦🇹','CZ':'🇨🇿','HU':'🇭🇺','OTHER':'🌍'};
+  $('holidayList').innerHTML=[...db.holidays].filter(h=>!_hCountryF||(h.country||'SK')===_hCountryF).sort((a,b)=>a.date>b.date?1:-1).map(h=>{
+    const flag=_flags[h.country||'SK']||'🌍';
+    return `<div class="li" style="font-size:0.8rem"><span title="${h.country||'SK'}">${flag}</span><span style="flex:1;margin:0 8px">${fmtDate(h.date)} — ${h.name}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openHolidayModal('${h.date}','${h.country||'SK'}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteHoliday('${h.date}','${h.country||'SK'}')">🗑</button></div></div>`;
+  }).join('');
   if(!db.vacations) db.vacations=[];
   $('vacationList').innerHTML=[...db.vacations].sort((a,b)=>a.start>b.start?1:-1).map((v,i)=>`<div class="li" style="font-size:0.8rem"><span>${fmtDate(v.start)} – ${fmtDate(v.end)}${v.name?' — '+v.name:''}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openVacationModal(${i})">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteVacation(${i})">🗑</button></div></div>`).join('')||'<div class="tm">Žiadne dovolenky</div>';
   const m=mode();
@@ -2095,12 +2176,12 @@ function openVehicleModal(idx){
   openModal('vehicleModal');
 }
 function openReasonModal(){openModal('reasonModal');}
-function openHolidayModal(editDate){
-  eIds.holiday = editDate||null;
+function openHolidayModal(editDate, editCountry){
+  eIds.holiday = editDate ? {date:editDate, country:editCountry||'SK'} : null;
   if(editDate){
-    const h=udb().holidays.find(x=>x.date===editDate);
-    if(h){$('fh_d').value=h.date;$('fh_n').value=h.name;}
-  } else { $('fh_d').value='';$('fh_n').value=''; }
+    const h=udb().holidays.find(x=>x.date===editDate&&(x.country||'SK')===(editCountry||'SK'));
+    if(h){$('fh_d').value=h.date;$('fh_n').value=h.name;$('fh_country').value=h.country||'SK';}
+  } else { $('fh_d').value='';$('fh_n').value='';$('fh_country').value='SK'; }
   openModal('holidayModal');
 }
 function saveVehicle(){
@@ -2119,13 +2200,13 @@ function deleteVehicle(i){showConfirm(`Zmazať "${udb().vehicles[i].name}"?`,()=
 function saveReason(){const t=$('freason').value.trim();if(!t)return;udb().tripReasons.push(t);debouncedSave();closeModal('reasonModal');renderSettings();$('freason').value='';toast('Dôvod uložený','ok');}
 function deleteReason(i){udb().tripReasons.splice(i,1);debouncedSave();renderSettings();}
 function saveHoliday(){
-  const d=$('fh_d').value,n=$('fh_n').value.trim();
+  const d=$('fh_d').value,n=$('fh_n').value.trim(),country=$('fh_country').value||'SK';
   if(!d||!n){toast('Vyplňte polia','err');return;}
-  if(eIds.holiday){udb().holidays=udb().holidays.filter(h=>h.date!==eIds.holiday);}
-  udb().holidays.push({date:d,name:n});
+  if(eIds.holiday){udb().holidays=udb().holidays.filter(h=>!(h.date===eIds.holiday.date&&(h.country||'SK')===eIds.holiday.country));}
+  udb().holidays.push({date:d,name:n,country});
   debouncedSave();closeModal('holidayModal');renderSettings();toast('Sviatok uložený','ok');
 }
-function deleteHoliday(d){showConfirm(`Zmazať sviatok ${fmtDate(d)}?`,()=>{udb().holidays=udb().holidays.filter(h=>h.date!==d);debouncedSave();renderSettings();});}
+function deleteHoliday(d,country){showConfirm(`Zmazať sviatok ${fmtDate(d)}?`,()=>{udb().holidays=udb().holidays.filter(h=>!(h.date===d&&(h.country||'SK')===(country||'SK')));debouncedSave();renderSettings();});}
 function saveVacation(){
   const start=$('fvac_start').value, end=$('fvac_end').value, name=$('fvac_name').value.trim();
   if(!start||!end){toast('Vyplňte dátumy','err');return;}
@@ -2732,6 +2813,138 @@ function syncMobileSyncStatus(state, label) {
   lbl2.innerHTML = state==='saving' ? '<span class="spinner"></span>' : (label||'—');
 }
 
+
+
+// ══════════════════════════════════════════════════
+// IMPORT HOLIDAYS FROM GOOGLE CALENDAR
+// ══════════════════════════════════════════════════
+let _ihFetched = [];
+
+function openImportHolidaysModal() {
+  _ihFetched = [];
+  $('ih_year').value = new Date().getFullYear();
+  $('ih_status').textContent = '';
+  $('ih_preview').style.display = 'none';
+  $('ih_import_btn').disabled = true;
+  $('ih_import_btn').style.opacity = '0.5';
+  openModal('importHolidaysModal');
+}
+
+async function fetchHolidayPreview() {
+  const calId  = $('ih_country').value;
+  const year   = parseInt($('ih_year').value);
+  const codeEl = $('ih_country').selectedOptions[0];
+  const code   = codeEl ? codeEl.dataset.code : 'SK';
+
+  if (!year || year < 2020 || year > 2035) {
+    $('ih_status').textContent = '⚠️ Zadajte platný rok (2020–2035)';
+    return;
+  }
+
+  $('ih_status').innerHTML = '<span class="spinner" style="border-top-color:var(--accent);border-color:var(--border)"></span> Načítavam z Google Calendar…';
+  $('ih_fetch_btn').disabled = true;
+
+  try {
+    const timeMin = encodeURIComponent(`${year}-01-01T00:00:00Z`);
+    const timeMax = encodeURIComponent(`${year}-12-31T23:59:59Z`);
+    // Google Calendar public ICS feed (no API key needed)
+    const icsUrl = `https://calendar.google.com/calendar/ical/${encodeURIComponent(calId)}/public/basic.ics`;
+    // Use a CORS proxy since Google Calendar ICS doesn't allow direct fetch from browser
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(icsUrl)}`;
+
+    const r = await fetch(proxyUrl);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    const ics = j.contents;
+
+    if (!ics || !ics.includes('BEGIN:VCALENDAR')) {
+      throw new Error('Neplatná odpoveď z Google Calendar. Skúste neskôr.');
+    }
+
+    // Parse ICS
+    _ihFetched = parseICS(ics, year, code);
+
+    if (!_ihFetched.length) {
+      $('ih_status').textContent = `⚠️ Žiadne sviatky pre rok ${year}`;
+      $('ih_preview').style.display = 'none';
+      return;
+    }
+
+    // Show preview
+    $('ih_count').textContent = _ihFetched.length;
+    const flags = {'SK':'🇸🇰','AT':'🇦🇹','CZ':'🇨🇿','HU':'🇭🇺','DE':'🇩🇪','PL':'🇵🇱'};
+    const flag  = flags[code] || '🌍';
+    $('ih_preview_list').innerHTML = _ihFetched.map(h =>
+      `<div style="padding:6px 10px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center">
+        <span style="color:var(--text3);font-size:0.75rem;width:72px;flex-shrink:0">${fmtDate(h.date)}</span>
+        <span>${flag} ${h.name}</span>
+      </div>`
+    ).join('');
+    $('ih_preview').style.display = 'block';
+    $('ih_status').textContent = `✅ Načítaných ${_ihFetched.length} sviatkov`;
+    $('ih_import_btn').disabled = false;
+    $('ih_import_btn').style.opacity = '1';
+
+  } catch(e) {
+    $('ih_status').textContent = '❌ Chyba: ' + e.message;
+    console.error('ICS fetch error:', e);
+  } finally {
+    $('ih_fetch_btn').disabled = false;
+  }
+}
+
+function parseICS(ics, year, country) {
+  const holidays = [];
+  // Split into VEVENT blocks
+  const events = ics.split('BEGIN:VEVENT').slice(1);
+  events.forEach(ev => {
+    // Date-only events (VALUE=DATE) — these are the holiday entries
+    const dtMatch = ev.match(/DTSTART(?:;VALUE=DATE)?:(\d{4})(\d{2})(\d{2})/);
+    if (!dtMatch) return;
+
+    const evYear = parseInt(dtMatch[1]);
+    if (evYear !== year) return;
+
+    const date = `${dtMatch[1]}-${dtMatch[2]}-${dtMatch[3]}`;
+
+    // Get summary (name) — handle line folding (lines starting with space/tab are continuations)
+    const summaryMatch = ev.replace(/\r?\n[ \t]/g, '').match(/SUMMARY:([^\r\n]+)/);
+    if (!summaryMatch) return;
+
+    let name = summaryMatch[1]
+      .replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\n/g, ' ')
+      .replace(/\\N/g, ' ').replace(/\\\\/g, '\\').trim();
+
+    holidays.push({ date, name, country });
+  });
+
+  return holidays.sort((a, b) => a.date > b.date ? 1 : -1);
+}
+
+function importHolidays() {
+  if (!_ihFetched.length) return;
+  const mode = $('ih_dupes').value;
+  const db   = udb();
+  let added = 0, skipped = 0, replaced = 0;
+  const code = $('ih_country').selectedOptions[0]?.dataset.code || 'SK';
+
+  _ihFetched.forEach(h => {
+    const exists = db.holidays.find(x => x.date === h.date && (x.country||'SK') === h.country);
+    if (exists) {
+      if (mode === 'skip') { skipped++; return; }
+      if (mode === 'replace') {
+        db.holidays = db.holidays.filter(x => !(x.date===h.date && (x.country||'SK')===h.country));
+        db.holidays.push(h); replaced++; return;
+      }
+    }
+    db.holidays.push(h); added++;
+  });
+
+  debouncedSave();
+  closeModal('importHolidaysModal');
+  renderSettings();
+  toast(`Import hotový: ${added} pridaných, ${replaced} nahradených, ${skipped} preskočených`, 'ok');
+}
 
 // ══════════════════════════════════════════════════
 // QUICK ADD TRIP
