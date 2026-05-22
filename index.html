@@ -316,7 +316,24 @@
   .mob-nav-item.active { background:rgba(255,255,255,0.13); color:#fff; font-weight:600; border-left-color:var(--accent2); }
 
   /* ── Content padding ── */
-  .content { padding:14px 14px 80px; } /* bottom padding for bottom nav */
+  /* Make main scrollable within viewport, accounting for topbar + bottom nav */
+  .main {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .topbar {
+    flex-shrink: 0;
+  }
+  .content {
+    padding: 14px 14px 14px;
+    flex: 1;
+    overflow-y: auto;
+    /* Extra space so last element clears bottom nav + FAB */
+    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px) + 14px);
+    -webkit-overflow-scrolling: touch;
+  }
 
   /* ── Stats: 2×2 grid ── */
   .stats-grid { grid-template-columns:1fr 1fr !important; gap:10px; }
