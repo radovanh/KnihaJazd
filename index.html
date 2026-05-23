@@ -364,19 +364,55 @@
     animation:slideUp 0.2s ease !important;
   }
 
-  /* Trip modal: fit entirely within screen width */
-  #tripModal .modal-body { padding:12px; }
-  #tripModal .form-grid { gap:9px; }
+  /* ── Trip modal: match fuel modal width on mobile ── */
+  #tripModal .modal-header { padding:13px 14px 11px; }
+  #tripModal .modal-body { padding:10px 12px; }
+  #tripModal .modal-footer { padding:11px 12px; }
+  #tripModal .form-grid { gap:8px; width:100%; box-sizing:border-box; }
+
+  /* Start/end panels: full width, no overflow */
   #tripModal .form-grid > div[style*="background:var(--surface2)"] {
-    margin-bottom:2px; padding:10px; min-width:0;
+    padding:9px 10px; min-width:0; width:100%; box-sizing:border-box;
   }
-  #tripModal .form-grid > div[style*="background:var(--surface2)"] .form-group input,
-  #tripModal .form-grid > div[style*="background:var(--surface2)"] .form-group select { font-size:0.82rem; }
-  /* Distance bar + estimate buttons — wrap on narrow screens */
-  #tripModal div[style*="background:var(--accent)"] { flex-wrap:wrap; gap:6px; }
-  #tripModal div[style*="background:var(--accent)"] div { flex-wrap:wrap; gap:5px; }
-  /* Minimap iframe — full width */
-  #minimapFrame { height:220px; }
+
+  /* All inputs/selects inside trip modal: shrink to fit */
+  #tripModal input, #tripModal select {
+    font-size:0.82rem; padding:6px 8px; min-width:0; width:100%; box-sizing:border-box;
+  }
+
+  /* Address row with 📍 button: don't overflow */
+  #tripModal .form-group > div[style*="display:flex"] {
+    gap:5px; min-width:0;
+  }
+  #tripModal .form-group > div[style*="display:flex"] input {
+    min-width:0; flex:1;
+  }
+  #tripModal .form-group > div[style*="display:flex"] button {
+    flex-shrink:0; padding:5px 8px;
+  }
+
+  /* Reason row: stack select + input vertically on small screens */
+  #tripModal div[style*="display:flex"][style*="gap:8px"] {
+    flex-direction:column; gap:6px;
+  }
+  #tripModal div[style*="display:flex"][style*="gap:8px"] select,
+  #tripModal div[style*="display:flex"][style*="gap:8px"] input {
+    width:100%;
+  }
+
+  /* Distance bar: wrap buttons */
+  #tripModal div[style*="background:var(--accent)"] {
+    flex-wrap:wrap; gap:5px; padding:8px 10px;
+  }
+  #tripModal div[style*="background:var(--accent)"] > div[style*="display:flex"] {
+    flex-wrap:wrap; gap:5px;
+  }
+  #tripModal div[style*="background:var(--accent)"] button {
+    font-size:0.72rem; padding:3px 7px;
+  }
+
+  /* Minimap */
+  #minimapFrame { height:200px; }
 
   /* ── Tables: compact, horizontal scroll ── */
   table { font-size:0.78rem; }
