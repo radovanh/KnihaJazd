@@ -2,6 +2,11 @@
 <html lang="sk">
 <head>
 <meta charset="UTF-8">
+<meta name="theme-color" content="#2c5f4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jazdy">
+<link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%232c5f4a'/><text y='46' x='8' font-size='42' font-family='serif'>🚗</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kniha Jazd</title>
@@ -3403,6 +3408,46 @@ function saveQuickTrip() {
   if (curPage === 'dashboard') renderDashboard();
 }
 
+
+// ── PWA Install prompt
+let _pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _pwaPrompt = e;
+  // Show install banner after user has been on the app for a bit
+  setTimeout(showInstallBanner, 3000);
+});
+
+function showInstallBanner() {
+  if (!_pwaPrompt || localStorage.getItem('pwa_dismissed')) return;
+  const banner = document.createElement('div');
+  banner.id = 'pwaBanner';
+  banner.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:10px 16px;border-radius:10px;font-size:0.82rem;display:flex;align-items:center;gap:10px;z-index:500;box-shadow:0 4px 18px rgba(0,0,0,0.25);white-space:nowrap;max-width:calc(100vw - 32px)';
+  banner.innerHTML = '<span>📲 Nainštalovať Kniha Jazd</span><button onclick="installPWA()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit;font-size:0.8rem">Inštalovať</button><button onclick="dismissInstall()" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:1rem;padding:0 2px">✕</button>';
+  document.body.appendChild(banner);
+}
+
+function installPWA() {
+  if (!_pwaPrompt) return;
+  _pwaPrompt.prompt();
+  _pwaPrompt.userChoice.then(r => {
+    if (r.outcome === 'accepted') toast('Aplikácia nainštalovaná!', 'ok');
+    _pwaPrompt = null;
+    document.getElementById('pwaBanner')?.remove();
+  });
+}
+
+function dismissInstall() {
+  document.getElementById('pwaBanner')?.remove();
+  localStorage.setItem('pwa_dismissed', '1');
+}
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('pwaBanner')?.remove();
+  _pwaPrompt = null;
+  toast('Aplikácia úspešne nainštalovaná', 'ok');
+});
+
 // ══════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════
@@ -3410,6 +3455,12 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
 
 async function init() {
+  // Register PWA service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.warn('SW registration failed:', err));
+  }
   gdHandleRedirect(); // handle OAuth callback before anything else
   await loadData();
   // Migrate v1 flat format → v2 multi-user format
