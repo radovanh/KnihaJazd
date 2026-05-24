@@ -1,11 +1,14 @@
 // Kniha Jazd — Service Worker v0.8.6
 // Caches the app shell for offline use and fast loading
 
-const CACHE_NAME = 'knjazd-v1';
+const CACHE_NAME = 'knjazd-v2';
 const SHELL = [
   './',
   './index.html',
   './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './apple-touch-icon.png',
   'https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap'
 ];
 
