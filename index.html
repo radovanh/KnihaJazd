@@ -1514,35 +1514,19 @@ async function loadData() {
   try {
     if (IS_LOCAL) {
       const r = await fetch('data.json?t='+Date.now());
-      if (r.ok) {
-        rootData = await r.json();
-        localStorage.setItem(LS_KEY, JSON.stringify(rootData));
-        console.log('[KJ] Loaded from local server');
-        return;
-      }
+      if (r.ok) { rootData = await r.json(); return; }
     }
     if (gdToken) {
       const raw = await gdReadFile();
-      if (raw) {
-        rootData = raw;
-        localStorage.setItem(LS_KEY, JSON.stringify(rootData));
-        console.log('[KJ] Loaded from Google Drive');
-        return;
-      }
+      if (raw) { rootData = raw; return; }
     }
     if (ghCfg?.token) {
       const raw = await ghGet();
-      if (raw) {
-        rootData = raw;
-        localStorage.setItem(LS_KEY, JSON.stringify(rootData));
-        console.log('[KJ] Loaded from GitHub');
-        return;
-      }
+      if (raw) { rootData = raw; return; }
     }
-  } catch(e) { console.warn('[KJ] Remote load failed, falling back to localStorage:', e.message); }
+  } catch(e) { console.warn('Remote load failed, using localStorage', e); }
   const ls = localStorage.getItem(LS_KEY);
   rootData = ls ? JSON.parse(ls) : emptyRoot();
-  console.log('[KJ] Loaded from localStorage');
   if (!rootData.users)    rootData.users = [];
   if (!rootData.userData) rootData.userData = {};
 }
@@ -1755,7 +1739,6 @@ const ghBase = () => `https://api.github.com/repos/${ghCfg.owner}/${ghCfg.repo}/
 const ghHdr  = () => ({ 'Authorization':'Bearer '+ghCfg.token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' });
 
 async function ghGet() {
-  console.log('[KJ] ghGet: fetching from GitHub...');
   const r = await fetch(ghBase()+'?ref='+ghCfg.branch, { headers:ghHdr() });
   if (r.status===404) return null;
   if (r.status===401) throw new Error('Token neplatny alebo expirovany (401)');
