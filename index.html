@@ -2,6 +2,17 @@
 <html lang="sk">
 <head>
 <meta charset="UTF-8">
+<script>
+// Kill any active service worker BEFORE page resources load
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(r) { r.unregister(); });
+  });
+  if ('caches' in window) {
+    caches.keys().then(function(keys) { keys.forEach(function(k) { caches.delete(k); }); });
+  }
+}
+</script>
 <meta name="theme-color" content="#2c5f4a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -3757,13 +3768,15 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
 
 async function init() {
-  // Unregister all service workers to prevent interference with network requests
+  // Aggressively kill all service workers and clear all caches
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(regs => {
-      regs.forEach(reg => {
-        reg.unregister().then(ok => console.log('[KJ] SW unregistered:', reg.scope, ok));
-      });
+      regs.forEach(r => r.unregister());
     });
+    // Also clear all caches the old SW may have populated
+    if ('caches' in window) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    }
   }
   gdHandleRedirect(); // handle OAuth callback before anything else
   loadLastSync();
