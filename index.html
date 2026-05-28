@@ -1530,7 +1530,7 @@ async function loadData() {
 
   try {
     if (IS_LOCAL) {
-      const r = await fetch('data.json?t='+Date.now());
+      const r = await fetch('data.json?t='+Date.now(), { cache:'no-store' });
       if (r.ok) {
         rootData = await r.json();
         localStorage.setItem(LS_KEY, JSON.stringify(rootData));
@@ -1876,12 +1876,14 @@ function forceUseLS() {
 // GITHUB API
 // ══════════════════════════════════════════════════
 const ghBase = () => `https://api.github.com/repos/${ghCfg.owner}/${ghCfg.repo}/contents/${ghCfg.path}`;
-const ghHdr  = () => ({ 'Authorization':'Bearer '+ghCfg.token, 'Accept':'application/vnd.github+json' });
-const ghHdrPut= () => ({ 'Authorization':'Bearer '+ghCfg.token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' });
+const ghHdr  = () => ({ 'Authorization':'Bearer '+ghCfg.token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' });
 
 async function ghGet() {
   console.log('[KJ] ghGet: fetching...');
-  const r = await fetch(ghBase()+'?ref='+ghCfg.branch, { headers: ghHdr() });
+  const r = await fetch(ghBase()+'?ref='+ghCfg.branch, {
+    headers: ghHdr(),
+    cache: 'no-store'   // never serve from browser HTTP cache
+  });
   if (r.status===404) return null;
   if (r.status===401) throw new Error('Token neplatný alebo expirovaný (401)');
   if (r.status===403) throw new Error('Prístup zamietnutý — skontrolujte oprávnenia tokenu (403)');
@@ -1905,7 +1907,7 @@ async function ghGet() {
   // This avoids the download_url CORS issue
   const rawUrl = `https://raw.githubusercontent.com/${ghCfg.owner}/${ghCfg.repo}/${ghCfg.branch}/${ghCfg.path}`;
   console.log('[KJ] ghGet: content empty, trying raw URL:', rawUrl);
-  const rr = await fetch(rawUrl, { headers:{'Authorization':'Bearer '+ghCfg.token} });
+  const rr = await fetch(rawUrl, { cache:'no-store', headers:{'Authorization':'Bearer '+ghCfg.token} });
   if (!rr.ok) throw new Error('GitHub raw fetch failed: HTTP '+rr.status+' — súbor data.json neexistuje alebo je prázdny');
   const jsonText = await rr.text();
   console.log('[KJ] ghGet raw OK, length='+jsonText.length);
@@ -1923,7 +1925,7 @@ async function ghPut(data) {
   const content = btoa(_binary);
   const body = { message:'Aktualizacia Knihy Jazd '+new Date().toISOString().slice(0,16).replace('T',' '), content, branch:ghCfg.branch };
   if (sha) body.sha = sha;
-  const r = await fetch(ghBase(), { method:'PUT', headers:ghHdrPut(), body:JSON.stringify(body) });
+  const r = await fetch(ghBase(), { method:'PUT', headers:ghHdr(), body:JSON.stringify(body) });
   if (!r.ok) {
     const e = await r.json().catch(()=>({}));
     const hint = r.status===409 ? ' (SHA konflikt - znovu nacitajte stranku)'
