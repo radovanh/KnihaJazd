@@ -1513,7 +1513,7 @@ async function loadData() {
       if (raw) {
         rootData = raw;
         localStorage.setItem(LS_KEY, JSON.stringify(rootData));
-        recordSync('load','Google Drive');
+        recordSyncFromMeta('Google Drive');
         return;
       }
     }
@@ -1522,7 +1522,7 @@ async function loadData() {
       if (raw) {
         rootData = raw;
         localStorage.setItem(LS_KEY, JSON.stringify(rootData));
-        recordSync('load','GitHub');
+        recordSyncFromMeta('GitHub');
         return;
       }
     }
@@ -1549,6 +1549,13 @@ async function loadData() {
 }
 
 async function saveData() {
+  // Stamp save metadata into rootData so all devices see last-saved info
+  rootData._meta = {
+    savedAt:  new Date().toISOString(),
+    savedBy:  uid || 'unknown',
+    userName: rootData.users?.find(u=>u.id===uid)?.name || '?',
+    source:   mode() === 'local' ? 'Lokálny server' : mode() === 'gdrive' ? 'Google Drive' : mode() === 'github' ? 'GitHub' : 'localStorage'
+  };
   localStorage.setItem(LS_KEY, JSON.stringify(rootData));
   setSyncStatus('saving');
   try {
@@ -1753,6 +1760,29 @@ function forceUseLS() {
 // ══════════════════════════════════════════════════
 // SYNC TIME TRACKING
 // ══════════════════════════════════════════════════
+// Read _meta from loaded rootData to show when data was last SAVED (not just loaded)
+function recordSyncFromMeta(loadSource) {
+  const meta = rootData?._meta;
+  if (meta?.savedAt) {
+    const savedDate = new Date(meta.savedAt);
+    const savedTime = savedDate.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'});
+    const savedDate2= savedDate.toLocaleDateString('sk-SK',{day:'2-digit',month:'2-digit'});
+    const by = meta.userName && meta.userName !== '?' ? ' (' + meta.userName + ')' : '';
+    _lastSyncLabel = '📥 ' + loadSource + ' · uložené ' + savedDate2 + ' ' + savedTime + by;
+  } else {
+    _lastSyncLabel = '📥 ' + loadSource;
+  }
+  const now = new Date();
+  localStorage.setItem('knjazd_sync', JSON.stringify({
+    label: _lastSyncLabel,
+    iso: now.toISOString(),
+    savedAt: meta?.savedAt || null,
+    savedBy: meta?.userName || null
+  }));
+  setSyncStatus('ok', _lastSyncLabel);
+  updateSyncFooter();
+}
+
 function recordSync(type, source) {
   const now = new Date();
   const time = now.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'});
@@ -1781,7 +1811,13 @@ function updateSyncFooter() {
   const s = JSON.parse(localStorage.getItem('knjazd_sync')||'null');
   if (!s) return;
   const lbl = $('syncLabel');
-  if (lbl) { lbl.textContent = _lastSyncLabel; lbl.title = 'Posledná sync: ' + new Date(s.iso).toLocaleString('sk-SK'); }
+  if (lbl) {
+    lbl.textContent = _lastSyncLabel;
+    const _m = rootData?._meta;
+    lbl.title = _m?.savedAt
+      ? 'Uložené: ' + new Date(_m.savedAt).toLocaleString('sk-SK') + (_m.userName&&_m.userName!='?'?' od '+_m.userName:'')
+      : 'Posledná sync: ' + new Date(s.iso).toLocaleString('sk-SK');
+  }
   const lbl2 = $('syncLabel2');
   if (lbl2) { lbl2.textContent = _lastSyncLabel; }
 }
@@ -2512,7 +2548,20 @@ function renderSettings(){
   const m=mode();
   const ml={local:'🖥️ Lokálny server (data.json)',gdrive:'🔵 Google Drive'+(gdUser?' — '+gdUser.name:''),github:'🐙 GitHub repozitár',ls:'💾 Len localStorage'};
   const mc={local:'ai',gdrive:'as',github:'as',ls:'aw'};
-  $('storagePanel').innerHTML=`<div class="alert ${mc[m]}">${ml[m]}</div><p class="tm mb2">Aktuálny spôsob ukladania.</p><button class="btn btn-secondary btn-sm" onclick="openGithubSetup()">⚙️ Nastavenia ukladania</button>`;
+  const _sr2=JSON.parse(localStorage.getItem('knjazd_sync')||'null');
+  const _meta2=rootData?._meta;
+  let _syncInfo='<div class="tm mt2">Ešte nebola synchronizácia</div>';
+  if(_sr2){
+    const _lt=new Date(_sr2.iso).toLocaleString('sk-SK');
+    let _si='';
+    if(_meta2?.savedAt){
+      const _sd=new Date(_meta2.savedAt);
+      const _by=_meta2.userName&&_meta2.userName!='?'?' — '+_meta2.userName:'';
+      _si=`<br>💾 Uložené: ${_sd.toLocaleDateString('sk-SK',{day:'2-digit',month:'2-digit',year:'numeric'})} ${_sd.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'})}${_by}`;
+    }
+    _syncInfo=`<div class="tm mt2">📥 Načítané: ${formatTimeAgo(_sr2.iso)} (${_lt})${_si}</div>`;
+  }
+  $('storagePanel').innerHTML=`<div class="alert ${mc[m]}">${ml[m]}</div>${_syncInfo}<div style="margin-top:10px"><button class="btn btn-secondary btn-sm" onclick="openGithubSetup()">⚙️ Nastavenia ukladania</button></div>`;
   // Render event list
   if ($('eventList')) {
     if(!db.events) db.events=[];
