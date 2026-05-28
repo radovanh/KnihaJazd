@@ -1745,16 +1745,21 @@ async function ghGet() {
   if (r.status===403) throw new Error('Pristup zamietnuty - skontrolujte opravnenia tokenu (403)');
   if (!r.ok) throw new Error('GitHub GET zlyhal: HTTP '+r.status);
   const j = await r.json();
-  // Decode UTF-8: mirror of btoa(unescape(encodeURIComponent(...))) used in ghPut
-  const raw = atob(j.content.replace(/\n/g,''));
-  const d = JSON.parse(decodeURIComponent(escape(raw)));
+  // UTF-8 safe base64 decode
+  const _raw = atob(j.content.replace(/\n/g,''));
+  const _buf = Uint8Array.from(_raw, ch => ch.charCodeAt(0));
+  const d = JSON.parse(new TextDecoder('utf-8').decode(_buf));
   d._sha = j.sha; return d;
 }
 
 async function ghPut(data) {
   const sha = data._sha;
   const p = JSON.parse(JSON.stringify(data)); delete p._sha;
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(p,null,2))));
+  // UTF-8 safe base64 encode
+  const _jsonStr = JSON.stringify(p,null,2);
+  const _bytes = new TextEncoder().encode(_jsonStr);
+  const _binary = Array.from(_bytes, b => String.fromCharCode(b)).join('');
+  const content = btoa(_binary);
   const body = { message:'Aktualizacia Knihy Jazd '+new Date().toISOString().slice(0,16).replace('T',' '), content, branch:ghCfg.branch };
   if (sha) body.sha = sha;
   const r = await fetch(ghBase(), { method:'PUT', headers:ghHdr(), body:JSON.stringify(body) });
