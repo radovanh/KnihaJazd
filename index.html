@@ -55,6 +55,7 @@
   .nav-item .icon { font-size:1rem; width:19px; text-align:center; }
   .sidebar-footer { padding:11px 15px; border-top:1px solid rgba(255,255,255,0.12); font-size:0.71rem; color:rgba(255,255,255,0.42); display:flex; align-items:center; gap:5px; }
   .sync-dot { width:7px; height:7px; border-radius:50%; background:#6bcb77; flex-shrink:0; }
+  #syncFooterRow:hover { background:rgba(255,255,255,0.08); }
   .sync-dot.warn { background:var(--warn); } .sync-dot.err { background:var(--accent3); }
   .main { margin-left:228px; flex:1; }
   .topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:12px 28px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; }
@@ -588,8 +589,13 @@
       <div class="nav-item" onclick="showPage('settings')" data-page="settings"><span class="icon">⚙️</span> Nastavenia</div>
     </nav>
     <div class="sidebar-footer" style="flex-direction:column;align-items:flex-start;gap:4px">
-      <div style="display:flex;align-items:center;gap:5px;width:100%">
-        <div class="sync-dot" id="syncDot"></div><span id="syncLabel">—</span>
+      <div id="syncFooterRow" onclick="toggleSyncPopup()" style="display:flex;align-items:center;gap:5px;width:100%;cursor:pointer;border-radius:5px;padding:2px 4px;transition:background 0.13s" title="Kliknite pre detail synchronizácie">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncLabel" style="flex:1">—</span>
+        <span style="font-size:0.68rem;opacity:0.5">ⓘ</span>
+      </div>
+      <div id="syncPopup" style="display:none;background:rgba(0,0,0,0.35);border-radius:7px;padding:8px 10px;font-size:0.72rem;color:rgba(255,255,255,0.8);line-height:1.6;width:100%">
+        <div id="syncPopupContent">—</div>
       </div>
       <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);letter-spacing:0.03em">v0.9.0</div>
     </div>
@@ -1807,17 +1813,34 @@ function formatTimeAgo(iso) {
   return new Date(iso).toLocaleDateString('sk-SK');
 }
 
+function toggleSyncPopup() {
+  const popup = $('syncPopup');
+  if (!popup) return;
+  const isOpen = popup.style.display !== 'none';
+  popup.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    // Fill content
+    const s    = JSON.parse(localStorage.getItem('knjazd_sync')||'null');
+    const meta = rootData?._meta;
+    const lines = [];
+    if (s?.iso) {
+      lines.push('📥 Načítané: ' + new Date(s.iso).toLocaleString('sk-SK'));
+    }
+    if (meta?.savedAt) {
+      const by = meta.userName && meta.userName !== '?' ? ' od ' + meta.userName : '';
+      lines.push('💾 Uložené: ' + new Date(meta.savedAt).toLocaleString('sk-SK') + by);
+    }
+    if (meta?.source) lines.push('📡 Zdroj: ' + meta.source);
+    const el = $('syncPopupContent');
+    if (el) el.innerHTML = lines.length ? lines.join('<br>') : 'Žiadne informácie';
+  }
+}
+
 function updateSyncFooter() {
   const s = JSON.parse(localStorage.getItem('knjazd_sync')||'null');
   if (!s) return;
   const lbl = $('syncLabel');
-  if (lbl) {
-    lbl.textContent = _lastSyncLabel;
-    const _m = rootData?._meta;
-    lbl.title = _m?.savedAt
-      ? 'Uložené: ' + new Date(_m.savedAt).toLocaleString('sk-SK') + (_m.userName&&_m.userName!='?'?' od '+_m.userName:'')
-      : 'Posledná sync: ' + new Date(s.iso).toLocaleString('sk-SK');
-  }
+  if (lbl) lbl.textContent = _lastSyncLabel;
   const lbl2 = $('syncLabel2');
   if (lbl2) { lbl2.textContent = _lastSyncLabel; }
 }
