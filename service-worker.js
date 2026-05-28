@@ -1,77 +1,71 @@
-// Kniha Jazd — Service Worker v0.8.9 (build 5)
-const CACHE_NAME = 'knjazd-v5';
+// Kniha Jazd — Service Worker v0.8.9
+// Strategy: network-first for HTML + data, cache-only fallback for offline
 
-const STATIC_ASSETS = [
+const CACHE_NAME = 'knjazd-v4';
+
+// Only cache truly static assets — NOT data.json, NOT index.html (changes with releases)
+const STATIC = [
   './icon-192.png',
   './icon-512.png',
   './apple-touch-icon.png',
   './manifest.json',
 ];
 
-// Hostnames that must NEVER be intercepted — always go straight to network
-const NETWORK_ONLY_HOSTS = [
-  'api.github.com',
-  'raw.githubusercontent.com',
-  'www.googleapis.com',
-  'accounts.google.com',
-  'oauth2.googleapis.com',
-  'nominatim.openstreetmap.org',
-  'router.project-osrm.org',
-  'date.nager.at',
-  'fonts.googleapis.com',
-  'fonts.gstatic.com',
-  'api.allorigins.win',
-  'corsproxy.io',
-  'calendarmcp.googleapis.com',
-  'gmailmcp.googleapis.com',
-  'drivemcp.googleapis.com',
-];
-
+// ── Install: pre-cache only icons + manifest
 self.addEventListener('install', e => {
-  // Skip waiting immediately — don't hold back on old clients
-  self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(STATIC_ASSETS))
-      .catch(err => console.warn('[SW] Install cache warn:', err))
+      .then(cache => cache.addAll(STATIC))
+      .then(() => self.skipWaiting())
+      .catch(err => console.warn('[SW] Install cache error:', err))
   );
 });
 
+// ── Activate: wipe ALL old caches
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => {
-          console.log('[SW] Removing old cache:', k);
-          return caches.delete(k);
-        })
-      ))
-      .then(() => self.clients.claim())  // take over ALL open tabs immediately
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => {
+        console.log('[SW] Deleting old cache:', k);
+        return caches.delete(k);
+      })))
+      .then(() => self.clients.claim())
   );
 });
 
+// ── Fetch strategy
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // 1. External / API hosts — pass straight through, never touch cache
-  if (NETWORK_ONLY_HOSTS.some(h => url.hostname === h || url.hostname.endsWith('.'+h))) {
-    return; // let browser handle it natively — no respondWith = default fetch
+  // 1. API calls — always network only, never cache
+  const isAPI = [
+    'api.github.com', 'www.googleapis.com', 'accounts.google.com',
+    'nominatim.openstreetmap.org', 'router.project-osrm.org',
+    'date.nager.at', 'oauth2.googleapis.com', 'api.allorigins.win'
+  ].some(h => url.hostname.includes(h));
+  if (isAPI) { e.respondWith(fetch(e.request)); return; }
+
+  // 2. data.json — always network, never cache (it changes constantly)
+  if (url.pathname.endsWith('data.json')) {
+    e.respondWith(
+      fetch(e.request).catch(() => {
+        // Only fall back to cache if completely offline
+        return caches.match(e.request);
+      })
+    );
+    return;
   }
 
-  // 2. data.json — network only, no caching
-  if (url.pathname.endsWith('/data.json') || url.pathname.endsWith('/data.json?')) {
-    return; // pass through
-  }
-
-  // 3. index.html / app root — network-first, cache as offline fallback
-  const isAppShell = url.pathname === '/' ||
-                     url.pathname.endsWith('/') ||
-                     url.pathname.endsWith('/index.html');
-  if (isAppShell) {
+  // 3. index.html — network-first (get latest), fall back to cache if offline
+  if (url.pathname.endsWith('/') || url.pathname.endsWith('index.html') || url.pathname === url.origin + '/') {
     e.respondWith(
       fetch(e.request)
         .then(res => {
-          if (res.ok) caches.open(CACHE_NAME).then(c => c.put(e.request, res.clone()));
+          // Cache the fresh copy for offline fallback
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+          }
           return res;
         })
         .catch(() => caches.match(e.request))
@@ -79,15 +73,30 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // 4. Static assets (icons etc.) — cache-first
-  if (STATIC_ASSETS.some(s => url.pathname.endsWith(s.replace('./', '')))) {
+  // 4. Google Fonts — stale-while-revalidate
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     e.respondWith(
-      caches.match(e.request).then(hit => hit || fetch(e.request))
+      caches.open(CACHE_NAME).then(cache =>
+        cache.match(e.request).then(cached => {
+          const fetchPromise = fetch(e.request).then(res => {
+            cache.put(e.request, res.clone()); return res;
+          });
+          return cached || fetchPromise;
+        })
+      )
     );
     return;
   }
 
-  // 5. All other same-origin requests — network with offline cache fallback
+  // 5. Static assets (icons, manifest) — cache-first
+  if (STATIC.some(s => url.pathname.endsWith(s.replace('./', '')))) {
+    e.respondWith(
+      caches.match(e.request).then(cached => cached || fetch(e.request))
+    );
+    return;
+  }
+
+  // 6. Everything else — network with cache fallback
   e.respondWith(
     fetch(e.request).catch(() => caches.match(e.request))
   );
