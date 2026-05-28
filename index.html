@@ -1762,10 +1762,28 @@ async function ghGet() {
   if (r.status===403) throw new Error('Pristup zamietnuty - skontrolujte opravnenia tokenu (403)');
   if (!r.ok) throw new Error('GitHub GET zlyhal: HTTP '+r.status);
   const j = await r.json();
-  // UTF-8 safe base64 decode
-  const _raw = atob(j.content.replace(/\n/g,''));
-  const _buf = Uint8Array.from(_raw, ch => ch.charCodeAt(0));
-  const d = JSON.parse(new TextDecoder('utf-8').decode(_buf));
+  console.log('[KJ] ghGet: type='+j.type+' size='+j.size+' encoding='+j.encoding+' content_len='+(j.content?.length||0));
+
+  let jsonText;
+  // GitHub returns empty content + download_url for files >1MB
+  if (!j.content || j.content.trim() === '') {
+    if (j.download_url) {
+      console.log('[KJ] ghGet: content empty, fetching via download_url');
+      const dr = await fetch(j.download_url);
+      if (!dr.ok) throw new Error('GitHub download_url failed: HTTP '+dr.status);
+      jsonText = await dr.text();
+    } else {
+      throw new Error('GitHub vrátil prázdny obsah súboru bez download_url');
+    }
+  } else {
+    // Normal case: decode base64 content UTF-8 safely
+    const _raw = atob(j.content.replace(/\n/g,''));
+    const _buf = Uint8Array.from(_raw, ch => ch.charCodeAt(0));
+    jsonText = new TextDecoder('utf-8').decode(_buf);
+  }
+
+  console.log('[KJ] ghGet: jsonText length='+jsonText.length+' first80='+jsonText.substring(0,80));
+  const d = JSON.parse(jsonText);
   d._sha = j.sha; return d;
 }
 
