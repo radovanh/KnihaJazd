@@ -528,14 +528,6 @@
   .mob-card-actions { display:flex; gap:8px; padding:8px 13px; border-top:1px solid var(--border); }
   .mob-card-footer { text-align:center; padding:10px; font-size:0.82rem; color:var(--text2); border-top:2px solid var(--accent); background:var(--surface2); border-radius:0 0 9px 9px; }
 
-  /* ── Settings calendar panel: scrollable as unit on mobile ── */
-  #stgpanel-calendar {
-    overflow-y: auto;
-    max-height: calc(100% - 50px);
-  }
-  #stgpanel-calendar .stg-scroll { max-height: 200px; }
-  #stgpanel-calendar > .card { margin-top: 12px; }
-
   /* ── Route cards (mobile) ── */
   .route-card { border:1px solid var(--border); border-radius:9px; margin:0 0 10px; background:var(--surface); overflow:hidden; }
   .route-card-top { display:flex; justify-content:space-between; align-items:center; padding:10px 13px 6px; gap:8px; }
@@ -599,7 +591,7 @@
       <div style="display:flex;align-items:center;gap:5px;width:100%">
         <div class="sync-dot" id="syncDot"></div><span id="syncLabel">—</span>
       </div>
-      <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);letter-spacing:0.03em">v0.8.9</div>
+      <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);letter-spacing:0.03em">v0.8.6</div>
     </div>
   </aside>
   <main class="main">
@@ -775,7 +767,7 @@
               <h3>📋 Udalosti</h3>
               <button class="btn btn-primary btn-sm" onclick="openEventModal()">+ Pridať</button>
             </div>
-            <div class="stg-scroll" id="eventList" style="max-height:300px"></div>
+            <div class="stg-scroll" id="eventList"></div>
           </div>
         </div>
 
@@ -2436,7 +2428,7 @@ function renderSettings(){
   const _calYear=$('calFilterYear')?.value||'';
   const _hCountryF=$('holidayFilterCountry')?.value||'';
   const _flags={'SK':'🇸🇰','AT':'🇦🇹','CZ':'🇨🇿','HU':'🇭🇺','OTHER':'🌍'};
-  if ($('holidayList')) $('holidayList').innerHTML=[...db.holidays].filter(h=>(!_hCountryF||(h.country||'SK')===_hCountryF)&&(!_calYear||h.date?.startsWith(_calYear))).sort((a,b)=>a.date>b.date?1:-1).map(h=>{
+  $('holidayList').innerHTML=[...db.holidays].filter(h=>(!_hCountryF||(h.country||'SK')===_hCountryF)&&(!_calYear||h.date?.startsWith(_calYear))).sort((a,b)=>a.date>b.date?1:-1).map(h=>{
     const flag=_flags[h.country||'SK']||'🌍';
     return `<div class="li" style="font-size:0.8rem"><span title="${h.country||'SK'}">${flag}</span><span style="flex:1;margin:0 8px">${fmtDate(h.date)} — ${h.name}</span><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm" onclick="openHolidayModal('${h.date}','${h.country||'SK'}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteHoliday('${h.date}','${h.country||'SK'}')">🗑</button></div></div>`;
   }).join('');
@@ -2446,7 +2438,7 @@ function renderSettings(){
   const _vacFiltered=[...db.vacations]
     .filter(v=>!_vacYear||(v.start&&v.start.startsWith(_vacYear))||(v.end&&v.end.startsWith(_vacYear)))
     .sort((a,b)=>a.start>b.start?1:-1);
-  if ($('vacationList')) $('vacationList').innerHTML=_vacFiltered.map(v=>{
+  $('vacationList').innerHTML=_vacFiltered.map(v=>{
     // ensure id exists (migration for old records without id)
     if(!v.id) v.id=db.vacations.indexOf(v)+1;
     const typeLabel=v.type&&v.type!=='full'?` <span class="badge bo">${_vtypes[v.type]||v.type}</span>`:'';
@@ -2463,7 +2455,7 @@ function renderSettings(){
   const _evFiltered = [...db.events]
     .filter(e => !_evtYear || e.start?.startsWith(_evtYear) || e.end?.startsWith(_evtYear))
     .sort((a,b) => a.start > b.start ? 1 : -1);
-  if ($('eventList')) $('eventList').innerHTML = _evFiltered.map(e => {
+  $('eventList').innerHTML = _evFiltered.map(e => {
     const typeLabel = e.type && e.type !== 'full' ? ` <span class="badge bo">${_etypes[e.type]||e.type}</span>` : '';
     const catLabel  = e.cat ? ` <span class="badge bb" style="font-size:0.67rem">${e.cat}</span>` : '';
     return `<div class="li" style="font-size:0.8rem">
