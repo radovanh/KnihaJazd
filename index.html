@@ -1209,7 +1209,6 @@
           <div style="margin-top:11px;display:flex;gap:7px;align-items:center;flex-wrap:wrap">
             <button class="btn btn-primary btn-sm" onclick="testGH()">🔗 Otestovať</button>
             <button class="btn btn-secondary btn-sm" onclick="saveGHConfig()">💾 Uložiť</button>
-            <button class="btn btn-secondary btn-sm" onclick="forceReload();closeModal('githubModal')">🔄 Obnoviť dáta</button>
             <button class="btn btn-danger btn-sm" onclick="clearGHConfig()">🗑 Odstrániť</button>
             <span id="ghTest" style="font-size:0.79rem"></span>
           </div>
@@ -1444,8 +1443,6 @@ const IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127
 
 let ghCfg = null, gdCfg = null, gdToken = null, gdFileId = null, gdUser = null;
 let rootData = null, uid = null, curPage = 'dashboard', eIds = {}, saveTimer = null;
-let isReadOnly = false;       // true when remote unavailable
-let lastSyncTime = null;      // ISO string of last successful sync
 
 // ── helpers
 const udb = () => {
@@ -1514,17 +1511,12 @@ async function loadData() {
   if (gdCache && gdCache.expires > Date.now()) {
     gdToken = gdCache.token; gdFileId = gdCache.fileId || null; gdUser = gdCache.user || null;
   }
-  // Determine if we should use remote storage
-  const useRemote = IS_LOCAL || gdToken || ghCfg?.token;
-
   try {
     if (IS_LOCAL) {
-      const r = await fetch('data.json?t='+Date.now(), { cache:'no-store' });
+      const r = await fetch('data.json?t='+Date.now());
       if (r.ok) {
         rootData = await r.json();
         localStorage.setItem(LS_KEY, JSON.stringify(rootData));
-        isReadOnly = false;
-        recordSync('load', 'Lokálny server');
         console.log('[KJ] Loaded from local server');
         return;
       }
@@ -1534,8 +1526,6 @@ async function loadData() {
       if (raw) {
         rootData = raw;
         localStorage.setItem(LS_KEY, JSON.stringify(rootData));
-        isReadOnly = false;
-        recordSync('load', 'Google Drive');
         console.log('[KJ] Loaded from Google Drive');
         return;
       }
@@ -1545,46 +1535,19 @@ async function loadData() {
       if (raw) {
         rootData = raw;
         localStorage.setItem(LS_KEY, JSON.stringify(rootData));
-        isReadOnly = false;
-        recordSync('load', 'GitHub');
         console.log('[KJ] Loaded from GitHub');
         return;
       }
     }
-  } catch(e) {
-    console.warn('[KJ] Remote load failed:', e.message);
-    if (useRemote) {
-      // Remote configured but failed — use localStorage as read-only cache
-      const ls = localStorage.getItem(LS_KEY);
-      if (ls) {
-        rootData = JSON.parse(ls);
-        isReadOnly = true;
-        setSyncStatus('err', 'Offline — len na čítanie');
-        showReadOnlyBanner(e.message);
-        console.warn('[KJ] Using localStorage in read-only mode');
-        if (!rootData.users)    rootData.users = [];
-        if (!rootData.userData) rootData.userData = {};
-        return;
-      }
-      throw new Error('Žiadne dáta dostupné: ' + e.message);
-    }
-  }
-
-  // No remote configured — localStorage is the primary store
+  } catch(e) { console.warn('[KJ] Remote load failed, falling back to localStorage:', e.message); }
   const ls = localStorage.getItem(LS_KEY);
   rootData = ls ? JSON.parse(ls) : emptyRoot();
-  isReadOnly = false;
-  console.log('[KJ] Loaded from localStorage (no remote configured)');
+  console.log('[KJ] Loaded from localStorage');
   if (!rootData.users)    rootData.users = [];
   if (!rootData.userData) rootData.userData = {};
 }
 
 async function saveData() {
-  if (isReadOnly) {
-    setSyncStatus('err', 'Read-only — bez pripojenia');
-    showReadOnlyBanner('Nie je možné uložiť — aplikácia je v režime len na čítanie.');
-    return;
-  }
   localStorage.setItem(LS_KEY, JSON.stringify(rootData));
   setSyncStatus('saving');
   try {
@@ -1601,82 +1564,6 @@ async function saveData() {
 
 const debouncedSave = () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveData, 600); };
 
-
-
-// ══════════════════════════════════════════════════
-// SYNC STATUS + READ-ONLY MODE
-// ══════════════════════════════════════════════════
-function recordSync(type, source) {
-  lastSyncTime = new Date().toISOString();
-  const label = (type === 'save' ? '💾 ' : '📥 ') + source + ' ' + new Date().toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'});
-  localStorage.setItem('knjazd_last_sync', JSON.stringify({ time: lastSyncTime, label }));
-  setSyncStatus('ok', label);
-  updateSyncDisplay();
-}
-
-function loadLastSync() {
-  const s = JSON.parse(localStorage.getItem('knjazd_last_sync')||'null');
-  if (s) { lastSyncTime = s.time; }
-  return s;
-}
-
-function updateSyncDisplay() {
-  const s = loadLastSync();
-  if (!s) return;
-  const timeAgo = formatTimeAgo(new Date(s.time));
-  const tip = 'Posledná synchronizácia: ' + new Date(s.time).toLocaleString('sk-SK');
-  // Update sidebar footer
-  const syncLbl = $('syncLabel');
-  if (syncLbl && !isReadOnly) syncLbl.title = tip;
-  // Update storage panel if visible
-  const sp = $('storagePanel');
-  if (sp && sp.innerHTML.includes('alert')) {
-    const syncDiv = sp.querySelector('.sync-time-info');
-    if (syncDiv) syncDiv.textContent = 'Posledná sync: ' + timeAgo;
-  }
-}
-
-function formatTimeAgo(date) {
-  const diff = Math.floor((Date.now() - date) / 1000);
-  if (diff < 60)   return 'pred ' + diff + 's';
-  if (diff < 3600) return 'pred ' + Math.floor(diff/60) + 'min';
-  if (diff < 86400)return 'pred ' + Math.floor(diff/3600) + 'h';
-  return date.toLocaleDateString('sk-SK');
-}
-
-function showReadOnlyBanner(reason) {
-  let banner = $('readOnlyBanner');
-  if (!banner) {
-    banner = document.createElement('div');
-    banner.id = 'readOnlyBanner';
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c0392b;color:#fff;padding:8px 16px;font-size:0.82rem;z-index:9998;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.3)';
-    banner.innerHTML = '<span>⚠️ <strong>Režim len na čítanie</strong> — zmeny sa neuložia</span><div style="display:flex;gap:8px;align-items:center"><button onclick="forceReload()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:5px;padding:3px 10px;cursor:pointer;font-family:inherit;font-size:0.79rem;white-space:nowrap">🔄 Obnoviť</button><button onclick="dismissReadOnlyBanner()" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:1rem">✕</button></div>';
-    document.body.prepend(banner);
-    // Push content down
-    const main = document.querySelector('.main');
-    if (main) main.style.paddingTop = '40px';
-  }
-}
-
-function dismissReadOnlyBanner() {
-  const b = $('readOnlyBanner');
-  if (b) { b.remove(); const main=document.querySelector('.main'); if(main) main.style.paddingTop=''; }
-}
-
-async function forceReload() {
-  dismissReadOnlyBanner();
-  setSyncStatus('saving');
-  try {
-    isReadOnly = false;
-    await loadData();
-    if (!isReadOnly) {
-      toast('Dáta obnovené', 'ok');
-      showPage(curPage);
-    }
-  } catch(e) {
-    toast('Obnovenie zlyhalo: ' + e.message, 'err');
-  }
-}
 
 // ══════════════════════════════════════════════════
 // GOOGLE DRIVE API (OAuth 2.0)
@@ -1868,40 +1755,36 @@ const ghBase = () => `https://api.github.com/repos/${ghCfg.owner}/${ghCfg.repo}/
 const ghHdr  = () => ({ 'Authorization':'Bearer '+ghCfg.token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' });
 
 async function ghGet() {
-  console.log('[KJ] ghGet: fetching...');
-  const r = await fetch(ghBase()+'?ref='+ghCfg.branch, {
-    headers: ghHdr(),
-    cache: 'no-store'   // never serve from browser HTTP cache
-  });
+  console.log('[KJ] ghGet: fetching from GitHub...');
+  const r = await fetch(ghBase()+'?ref='+ghCfg.branch, { headers:ghHdr() });
   if (r.status===404) return null;
-  if (r.status===401) throw new Error('Token neplatný alebo expirovaný (401)');
-  if (r.status===403) throw new Error('Prístup zamietnutý — skontrolujte oprávnenia tokenu (403)');
+  if (r.status===401) throw new Error('Token neplatny alebo expirovany (401)');
+  if (r.status===403) throw new Error('Pristup zamietnuty - skontrolujte opravnenia tokenu (403)');
   if (!r.ok) throw new Error('GitHub GET zlyhal: HTTP '+r.status);
   const j = await r.json();
-  console.log('[KJ] ghGet response keys:', Object.keys(j).join(','));
   console.log('[KJ] ghGet: type='+j.type+' size='+j.size+' encoding='+j.encoding+' content_len='+(j.content?.length||0));
 
-  // GitHub API always returns base64 content for files < 1MB
-  // For larger files it returns content:'' + download_url
-  if (j.content && j.content.trim() !== '') {
+  let jsonText;
+  // GitHub returns empty content + download_url for files >1MB
+  if (!j.content || j.content.trim() === '') {
+    if (j.download_url) {
+      console.log('[KJ] ghGet: content empty, fetching via download_url');
+      const dr = await fetch(j.download_url);
+      if (!dr.ok) throw new Error('GitHub download_url failed: HTTP '+dr.status);
+      jsonText = await dr.text();
+    } else {
+      throw new Error('GitHub vrátil prázdny obsah súboru bez download_url');
+    }
+  } else {
+    // Normal case: decode base64 content UTF-8 safely
     const _raw = atob(j.content.replace(/\n/g,''));
     const _buf = Uint8Array.from(_raw, ch => ch.charCodeAt(0));
-    const jsonText = new TextDecoder('utf-8').decode(_buf);
-    console.log('[KJ] ghGet OK, length='+jsonText.length);
-    const d = JSON.parse(jsonText);
-    d._sha = j.sha; return d;
+    jsonText = new TextDecoder('utf-8').decode(_buf);
   }
 
-  // Fallback: fetch raw content directly via raw.githubusercontent.com
-  // This avoids the download_url CORS issue
-  const rawUrl = `https://raw.githubusercontent.com/${ghCfg.owner}/${ghCfg.repo}/${ghCfg.branch}/${ghCfg.path}`;
-  console.log('[KJ] ghGet: content empty, trying raw URL:', rawUrl);
-  const rr = await fetch(rawUrl, { cache:'no-store', headers:{'Authorization':'Bearer '+ghCfg.token} });
-  if (!rr.ok) throw new Error('GitHub raw fetch failed: HTTP '+rr.status+' — súbor data.json neexistuje alebo je prázdny');
-  const jsonText = await rr.text();
-  console.log('[KJ] ghGet raw OK, length='+jsonText.length);
+  console.log('[KJ] ghGet: jsonText length='+jsonText.length+' first80='+jsonText.substring(0,80));
   const d = JSON.parse(jsonText);
-  d._sha = j.sha || null; return d;
+  d._sha = j.sha; return d;
 }
 
 async function ghPut(data) {
@@ -2615,10 +2498,7 @@ function renderSettings(){
   const m=mode();
   const ml={local:'🖥️ Lokálny server (data.json)',gdrive:'🔵 Google Drive'+(gdUser?' — '+gdUser.name:''),github:'🐙 GitHub repozitár',ls:'💾 Len localStorage'};
   const mc={local:'ai',gdrive:'as',github:'as',ls:'aw'};
-  const _lastSync=loadLastSync();
-  const _syncInfo=_lastSync?`<div class="sync-time-info tm mt2">Posledná sync: ${formatTimeAgo(new Date(_lastSync.time))} (${new Date(_lastSync.time).toLocaleString('sk-SK')})</div>`:'<div class="tm mt2">Ešte nebola synchronizácia</div>';
-  const _roInfo=isReadOnly?`<div class="alert ad mt2">⚠️ Aplikácia je v režime len na čítanie — bez pripojenia k ${ml[m]}</div>`:'';
-  $('storagePanel').innerHTML=`<div class="alert ${mc[m]}">${ml[m]}${isReadOnly?' — <strong>OFFLINE</strong>':''}</div>${_roInfo}${_syncInfo}<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-secondary btn-sm" onclick="openGithubSetup()">⚙️ Nastavenia</button>${m!=='ls'?`<button class="btn btn-primary btn-sm" onclick="forceReload()">🔄 Obnoviť dáta</button>`:''}</div>`;
+  $('storagePanel').innerHTML=`<div class="alert ${mc[m]}">${ml[m]}</div><p class="tm mb2">Aktuálny spôsob ukladania.</p><button class="btn btn-secondary btn-sm" onclick="openGithubSetup()">⚙️ Nastavenia ukladania</button>`;
   // Render events list
   if (!db.events) db.events = [];
   const _evtYear = $('calFilterYear')?.value || '';
@@ -3764,7 +3644,6 @@ async function init() {
       .catch(err => console.warn('SW registration failed:', err));
   }
   gdHandleRedirect(); // handle OAuth callback before anything else
-  loadLastSync();
   await loadData();
   // Migrate v1 flat format → v2 multi-user format
   if (rootData.vehicles && !rootData.users) {
