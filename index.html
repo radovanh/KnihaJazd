@@ -1680,7 +1680,8 @@ function forceUseLS() {
 // GITHUB API
 // ══════════════════════════════════════════════════
 const ghBase = () => `https://api.github.com/repos/${ghCfg.owner}/${ghCfg.repo}/contents/${ghCfg.path}`;
-const ghHdr  = () => ({ 'Authorization':'Bearer '+ghCfg.token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' });
+const ghHdr    = () => ({ 'Authorization':'Bearer '+ghCfg.token, 'Accept':'application/vnd.github+json' });
+const ghHdrPut = () => ({ 'Authorization':'Bearer '+ghCfg.token, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' });
 
 async function ghGet() {
   const r = await fetch(ghBase()+'?ref='+ghCfg.branch, { headers:ghHdr() });
@@ -1689,17 +1690,24 @@ async function ghGet() {
   if (r.status===403) throw new Error('Pristup zamietnuty - skontrolujte opravnenia tokenu (403)');
   if (!r.ok) throw new Error('GitHub GET zlyhal: HTTP '+r.status);
   const j = await r.json();
-  const d = JSON.parse(atob(j.content.replace(/\n/g,'')));
+  // UTF-8 safe decode
+  const _raw = atob(j.content.replace(/\n/g,''));
+  const _buf = Uint8Array.from(_raw, ch => ch.charCodeAt(0));
+  const d = JSON.parse(new TextDecoder('utf-8').decode(_buf));
   d._sha = j.sha; return d;
 }
 
 async function ghPut(data) {
   const sha = data._sha;
   const p = JSON.parse(JSON.stringify(data)); delete p._sha;
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(p,null,2))));
+  // UTF-8 safe encode
+  const _jsonStr = JSON.stringify(p,null,2);
+  const _bytes = new TextEncoder().encode(_jsonStr);
+  const _binary = Array.from(_bytes, b => String.fromCharCode(b)).join('');
+  const content = btoa(_binary);
   const body = { message:'Aktualizacia Knihy Jazd '+new Date().toISOString().slice(0,16).replace('T',' '), content, branch:ghCfg.branch };
   if (sha) body.sha = sha;
-  const r = await fetch(ghBase(), { method:'PUT', headers:ghHdr(), body:JSON.stringify(body) });
+  const r = await fetch(ghBase(), { method:'PUT', headers:ghHdrPut(), body:JSON.stringify(body) });
   if (!r.ok) {
     const e = await r.json().catch(()=>({}));
     const hint = r.status===409 ? ' (SHA konflikt - znovu nacitajte stranku)'
