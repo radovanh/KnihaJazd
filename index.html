@@ -3757,13 +3757,11 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
 
 async function init() {
-  // Unregister all service workers to prevent interference with network requests
+  // Register PWA service worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(regs => {
-      regs.forEach(reg => {
-        reg.unregister().then(ok => console.log('[KJ] SW unregistered:', reg.scope, ok));
-      });
-    });
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.warn('SW registration failed:', err));
   }
   gdHandleRedirect(); // handle OAuth callback before anything else
   loadLastSync();
