@@ -184,6 +184,7 @@
   .cal-day.weekend { background:rgba(230,126,34,0.08); }
   .cal-day.holiday { background:rgba(192,57,43,0.1); }
   .cal-day.vacation { background:rgba(142,68,173,0.09); }
+  .cal-day.cal-event { background:rgba(5,161,194,0.1); }
   .cal-day.has-trip { font-weight:700; color:var(--accent); }
   .cal-day.has-trip::after { content:''; width:5px; height:5px; border-radius:50%; background:var(--accent); position:absolute; bottom:3px; }
   .cal-day.today { border-color:var(--accent); font-weight:700; }
@@ -646,6 +647,7 @@
               <span class="cal-legend-item"><span class="cal-swatch" style="background:rgba(230,126,34,0.2)"></span> Víkend</span>
               <span class="cal-legend-item"><span class="cal-swatch" style="background:rgba(192,57,43,0.2)"></span> Sviatok</span>
               <span class="cal-legend-item"><span class="cal-swatch" style="background:rgba(142,68,173,0.15)"></span> Dovolenka</span>
+              <span class="cal-legend-item"><span class="cal-swatch" style="background:rgba(5,161,194,0.15)"></span> Udalosť</span>
             </div>
           </div>
         </div>
@@ -758,6 +760,14 @@
               </div>
               <div class="stg-scroll" id="vacationList"></div>
             </div>
+          </div>
+          <!-- Events card — full width -->
+          <div class="card" style="margin-top:17px">
+            <div class="card-header">
+              <h3>📋 Udalosti</h3>
+              <button class="btn btn-primary btn-sm" onclick="openEventModal()">+ Pridať</button>
+            </div>
+            <div class="stg-scroll" id="eventList"></div>
           </div>
         </div>
 
@@ -1071,6 +1081,40 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('holidayModal')">Zrušiť</button>
       <button class="btn btn-primary" onclick="saveHoliday()">Uložiť</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EVENT MODAL ══ -->
+<div class="modal-overlay" id="eventModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><h3 id="evtModalTitle">Nová udalosť</h3><button class="close-btn" onclick="closeModal('eventModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Názov udalosti *</label><input type="text" id="fe_name" placeholder="napr. Lekárska prehliadka, Školenie..."></div>
+        <div class="form-group">
+          <label>Kategória</label>
+          <select id="fe_cat">
+            <option value="">— vybrať —</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Od *</label><input type="date" id="fe_start"></div>
+          <div class="form-group"><label>Do *</label><input type="date" id="fe_end"></div>
+        </div>
+        <div class="form-group">
+          <label>Typ</label>
+          <select id="fe_type">
+            <option value="full">Celý deň / viac dní</option>
+            <option value="morning">Poldeň — dopoludnie</option>
+            <option value="afternoon">Poldeň — popoludnie</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('eventModal')">Zrušiť</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Uložiť</button>
     </div>
   </div>
 </div>
@@ -1397,7 +1441,7 @@ const udb = () => {
   if (!d) return d;
   // Auto-initialise fields missing in older records (migration guard)
   const defaults = { vacations:[], costs:[], holidays:[], vehicles:[], places:[],
-                     routes:[], tripReasons:[], trips:[], fuelLogs:[], ignoredWarnings:[] };
+                     routes:[], tripReasons:[], trips:[], fuelLogs:[], events:[], ignoredWarnings:[] };
   Object.keys(defaults).forEach(k => { if (!d[k]) d[k] = defaults[k]; });
   return d;
 };
@@ -1407,6 +1451,9 @@ const isHD    = d  => udb().holidays.some(h => h.date === d);
 const hdName  = d  => (udb().holidays.find(h => h.date === d)||{}).name || null;
 const isVac   = d  => { const db=udb(); if(!db.vacations) return false; return db.vacations.some(v=>d>=v.start&&d<=v.end); };
 const vacName = d  => { const db=udb(); if(!db.vacations) return null; const v=db.vacations.find(x=>d>=x.start&&d<=x.end); return v?v.name||'Dovolenka':null; };
+const isEvent   = d  => { const db=udb(); if(!db.events) return false; return db.events.some(e=>d>=e.start&&d<=e.end); };
+const eventName = d  => { const db=udb(); if(!db.events) return null; const e=db.events.find(x=>d>=x.start&&d<=x.end); return e?e.name:null; };
+const EVENT_CATS = ['🏥 Lekár / PN','🎓 Školenie','🏢 Pracovná cesta','🔧 Servis vozidla','📋 Iné'];
 const nextId  = a  => a.length ? Math.max(...a.map(x=>x.id))+1 : 1;
 const $       = id => document.getElementById(id);
 const popSel  = (id, items) => $(id).innerHTML = items.map(i=>`<option value="${i.v}">${i.l}</option>`).join('');
@@ -1420,7 +1467,7 @@ function openModal(id) {
 }
 const toast   = (msg, t='ok') => { const el=$('toast'); el.textContent=msg; el.className='show t'+t; setTimeout(()=>el.className='',2600); };
 const emptyRoot = () => ({ users:[], userData:{} });
-const emptyUser = () => ({ vehicles:[], places:[], routes:[], tripReasons:[], holidays:[], trips:[], fuelLogs:[], costs:[], vacations:[], ignoredWarnings:[] });
+const emptyUser = () => ({ vehicles:[], places:[], routes:[], tripReasons:[], holidays:[], trips:[], fuelLogs:[], costs:[], vacations:[], events:[], ignoredWarnings:[] });
 
 function showConfirm(text, cb) {
   $('confirmText').textContent = text;
@@ -1854,6 +1901,7 @@ function warnKey(e) {
     const cat = e.msg.includes('víkend')   ? 'weekend'
               : e.msg.includes('sviatok')   ? 'holiday'
               : e.msg.includes('dovolenk')  ? 'vacation'
+              : e.msg.includes('udalosť')   ? 'event'
               : e.msg.includes('tankovanie')? 'fuel'
               : e.msg.includes('Tachometer')? 'odo'
               : e.msg.includes('Koniec tach')? 'odo_inv'
@@ -1901,6 +1949,8 @@ function validate() {
       errs.push({type:'warning',tid:t.id,msg:`${pfx}: Označené tankovanie, chýba záznam PHM`});
     const vn = vacName(t.startDate);
     if (vn) errs.push({type:'warning',tid:t.id,msg:`${pfx}: Jazda počas dovolenky — ${vn}`});
+    const en = eventName(t.startDate);
+    if (en) errs.push({type:'warning',tid:t.id,msg:`${pfx}: Zhoduje sa s udalosťou — ${en}`});
   });
   db.fuelLogs.forEach(f => {
     if (!db.trips.some(t=>t.ecv===f.ecv&&t.startDate===f.date))
@@ -1964,21 +2014,24 @@ function renderCalendar() {
     const dow = (i % 7);
     const isWEnd = dow >= 5;
     const isHol  = isHD(dateStr);
-    const isVacD = !isOther && isVac(dateStr);
+    const isVacD  = !isOther && isVac(dateStr);
+    const isEvtD  = !isOther && isEvent(dateStr);
     const hasTrip= tripDays.has(dateStr);
     const isTdy  = dateStr === today;
 
     let cls = 'cal-day';
     if(isOther)  cls += ' other-month';
-    if(isVacD)   cls += ' vacation';
+    if(isEvtD)   cls += ' cal-event';
+    else if(isVacD) cls += ' vacation';
     else if(isHol) cls += ' holiday';
     else if(isWEnd) cls += ' weekend';
     if(hasTrip)  cls += ' has-trip';
     if(isTdy)    cls += ' today';
 
     const tipParts = [];
-    if(isHol) tipParts.push(hdName(dateStr));
+    if(isHol)  tipParts.push(hdName(dateStr));
     if(isVacD) tipParts.push(vacName(dateStr));
+    if(isEvtD) tipParts.push(eventName(dateStr));
     if(hasTrip){
       const ts = db.trips.filter(t=>t.startDate===dateStr);
       ts.forEach(t=>tipParts.push(`${t.startPlace||t.startAddress.split(',')[0]} → ${t.endPlace||t.endAddress.split(',')[0]} (${t.endOdo-t.startOdo} km)`));
@@ -2155,6 +2208,7 @@ function onDateChange() {
   if(isWE(d)) f.innerHTML+='<span class="badge bo">Víkend</span>';
   const hn=hdName(d); if(hn) f.innerHTML+=`<span class="badge br">${hn}</span>`;
   const vn=vacName(d); if(vn) f.innerHTML+=`<span class="badge" style="background:#e8d5f5;color:#5a2d82">${vn}</span>`;
+  const en=eventName(d); if(en) f.innerHTML+=`<span class="badge" style="background:#cff4fc;color:#055160">${en}</span>`;
   // recalc end time if a route with duration is selected
   if($('f_route').value) onRouteChange();
 }
@@ -2365,7 +2419,8 @@ function renderSettings(){
     const _savedYear=_yearSel.value;
     const _allYears=[...new Set([
       ...db.holidays.map(h=>h.date?.substring(0,4)),
-      ...db.vacations.map(v=>v.start?.substring(0,4))
+      ...db.vacations.map(v=>v.start?.substring(0,4)),
+      ...(db.events||[]).map(e=>e.start?.substring(0,4))
     ].filter(Boolean))].sort((a,b)=>b-a);
     _yearSel.innerHTML='<option value="">Všetky roky</option>'+_allYears.map(y=>`<option value="${y}">${y}</option>`).join('');
     if(_savedYear) _yearSel.value=_savedYear;
@@ -2393,6 +2448,25 @@ function renderSettings(){
   const ml={local:'🖥️ Lokálny server (data.json)',gdrive:'🔵 Google Drive'+(gdUser?' — '+gdUser.name:''),github:'🐙 GitHub repozitár',ls:'💾 Len localStorage'};
   const mc={local:'ai',gdrive:'as',github:'as',ls:'aw'};
   $('storagePanel').innerHTML=`<div class="alert ${mc[m]}">${ml[m]}</div><p class="tm mb2">Aktuálny spôsob ukladania.</p><button class="btn btn-secondary btn-sm" onclick="openGithubSetup()">⚙️ Nastavenia ukladania</button>`;
+  // Render events list
+  if (!db.events) db.events = [];
+  const _evtYear = $('calFilterYear')?.value || '';
+  const _etypes  = { full:'', morning:'🌅 dopoludnie', afternoon:'🌇 popoludnie' };
+  const _evFiltered = [...db.events]
+    .filter(e => !_evtYear || e.start?.startsWith(_evtYear) || e.end?.startsWith(_evtYear))
+    .sort((a,b) => a.start > b.start ? 1 : -1);
+  $('eventList').innerHTML = _evFiltered.map(e => {
+    const typeLabel = e.type && e.type !== 'full' ? ` <span class="badge bo">${_etypes[e.type]||e.type}</span>` : '';
+    const catLabel  = e.cat ? ` <span class="badge bb" style="font-size:0.67rem">${e.cat}</span>` : '';
+    return `<div class="li" style="font-size:0.8rem">
+      <span style="flex:1">${fmtDate(e.start)} – ${fmtDate(e.end)} — <strong>${e.name}</strong>${catLabel}${typeLabel}</span>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-secondary btn-sm" onclick="openEventModal(${e.id})">✏️</button>
+        <button class="btn btn-danger btn-sm"    onclick="deleteEvent(${e.id})">🗑</button>
+      </div>
+    </div>`;
+  }).join('') || '<div class="tm">Žiadne udalosti</div>';
+
   // Restore last active settings tab
   const lastTab = localStorage.getItem('knjazd_stgtab') || 'vehicles';
   showSettingsTab(lastTab);
@@ -3093,6 +3167,62 @@ function syncMobileSyncStatus(state, label) {
 }
 
 
+
+
+// ══════════════════════════════════════════════════
+// EVENTS (generic calendar events)
+// ══════════════════════════════════════════════════
+function openEventModal(evtId) {
+  eIds.event = evtId !== undefined && evtId !== null ? evtId : null;
+  $('evtModalTitle').textContent = eIds.event !== null ? 'Upraviť udalosť' : 'Nová udalosť';
+  // Populate category select
+  $('fe_cat').innerHTML = '<option value="">— vybrať —</option>' +
+    EVENT_CATS.map(c => `<option value="${c}">${c}</option>`).join('');
+  if (eIds.event !== null) {
+    const e = udb().events?.find(x => x.id === eIds.event);
+    if (e) {
+      $('fe_name').value  = e.name  || '';
+      $('fe_cat').value   = e.cat   || '';
+      $('fe_start').value = e.start || '';
+      $('fe_end').value   = e.end   || '';
+      $('fe_type').value  = e.type  || 'full';
+    }
+  } else {
+    $('fe_name').value  = '';
+    $('fe_cat').value   = '';
+    $('fe_start').value = '';
+    $('fe_end').value   = '';
+    $('fe_type').value  = 'full';
+  }
+  openModal('eventModal');
+}
+
+function saveEvent() {
+  const name  = $('fe_name').value.trim();
+  const cat   = $('fe_cat').value;
+  const start = $('fe_start').value;
+  const end   = $('fe_end').value;
+  const type  = $('fe_type').value || 'full';
+  if (!name)         { toast('Zadajte názov udalosti', 'err'); return; }
+  if (!start || !end){ toast('Vyplňte dátumy', 'err'); return; }
+  if (end < start)   { toast('Koniec musí byť po začiatku', 'err'); return; }
+  const db = udb(); if (!db.events) db.events = [];
+  const evtId = eIds.event !== null ? eIds.event
+              : (db.events.length ? Math.max(...db.events.map(e=>e.id||0))+1 : 1);
+  const evt = { id:evtId, name, cat:cat||null, start, end, type };
+  if (eIds.event !== null) {
+    const idx = db.events.findIndex(e => e.id === eIds.event);
+    if (idx >= 0) db.events[idx] = evt; else db.events.push(evt);
+  } else db.events.push(evt);
+  debouncedSave(); closeModal('eventModal'); renderSettings(); toast('Udalosť uložená', 'ok');
+}
+
+function deleteEvent(evtId) {
+  showConfirm('Naozaj zmazať túto udalosť?', () => {
+    udb().events = udb().events.filter(e => e.id !== evtId);
+    debouncedSave(); renderSettings();
+  });
+}
 
 // ══════════════════════════════════════════════════
 // IMPORT HOLIDAYS FROM GOOGLE CALENDAR
