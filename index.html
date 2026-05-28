@@ -1745,7 +1745,9 @@ async function ghGet() {
   if (r.status===403) throw new Error('Pristup zamietnuty - skontrolujte opravnenia tokenu (403)');
   if (!r.ok) throw new Error('GitHub GET zlyhal: HTTP '+r.status);
   const j = await r.json();
-  const d = JSON.parse(atob(j.content.replace(/\n/g,'')));
+  // Decode UTF-8: mirror of btoa(unescape(encodeURIComponent(...))) used in ghPut
+  const raw = atob(j.content.replace(/\n/g,''));
+  const d = JSON.parse(decodeURIComponent(escape(raw)));
   d._sha = j.sha; return d;
 }
 
