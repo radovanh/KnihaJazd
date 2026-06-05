@@ -695,8 +695,9 @@
           <input type="date" id="repFrom" onchange="renderReport()">
           <label style="font-size:0.82rem;color:var(--text2)">Do:</label>
           <input type="date" id="repTo" onchange="renderReport()">
-          <button class="btn btn-secondary btn-sm" onclick="setRepMonth(-1)">◀ Prev. mesiac</button>
+          <button class="btn btn-secondary btn-sm" onclick="setRepMonth(-1)">◀ Predch. mesiac</button>
           <button class="btn btn-secondary btn-sm" onclick="setRepMonth(0)">Tento mesiac</button>
+          <button class="btn btn-secondary btn-sm" onclick="setRepMonth(1)">Nasl. mesiac ▶</button>
           <button class="btn btn-primary btn-sm" onclick="printReport()">🖨️ Tlačiť / PDF</button>
         </div>
         <div id="reportContent"></div>
@@ -2815,8 +2816,15 @@ function deleteCost(id){showConfirm(`Naozaj zmazať náklad #${id}?`,()=>{udb().
 // REPORT
 // ══════════════════════════════════════════════════
 function setRepMonth(offset) {
-  const d = new Date(); d.setDate(1);
-  if (offset !== 0) d.setMonth(d.getMonth() + offset);
+  let d;
+  if (offset === 0) {
+    d = new Date();
+  } else {
+    const cur = $('repFrom').value;
+    d = cur ? new Date(cur + 'T00:00:00') : new Date();
+    d.setMonth(d.getMonth() + offset);
+  }
+  d.setDate(1);
   const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0');
   const last=new Date(y, d.getMonth()+1, 0).getDate();
   $('repFrom').value = `${y}-${m}-01`;
