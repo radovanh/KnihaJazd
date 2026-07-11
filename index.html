@@ -695,9 +695,8 @@
           <input type="date" id="repFrom" onchange="renderReport()">
           <label style="font-size:0.82rem;color:var(--text2)">Do:</label>
           <input type="date" id="repTo" onchange="renderReport()">
-          <button class="btn btn-secondary btn-sm" onclick="setRepMonth(-1)">◀ Predch. mesiac</button>
+          <button class="btn btn-secondary btn-sm" onclick="setRepMonth(-1)">◀ Prev. mesiac</button>
           <button class="btn btn-secondary btn-sm" onclick="setRepMonth(0)">Tento mesiac</button>
-          <button class="btn btn-secondary btn-sm" onclick="setRepMonth(1)">Nasl. mesiac ▶</button>
           <button class="btn btn-primary btn-sm" onclick="printReport()">🖨️ Tlačiť / PDF</button>
         </div>
         <div id="reportContent"></div>
@@ -2083,8 +2082,25 @@ function validate() {
     if (en) errs.push({type:'warning',tid:t.id,msg:`${pfx}: Zhoduje sa s udalosťou — ${en}`});
   });
   db.fuelLogs.forEach(f => {
-    if (!db.trips.some(t=>t.ecv===f.ecv&&t.startDate===f.date))
-      errs.push({type:'warning',msg:`PHM ${fmtDate(f.date)} (${f.place}): žiadna jazda pre ${f.ecv}`});
+    // Check 1: a trip exists on the same day for the same vehicle
+    const dayTrips = db.trips.filter(t => t.ecv === f.ecv && t.startDate === f.date);
+    if (!dayTrips.length) {
+      errs.push({type:'warning', msg:`PHM ${fmtDate(f.date)} (${f.place}): žiadna jazda pre ${f.ecv}`});
+      return;
+    }
+    // Check 2: fuel odometer fits within the range of at least one trip that day
+    // Refuelling odometer must be between startOdo and endOdo of some trip
+    const odo = f.odometer;
+    if (odo) {
+      const fitsAnyTrip = dayTrips.some(t => odo >= t.startOdo && odo <= t.endOdo);
+      if (!fitsAnyTrip) {
+        // Build a readable list of trip ranges
+        const ranges = dayTrips.map(t => `${t.startOdo}–${t.endOdo} km`).join(', ');
+        errs.push({type:'warning',
+          msg:`PHM ${fmtDate(f.date)} (${f.place}): tachometer tankovania ${odo.toLocaleString('sk')} km nespadá do rozsahu ${dayTrips.length===1?'jazdy':'jázd'} (${ranges})`
+        });
+      }
+    }
   });
   return errs;
 }
@@ -2816,15 +2832,8 @@ function deleteCost(id){showConfirm(`Naozaj zmazať náklad #${id}?`,()=>{udb().
 // REPORT
 // ══════════════════════════════════════════════════
 function setRepMonth(offset) {
-  let d;
-  if (offset === 0) {
-    d = new Date();
-  } else {
-    const cur = $('repFrom').value;
-    d = cur ? new Date(cur + 'T00:00:00') : new Date();
-    d.setMonth(d.getMonth() + offset);
-  }
-  d.setDate(1);
+  const d = new Date(); d.setDate(1);
+  if (offset !== 0) d.setMonth(d.getMonth() + offset);
   const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0');
   const last=new Date(y, d.getMonth()+1, 0).getDate();
   $('repFrom').value = `${y}-${m}-01`;
