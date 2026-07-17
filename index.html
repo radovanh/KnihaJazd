@@ -127,6 +127,14 @@
   /* ── PAGES ── */
   .page { display:none; } .page.active { display:block; }
   .filter-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:13px; }
+  .month-nav-btn {
+    width:30px; height:32px; border:1.5px solid var(--border); border-radius:7px;
+    background:var(--surface); color:var(--text2); font-size:1.1rem; font-weight:600;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:all 0.12s; line-height:1; padding:0; font-family:inherit; flex-shrink:0;
+  }
+  .month-nav-btn:hover { background:var(--surface2); color:var(--accent); border-color:var(--accent); }
+  .month-nav-btn:active { transform:scale(0.93); }
   .filter-bar input, .filter-bar select { padding:6px 10px; font-size:0.825rem; }
 
   /* ── VALIDATION ── */
@@ -660,7 +668,11 @@
       </div>
       <div class="page" id="page-trips">
         <div class="filter-bar">
-          <input type="month" id="filterMonth" onchange="renderTrips()">
+          <div style="display:flex;align-items:center;gap:3px">
+            <button class="month-nav-btn" onclick="shiftTripsMonth(-1)" title="Predchádzajúci mesiac">‹</button>
+            <input type="month" id="filterMonth" onchange="renderTrips()">
+            <button class="month-nav-btn" onclick="shiftTripsMonth(1)" title="Nasledujúci mesiac">›</button>
+          </div>
           <select id="filterVehicle" onchange="renderTrips()"><option value="">Všetky vozidlá</option></select>
           <input type="text" placeholder="Hľadať…" id="filterSearch" oninput="renderTrips()" style="flex:1;max-width:210px">
         </div>
@@ -3710,6 +3722,17 @@ window.addEventListener('appinstalled', () => {
   toast('Aplikácia úspešne nainštalovaná', 'ok');
 });
 
+
+function shiftTripsMonth(delta) {
+  const el = $('filterMonth');
+  if (!el) return;
+  let [y, m] = el.value ? el.value.split('-').map(Number) : [new Date().getFullYear(), new Date().getMonth()+1];
+  m += delta;
+  if (m > 12) { m = 1;  y++; }
+  if (m < 1)  { m = 12; y--; }
+  el.value = y + '-' + String(m).padStart(2, '0');
+  renderTrips();
+}
 // ══════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════
