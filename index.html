@@ -669,10 +669,9 @@
       <div class="page" id="page-trips">
         <div class="filter-bar">
           <div style="display:flex;align-items:center;gap:3px">
-            <button class="month-nav-btn" onclick="monthPickerShift('fm',-1,renderTrips)" title="Predchádzajúci mesiac">‹</button>
-            <select id="fm_m" onchange="renderTrips()" style="width:108px"></select>
-            <input type="number" id="fm_y" onchange="renderTrips()" min="2020" max="2035" style="width:64px;text-align:center">
-            <button class="month-nav-btn" onclick="monthPickerShift('fm',1,renderTrips)" title="Nasledujúci mesiac">›</button>
+            <button class="month-nav-btn" onclick="shiftTripsMonth(-1)" title="Predchádzajúci mesiac">‹</button>
+            <input type="month" id="filterMonth" onchange="renderTrips()">
+            <button class="month-nav-btn" onclick="shiftTripsMonth(1)" title="Nasledujúci mesiac">›</button>
           </div>
           <select id="filterVehicle" onchange="renderTrips()"><option value="">Všetky vozidlá</option></select>
           <input type="text" placeholder="Hľadať…" id="filterSearch" oninput="renderTrips()" style="flex:1;max-width:210px">
@@ -687,12 +686,7 @@
       <div class="page" id="page-costs">
         <div class="stats-grid" id="costsStats"></div>
         <div class="filter-bar">
-          <div style="display:flex;align-items:center;gap:3px">
-            <button class="month-nav-btn" onclick="monthPickerShift('cm',-1,renderCosts)" title="Predchádzajúci mesiac">‹</button>
-            <select id="cm_m" onchange="renderCosts()" style="width:108px"></select>
-            <input type="number" id="cm_y" onchange="renderCosts()" min="2020" max="2035" style="width:64px;text-align:center">
-            <button class="month-nav-btn" onclick="monthPickerShift('cm',1,renderCosts)" title="Nasledujúci mesiac">›</button>
-          </div>
+          <input type="month" id="costsMonth" onchange="renderCosts()">
           <select id="costsVehicle" onchange="renderCosts()"><option value="">Všetky vozidlá</option></select>
           <select id="costsType" onchange="renderCosts()"><option value="">Všetky typy</option></select>
         </div>
@@ -2024,8 +2018,6 @@ function showPage(page) {
   const titles={dashboard:'Prehľad',trips:'Evidencia jázd',fuel:'Evidencia PHM',costs:'Náklady na vozidlá',routes:'Trasy',places:'Miesta / Ciele',report:'Výkaz jázd',settings:'Nastavenia'};
   $('pageTitle').textContent = titles[page]||page;
   $('topAct').innerHTML = {trips:'<button class="btn btn-secondary" onclick="openQuickModal()" style="margin-right:4px">⚡ Rýchla jazda</button><button class="btn btn-primary" onclick="openTripModal()">＋ Nová jazda</button>',fuel:'<button class="btn btn-primary" onclick="openFuelModal()">＋ Tankovanie</button>',costs:'<button class="btn btn-primary" onclick="openCostModal()">＋ Nový náklad</button>',routes:'<button class="btn btn-primary" onclick="openRouteModal()">＋ Nová trasa</button>',places:'<button class="btn btn-primary" onclick="openPlaceModal()">＋ Nové miesto</button>'}[page]||'';
-  if (page === 'trips') initMonthPicker('fm', renderTrips);
-  if (page === 'costs') initMonthPicker('cm', renderCosts);
   ({dashboard:renderDashboard,trips:renderTrips,fuel:renderFuel,costs:renderCosts,routes:renderRoutes,places:renderPlaces,report:initReport,settings:renderSettings})[page]?.();
   updateMobileNav(page);
 }
@@ -2272,7 +2264,7 @@ function renderDashboard() {
 // TRIPS
 // ══════════════════════════════════════════════════
 function renderTrips() {
-  const db=udb(), month=monthPickerValue('fm'), ecvF=$('filterVehicle').value, srch=$('filterSearch').value.toLowerCase();
+  const db=udb(), month=$('filterMonth').value, ecvF=$('filterVehicle').value, srch=$('filterSearch').value.toLowerCase();
   const vf=$('filterVehicle'); while(vf.options.length>1) vf.remove(1);
   db.vehicles.forEach(v=>{const o=document.createElement('option');o.value=v.ecv;o.textContent=`${v.name} (${v.ecv})`;vf.appendChild(o);}); if(ecvF) vf.value=ecvF;
   let trips=[...db.trips].sort((a,b)=>(a.startDate+(a.startTime||'')<b.startDate+(b.startTime||''))?-1:1);
@@ -2744,7 +2736,7 @@ function getCosts() {
 function renderCosts() {
   const db = udb();
   if (!db.costs) db.costs = [];
-  const month = monthPickerValue('cm'), ecvF = $('costsVehicle').value, typeF = $('costsType').value;
+  const month = $('costsMonth').value, ecvF = $('costsVehicle').value, typeF = $('costsType').value;
 
   // populate vehicle filter
   const vf=$('costsVehicle'); while(vf.options.length>1) vf.remove(1);
@@ -3731,46 +3723,18 @@ window.addEventListener('appinstalled', () => {
 });
 
 
-// shiftTripsMonth replaced by monthPickerShift('fm', delta, renderTrips)
-
-function monthPickerValue(prefix) {
-  const m = $(`${prefix}_m`).value, y = $(`${prefix}_y`).value;
-  return (m && y) ? y + '-' + m : '';
-}
-
-function monthPickerSet(prefix, yyyymm) {
-  if (!yyyymm) { $(`${prefix}_m`).value=''; $(`${prefix}_y`).value=''; return; }
-  const [y,m] = yyyymm.split('-');
-  $(`${prefix}_m`).value = m;
-  $(`${prefix}_y`).value = y;
-}
-
-
-function initMonthPicker(prefix, cb) {
-  const mSel = $(`${prefix}_m`), yInp = $(`${prefix}_y`);
-  if (!mSel || mSel.options.length > 1) return; // already built
-  mSel.innerHTML = buildMonthSelect(prefix);
-  // Set to current month/year if empty
-  if (!mSel.value) {
-    const now = new Date();
-    mSel.value = String(now.getMonth()+1).padStart(2,'0');
-    yInp.value = now.getFullYear();
-  }
-}
-function monthPickerShift(prefix, delta, cb) {
-  let m = parseInt($(`${prefix}_m`).value||new Date().getMonth()+1);
-  let y = parseInt($(`${prefix}_y`).value||new Date().getFullYear());
+function shiftTripsMonth(delta) {
+  const el = $('filterMonth');
+  if (!el) return;
+  let [y, m] = el.value ? el.value.split('-').map(Number) : [new Date().getFullYear(), new Date().getMonth()+1];
   m += delta;
   if (m > 12) { m = 1;  y++; }
   if (m < 1)  { m = 12; y--; }
-  $(`${prefix}_m`).value = String(m).padStart(2,'0');
-  $(`${prefix}_y`).value = y;
-  if (cb) cb();
+  el.value = y + '-' + String(m).padStart(2, '0');
+  renderTrips();
 }
 
-function buildMonthSelect(prefix) {
-  return '<option value="">— mesiac —</option>' + SK_MONTHS.map((n,i)=>`<option value="${String(i+1).padStart(2,'0')}">${n}</option>`).join('');
-}
+
 // ══════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════
@@ -3797,7 +3761,8 @@ async function init() {
   if(!rootData.users) rootData.users=[];
   if(!rootData.userData) rootData.userData={};
 
-  // Month pickers initialised by initMonthPicker() when page is first shown
+  $('filterMonth').value = new Date().toISOString().substring(0,7);
+  $('costsMonth').value  = new Date().toISOString().substring(0,7);
 
   // Auto-login last user
   const lastUid=localStorage.getItem(LS_USER), lastUser=lastUid&&rootData.users.find(u=>u.id===lastUid);
