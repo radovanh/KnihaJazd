@@ -3797,8 +3797,7 @@ async function init() {
   if(!rootData.users) rootData.users=[];
   if(!rootData.userData) rootData.userData={};
 
-  $('filterMonth').value = new Date().toISOString().substring(0,7);
-  $('costsMonth').value = new Date().toISOString().substring(0,7);
+  // Month pickers initialised by initMonthPicker() when page is first shown
 
   // Auto-login last user
   const lastUid=localStorage.getItem(LS_USER), lastUser=lastUid&&rootData.users.find(u=>u.id===lastUid);
