@@ -1,4 +1,4 @@
-// Kniha Jazd — Service Worker v0.9.0
+// Kniha Jazd — Service Worker v0.10.0
 // Strategy: cache ONLY static assets (icons, manifest)
 // index.html is always fetched fresh — no cache bumping needed on app updates
 

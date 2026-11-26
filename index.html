@@ -105,6 +105,10 @@
   input, select, textarea { background:var(--surface); border:1.5px solid var(--border); border-radius:7px; padding:7px 10px; font-family:inherit; font-size:0.845rem; color:var(--text); transition:border-color 0.13s; outline:none; }
   input:focus, select:focus, textarea:focus { border-color:var(--accent); }
   .ferr { font-size:0.71rem; color:var(--accent3); }
+  /* Poznámka (textarea) — nikdy nesmie rozšíriť okno do šírky */
+  .note-group { min-width:0; grid-column:1/-1; }
+  .note-ta { display:block; width:100%; max-width:100%; min-width:0; box-sizing:border-box; resize:vertical; min-height:60px; max-height:200px; line-height:1.35; overflow-wrap:anywhere; word-break:break-word; }
+  @media (max-width:680px) { .note-ta { font-size:16px; } } /* 16px = iOS nezoomuje pri focuse */
 
   /* ── MODAL ── */
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.42); z-index:200; align-items:center; justify-content:center; padding:16px; }
@@ -605,7 +609,7 @@
       <div id="syncPopup" style="display:none;background:rgba(0,0,0,0.35);border-radius:7px;padding:8px 10px;font-size:0.72rem;color:rgba(255,255,255,0.8);line-height:1.6;width:100%">
         <div id="syncPopupContent">—</div>
       </div>
-      <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);letter-spacing:0.03em">v0.9.0</div>
+      <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);letter-spacing:0.03em">v0.10.0</div>
     </div>
   </aside>
   <main class="main">
@@ -898,6 +902,7 @@
           </div>
           <iframe id="minimapFrame" src="" width="100%" height="300" style="border:none;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
+        <div class="form-group note-group"><label>Poznámka</label><textarea id="f_note" class="note-ta" rows="3" maxlength="500" placeholder="voliteľná poznámka"></textarea></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -931,6 +936,7 @@
           <label>Celková suma €</label>
           <input type="number" step="0.01" id="ff_total" oninput="calcFuelP()" placeholder="automaticky z cena × litre">
         </div>
+        <div class="form-group note-group"><label>Poznámka</label><textarea id="ff_note" class="note-ta" rows="3" maxlength="500" placeholder="voliteľná poznámka"></textarea></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1056,6 +1062,7 @@
           <div class="form-group"><label>Dodávateľ / Miesto</label><input type="text" id="fc_supplier"></div>
           <div class="form-group"><label>Číslo dokladu</label><input type="text" id="fc_invoice"></div>
         </div>
+        <div class="form-group note-group"><label>Poznámka</label><textarea id="fc_note" class="note-ta" rows="3" maxlength="500" placeholder="voliteľná poznámka"></textarea></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -2207,6 +2214,9 @@ function renderCalendar() {
 // ══════════════════════════════════════════════════
 // DASHBOARD
 // ══════════════════════════════════════════════════
+let ignoredListOpen = false;   // stav zbalenia zoznamu ignorovaných upozornení (default zbalený)
+function toggleIgnoredList() { ignoredListOpen = !ignoredListOpen; renderDashboard(); }
+function ignoredLabel(n) { return n===1 ? '1 upozornenie ignorované' : (n>=2 && n<=4 ? n+' upozornenia ignorované' : n+' upozornení ignorovaných'); }
 function renderDashboard() {
   const db = udb();
   const km=db.trips.reduce((s,t)=>s+(t.endOdo-t.startOdo),0), fuel=db.fuelLogs.reduce((s,f)=>s+f.total,0);
@@ -2244,17 +2254,22 @@ function renderDashboard() {
     </div>`;
   }
   if (ignored.length) {
-    valHtml += `<div style="margin-bottom:17px;font-size:0.78rem;color:var(--text3);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span>🔕 ${ignored.length} upozornení ignorovaných</span>
+    valHtml += `<div style="margin-bottom:17px;font-size:0.78rem;color:var(--text3)">
+      <button type="button" onclick="toggleIgnoredList()" aria-expanded="${ignoredListOpen}"
+        style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:5px 11px;font-size:0.78rem;font-family:inherit;color:var(--text2);cursor:pointer;display:inline-flex;align-items:center;gap:6px;max-width:100%">
+        <span>🔕 ${ignoredLabel(ignored.length)}</span><span style="font-size:0.7rem">${ignoredListOpen?'▲':'▼'}</span>
+      </button>
+      ${ignoredListOpen ? `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
       ${ignored.map(e => {
         const key = warnKey(e);
-        return `<span style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-size:0.72rem;color:var(--text2);display:inline-flex;align-items:center;gap:4px">
+        return `<span style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-size:0.72rem;color:var(--text2);display:inline-flex;align-items:center;gap:4px;max-width:100%">
           <span style="opacity:0.5">${e.type==='error'?'🔴':'🟡'}</span>
           <span style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.msg}">${e.msg}</span>
           <button onclick="toggleIgnoreWarning('${key}')" title="Obnoviť upozornenie"
             style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:0.75rem;padding:0 2px;line-height:1">↩</button>
         </span>`;
       }).join('')}
+    </div>` : ''}
     </div>`;
   }
   if (!active.length && !ignored.length) valHtml = '';
@@ -2320,12 +2335,12 @@ function openTripModal(id) {
     const t=db.trips.find(x=>x.id===id);
     if(t){$('f_sd').value=t.startDate;$('f_st').value=t.startTime||'';$('f_sa').value=t.startAddress;$('f_so').value=t.startOdo;$('f_sp').value=t.startPlace||'';
       $('f_ed').value=t.endDate;$('f_et').value=t.endTime||'';$('f_ea').value=t.endAddress;$('f_eo').value=t.endOdo;$('f_ep').value=t.endPlace||'';
-      $('f_ecv').value=t.ecv;$('f_reason').value=t.reason||'';$('f_route').value=t.route||'';$('f_fp').value=t.fuelPlace||'';}
+      $('f_ecv').value=t.ecv;$('f_reason').value=t.reason||'';$('f_route').value=t.route||'';$('f_fp').value=t.fuelPlace||'';$('f_note').value=t.note||'';}
   } else {
     const now=new Date();
     const today=now.toISOString().split('T')[0];
     const nowTime=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-    ['f_sa','f_ea','f_reason'].forEach(i=>$(i).value='');
+    ['f_sa','f_ea','f_reason','f_note'].forEach(i=>$(i).value='');
     $('f_st').value=nowTime; $('f_et').value='';
     $('f_sd').value=$('f_ed').value=today; $('f_sp').value=$('f_ep').value=$('f_route').value=$('f_fp').value='';
     const last=[...db.trips].filter(t=>db.vehicles[0]&&t.ecv===db.vehicles[0].ecv).sort((a,b)=>a.id-b.id).pop();
@@ -2419,6 +2434,7 @@ function saveTrip() {
   const vn=vacName(sd); if(vn) warns.push('Jazda počas dovolenky: '+vn);
   if(warns.length) ae.innerHTML=warns.map(w=>`<div class="alert aw">⚠️ ${w}</div>`).join('');
   const db=udb(), trip={id:eIds.trip||nextId(db.trips),startDate:sd,startTime:st,startAddress:sa,startOdo:so,endDate:ed,endTime:et,endAddress:ea,endOdo:eo,ecv,reason,route,startPlace:sp,endPlace:ep,fuelPlace:fp||null,hasFuel:!!fp};
+  const tripNote=$('f_note').value.trim(); if(tripNote) trip.note=tripNote;
   if(eIds.trip){const i=db.trips.findIndex(t=>t.id===eIds.trip);db.trips[i]=trip;}else db.trips.push(trip);
   db.trips.sort((a,b)=>(a.startDate+(a.startTime||'')<b.startDate+(b.startTime||''))?-1:1);
   debouncedSave(); closeModal('tripModal'); renderTrips(); toast('Jazda uložená','ok');
@@ -2477,8 +2493,8 @@ function openFuelModal(id) {
   popSel('ff_ecv', db.vehicles.map(v=>({v:v.ecv,l:`${v.name} (${v.ecv})`})));
   const fuelPlaces=db.places.filter(p=>p.isFuel);
   popSel('ff_place', [{v:'',l:'— vybrať —'},...fuelPlaces.map(p=>({v:p.name,l:p.name}))]);
-  if(id){const f=db.fuelLogs.find(x=>x.id===id);if(f){$('ff_date').value=f.date;$('ff_time').value=f.time;$('ff_ecv').value=f.ecv;$('ff_odo').value=f.odometer;$('ff_place').value=f.place;$('ff_ppl').value=f.pricePerLiter;$('ff_l').value=f.liters;$('ff_total').value=f.total.toFixed(2);}}
-  else{const _n=new Date();$('ff_date').value=_n.toISOString().split('T')[0];$('ff_time').value=_n.getHours().toString().padStart(2,'0')+':'+_n.getMinutes().toString().padStart(2,'0');['ff_odo','ff_ppl','ff_l','ff_total'].forEach(i=>$(i).value='');$('ff_place').value='';}
+  if(id){const f=db.fuelLogs.find(x=>x.id===id);if(f){$('ff_date').value=f.date;$('ff_time').value=f.time;$('ff_ecv').value=f.ecv;$('ff_odo').value=f.odometer;$('ff_place').value=f.place;$('ff_ppl').value=f.pricePerLiter;$('ff_l').value=f.liters;$('ff_total').value=f.total.toFixed(2);$('ff_note').value=f.note||'';}}
+  else{const _n=new Date();$('ff_date').value=_n.toISOString().split('T')[0];$('ff_time').value=_n.getHours().toString().padStart(2,'0')+':'+_n.getMinutes().toString().padStart(2,'0');['ff_odo','ff_ppl','ff_l','ff_total','ff_note'].forEach(i=>$(i).value='');$('ff_place').value='';}
   openModal('fuelModal');
 }
 
@@ -2496,6 +2512,7 @@ function saveFuel() {
   if(errs.length){ae.innerHTML=errs.map(e=>`<div class="alert ad">⛔ ${e}</div>`).join('');return;}
   if(!udb().trips.some(t=>t.ecv===ecv&&t.startDate===date)) ae.innerHTML=`<div class="alert aw">⚠️ Žiadna jazda pre ${ecv} v deň tankovania</div>`;
   const db=udb(), fuel={id:eIds.fuel||nextId(db.fuelLogs),ecv,date,time,place,pricePerLiter:ppl,liters:l,total,odometer:odo};
+  const fuelNote=$('ff_note').value.trim(); if(fuelNote) fuel.note=fuelNote;
   if(eIds.fuel){const i=db.fuelLogs.findIndex(f=>f.id===eIds.fuel);db.fuelLogs[i]=fuel;}else db.fuelLogs.push(fuel);
   debouncedSave(); closeModal('fuelModal'); renderFuel(); toast('Tankovanie uložené','ok');
 }
@@ -2813,10 +2830,11 @@ function openCostModal(id) {
       $('fc_desc').value=co.desc||''; $('fc_amount').value=co.amount;
       $('fc_odo').value=co.odo||''; $('fc_supplier').value=co.supplier||'';
       $('fc_invoice').value=co.invoice||'';
+      $('fc_note').value=co.note||'';
     }
   } else {
     $('fc_date').value=new Date().toISOString().split('T')[0];
-    ['fc_type','fc_desc','fc_amount','fc_odo','fc_supplier','fc_invoice'].forEach(i=>$(i).value='');
+    ['fc_type','fc_desc','fc_amount','fc_odo','fc_supplier','fc_invoice','fc_note'].forEach(i=>$(i).value='');
     $('fc_type_sel').value='';
     if(db.vehicles.length) $('fc_ecv').value=db.vehicles[0].ecv;
   }
@@ -2835,6 +2853,7 @@ function saveCost(){
   if(errs.length){ae.innerHTML=errs.map(e=>`<div class="alert ad">⛔ ${e}</div>`).join('');return;}
   const db=udb(); if(!db.costs) db.costs=[];
   const cost={id:eIds.cost||nextId(db.costs),date,ecv,type,desc:desc||null,amount,odo,supplier:supplier||null,invoice:invoice||null};
+  const costNote=$('fc_note').value.trim(); if(costNote) cost.note=costNote;
   if(eIds.cost){const i=db.costs.findIndex(c=>c.id===eIds.cost);db.costs[i]=cost;}
   else db.costs.push(cost);
   db.costs.sort((a,b)=>a.date>b.date?1:-1);
